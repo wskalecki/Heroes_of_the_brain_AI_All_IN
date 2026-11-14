@@ -59,3 +59,17 @@ def test_rate_per_minute():
     detector = BlinkDetector(Config())
     _feed(detector, x)
     assert 10 <= detector.rate_per_min(90.0) <= 14
+
+
+def test_biphasic_blink_after_the_stream_filter_counts_once():
+    from wachta.pipeline import StreamFilter
+
+    cfg = Config()
+    x = _frontal_noise(120, seed=4) + 50_000.0
+    times = list(np.arange(30.0, 120.0, 4.0))
+    for t in times:
+        _add_blink(x, t)
+    stream, detector = StreamFilter(cfg), BlinkDetector(cfg)
+    for start in range(0, x.shape[1], 250):
+        detector.push(stream(x[:, start : start + 250]), start)
+    assert len([b for b in detector.blinks if b >= 29]) == len(times)
