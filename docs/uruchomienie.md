@@ -101,6 +101,18 @@ Tryb na żywo czyta nowe próbki z bazy danych sesji Board (`brainaccess-board`,
 Sprawdzony na sprzęcie 14.11.2026: kalibracja i zmiana stanu po zamknięciu oczu działają.
 Przy pracy w czasie rzeczywistym dodaj `--time-scale 1`. Jeśli port 8000 jest zajęty, użyj np. `--port 8001`.
 
+## Nocny punkt pomiarowy
+
+Protokół i analiza: [`protokol-nocny.md`](protokol-nocny.md). W skrócie:
+
+```bash
+python -m wachta.session --person wojtek --checkpoint N1 --monotony-min 10
+```
+
+```bash
+python experiments/analyze-night-checkpoint.py --fit wojtek-n1=plik.fit --figure docs/img/noc-vs-dzien.png
+```
+
 ## Pipeline w kodzie
 
 ```python

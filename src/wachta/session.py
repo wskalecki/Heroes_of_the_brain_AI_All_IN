@@ -25,7 +25,7 @@ from typing import Callable, Sequence, TextIO
 
 DEFAULT_RECORDINGS_DIR = Path("data/recordings")
 DEFAULT_STEP_SECONDS = 60.0
-VALID_CHECKPOINTS = ("T0", "T1", "T2")
+VALID_CHECKPOINTS = ("T0", "T1", "T2", "N1", "N2")   # N*: night checkpoints
 
 CHECKPOINT_FIELDS = (
     "person",
@@ -73,14 +73,24 @@ DEFAULT_STEPS: tuple[ProtocolStep, ...] = (
 )
 
 
-def build_steps(step_seconds: float = DEFAULT_STEP_SECONDS) -> tuple[ProtocolStep, ...]:
-    """Return the fixed checkpoint steps with the requested per-step duration."""
+MONOTONY_INSTRUCTION = "Monotonia: siedź spokojnie, oczy otwarte, patrz w jeden punkt, bez telefonu i rozmowy"
+
+
+def build_steps(
+    step_seconds: float = DEFAULT_STEP_SECONDS, monotony_minutes: float = 0.0
+) -> tuple[ProtocolStep, ...]:
+    """Return the fixed checkpoint steps, optionally followed by a monotony block."""
     if step_seconds <= 0:
         raise ValueError(f"step_seconds must be positive, got {step_seconds}")
-    return tuple(
+    if monotony_minutes < 0:
+        raise ValueError(f"monotony_minutes cannot be negative, got {monotony_minutes}")
+    steps = tuple(
         ProtocolStep(step.label, float(step_seconds), step.instruction)
         for step in DEFAULT_STEPS
     )
+    if monotony_minutes > 0:
+        steps += (ProtocolStep("monotony", float(monotony_minutes) * 60.0, MONOTONY_INSTRUCTION),)
+    return steps
 
 
 def normalize_person(value: str) -> str:
@@ -348,7 +358,7 @@ def run_session(
         if args.checkpoints_file
         else recordings_dir / "checkpoints.csv"
     )
-    steps = build_steps(args.step_seconds)
+    steps = build_steps(args.step_seconds, getattr(args, "monotony_min", 0.0) or 0.0)
 
     person = (
         normalize_person(args.person)
@@ -578,6 +588,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=DEFAULT_STEP_SECONDS,
         help="Czas trwania każdego z 3 bloków EEG w sekundach (domyślnie: 60)",
+    )
+    parser.add_argument(
+        "--monotony-min",
+        type=float,
+        default=0.0,
+        help="Dodaj na końcu blok monotonii o tej długości w minutach (nocny protokół: 10)",
     )
     parser.add_argument(
         "--started-at",
