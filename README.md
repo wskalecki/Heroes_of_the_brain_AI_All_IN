@@ -16,10 +16,13 @@ Repozytorium drużyny na hackathon **Heroes of the Brain 2026** (kategoria: Adap
 | Ścieżka | Co tu jest |
 |---|---|
 | `pomysly-adi/` | Pomysły i notatki Adiego (inspiracja, nic potwierdzonego) |
+| `docs/` | Dokumentacja: pomysły, zbiory danych, research rynku i konkurencji |
+| `data/recordings/` | Nagrania testowe z BrainAccess MINI (za zgodą uczestników) |
+| `data/analysis/` | Notebooki z analizą nagrań i porównaniem z danymi publicznymi |
 | `AGENTS.md` | Zasady pracy w repo — obowiązują ludzi i agentów AI |
 | `CONTRIBUTING.md` | Jak dokładać zmiany: gałęzie, commity, PR-y |
 
-Docelowe foldery (`src/`, `docs/`, `data/` itd.) powstaną, gdy wybierzemy pomysł.
+Folder `src/` i pozostałe powstaną, gdy wybierzemy pomysł.
 
 ## Zasady w skrócie
 
