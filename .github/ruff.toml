@@ -1,0 +1,19 @@
+# Lint configuration for CI (see .github/workflows/ci.yml).
+# Two levels:
+#   blocking  : syntax errors and undefined names (ruff check --select E9,F63,F7,F82), no config needed
+#   advisory  : the rules below, shown as warnings on the PR but never failing the build
+target-version = "py310"
+line-length = 140
+
+[lint]
+select = [
+    "E9",   # syntax and runtime errors
+    "F",    # pyflakes: unused imports and variables, undefined names
+    "B",    # bugbear: likely bugs (mutable defaults, bare except, ...)
+    "UP006", "UP007",  # modern type annotations (py310 target)
+    "PLE",  # pylint errors
+]
+ignore = [
+    "B008",  # function calls in defaults are normal for FastAPI
+    "B905",  # zip() without strict= (not worth churn)
+]

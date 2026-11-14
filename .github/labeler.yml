@@ -1,0 +1,19 @@
+# Path -> label mapping for .github/workflows/labeler.yml. Streams as in docs/zadania.md.
+A-sygnal:
+  - changed-files:
+      - any-glob-to-any-file: ["src/**", "tests/**", "experiments/**", "pyproject.toml"]
+B-dane:
+  - changed-files:
+      - any-glob-to-any-file: ["data/analysis/**", "docs/datasety-eeg-zrodla.md", "docs/img/**"]
+C-pomiary:
+  - changed-files:
+      - any-glob-to-any-file: ["data/recordings/**", "docs/protokol-nocny.md"]
+D-pitch:
+  - changed-files:
+      - any-glob-to-any-file: ["docs/pitch.md", "docs/scenariusz-demo.md", "docs/rynek-*.md", "docs/jury-i-kryteria.md"]
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: ["docs/**", "*.md"]
+ci:
+  - changed-files:
+      - any-glob-to-any-file: [".github/**"]

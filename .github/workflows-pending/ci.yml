@@ -1,0 +1,85 @@
+name: CI
+
+# Runs on every pull request and on pushes to main.
+# Jobs: repository hygiene, lint, tests on two Python versions, pipeline regression on the team recordings.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Higiena repo (nazwy, sekrety, rozmiary, linki, notebooki)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Nazwy plików, rozmiary, surowe EEG, sekrety
+        run: python .github/scripts/check-repo.py
+      - name: Linki względne w Markdown
+        run: python .github/scripts/check-links.py
+      - name: Notebooki (poprawność, brak błędów w wynikach, brak ścieżek lokalnych)
+        run: python .github/scripts/check-notebooks.py
+
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install "ruff>=0.6,<1"
+      - name: Błędy blokujące (składnia, niezdefiniowane nazwy)
+        run: ruff check --select E9,F63,F7,F82 src tests experiments .github/scripts
+      - name: Ostrzeżenia (nieużywane importy, typowe błędy), nie blokują
+        run: ruff check --config .github/ruff.toml src tests experiments .github/scripts --output-format github --exit-zero
+
+  tests:
+    name: Testy (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Instalacja pakietu
+        run: pip install -e ".[dev,analysis]"
+      - name: pytest
+        run: pytest -q --tb=short
+      - name: Regresja pipeline'u na nagraniach zespołu (wszystkie bloki zamkniętych oczu wykryte)
+        if: matrix.python-version == '3.12'
+        run: python .github/scripts/check-regression.py
+
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [hygiene, lint, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wszystkie zadania przeszły
+        run: |
+          echo "hygiene=${{ needs.hygiene.result }} lint=${{ needs.lint.result }} tests=${{ needs.tests.result }}"
+          test "${{ needs.hygiene.result }}" = "success"
+          test "${{ needs.lint.result }}" = "success"
+          test "${{ needs.tests.result }}" = "success"
