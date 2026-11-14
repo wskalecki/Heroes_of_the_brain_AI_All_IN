@@ -71,3 +71,23 @@ def test_eyes_closed_block_is_detected_in_team_recordings(name):
     block = next(b for b in load_annotations(recordings[name]) if b.label == "eyes_closed")
     starts = [r["t"] for r in run_offline(eeg) if r["new_lapse"]]
     assert any(block.onset <= t <= block.end for t in starts)
+
+
+def test_new_shift_keeps_calibration_and_restores_the_reserve():
+    import dataclasses
+
+    from wachta.config import Config
+
+    cfg = dataclasses.replace(Config(), time_scale=3600.0)
+    pipeline = Pipeline(cfg)
+    eeg = _synthetic(70)
+    results = []
+    for start in range(0, eeg.shape[1], 250):
+        results.extend(pipeline.push(eeg[:, start : start + 250]))
+    last = results[-1]
+    assert last["calibrated"] and last["reserve"] < 100
+    pipeline.new_shift()
+    result = pipeline.push(_synthetic(1, seed=9))[-1]
+    assert result["calibrated"] and result["state"] != "calibrating"
+    assert result["reserve"] == pytest.approx(100 - cfg.drain_per_hour)   # one window = one shift hour
+    assert result["work_min"] == pytest.approx(60)

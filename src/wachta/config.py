@@ -44,6 +44,25 @@ class Config:
     lapse_exit_s: float = 2.0
     recent_lapse_s: float = 120.0  # a lapse keeps the state at "warn" for this long (real seconds)
 
+    # Eye state from blinks on F3/F4 (A7)
+    blink_cal_s: float = 20.0      # seconds of signal used for the blink threshold
+    blink_k: float = 5.0           # threshold = k * MAD of the frontal signal
+    blink_lowpass_hz: float = 4.0
+    blink_min_uv: float = 20.0
+    blink_min_s: float = 0.04
+    blink_max_s: float = 0.5
+    blink_refractory_s: float = 0.3
+    eyes_closed_after_s: float = 10.0  # no blink for this long: eyes probably closed
+    lapse_blink_lookback_s: float = 2.0  # a blink this soon before the lapse or later: eyes open
+    lapse_kind_settle_s: float = 5.0     # count the lapse by the kind it has after this long
+
+    # Reaction probes (A8). Lapse threshold as in PVT-B (Basner et al. 2011).
+    probe_z: float = 1.5           # the fast index above this, but below z_enter ...
+    probe_min_s: float = 2.0       # ... for this long triggers a probe
+    probe_cooldown_s: float = 45.0
+    probe_lapse_ms: float = 355.0
+    probe_timeout_ms: float = 3000.0
+
     # Slow index: fatigue trend
     slow_window_s: float = 60.0
 
@@ -60,6 +79,18 @@ class Config:
     recharge_per_hour: float = 60.0  # a 45 min break restores 45 points
     warn_below: float = 50.0
     stop_below: float = 25.0
+
+    # Context (A9): simplified two-process model, assumptions. Off unless start_clock_h is set.
+    start_clock_h: float | None = None     # time of day at calibration, in hours
+    awake_at_start_h: float | None = None  # hours awake at calibration
+    circadian_night_gain: float = 0.6      # drain +60% around the circadian low ...
+    circadian_night_h: float = 4.5         # ... centred at 04:30
+    circadian_night_width_h: float = 2.5
+    circadian_dip_gain: float = 0.2        # post-lunch dip
+    circadian_dip_h: float = 15.0
+    circadian_dip_width_h: float = 1.5
+    awake_gain_per_h: float = 0.06         # +6% drain per hour awake beyond awake_free_h
+    awake_free_h: float = 8.0
 
     @property
     def win_samples(self) -> int:
