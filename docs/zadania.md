@@ -70,10 +70,10 @@ a adnotacje wpisuje się z tabeli w sekcji „Kontrakty”.
 
 | ID | Priorytet | Zadanie | Wynik | Gotowe, gdy | Status |
 |---|---|---|---|---|---|
-| D1 | MUST | Treść slajdów: problem, luka, rozwiązanie, dowody, rynek, prawo, zespół | `docs/pitch.md` | 10 slajdów, na każdym jedno zdanie i źródło każdej liczby | do zrobienia |
+| D1 | MUST | Treść slajdów: problem, luka, rozwiązanie, dowody, rynek, prawo, zespół | `docs/pitch.md` | 10 slajdów, na każdym jedno zdanie i źródło każdej liczby | szkic gotowy (pozycjonowanie: personalizacja norm zmęczenia), do przejrzenia przez D |
 | D2 | MUST | Segment wejścia i różnica względem SmartCap (punkt otwarty 1 w decyzjach) | wpis w `docs/decyzje.md`, slajd w `docs/pitch.md` | zespół wybrał segment | do zrobienia |
 | D3 | MUST | Scenariusz demo co do kroku i plan awaryjny | `docs/scenariusz-demo.md` | wiadomo, kto co klika i co mówimy; jest wariant bez sprzętu | szkic gotowy, do przejrzenia przez D i próby C3 |
-| D4 | SHOULD | Slajd „co zweryfikowane, a co założone” | w `docs/pitch.md` | wstawione liczby z A2 i B2 | do zrobienia (czeka na A2, B2) |
+| D4 | SHOULD | Slajd „co zweryfikowane, a co założone” | w `docs/pitch.md` | wstawione liczby z A2 i B2 | szkic w `pitch.md` slajd 8, liczby z A2 i B2 wstawione |
 | D5 | MUST | Slajd „Kamera a Wachta”: kamera widzi, czy oczy są otwarte, my sprawdzamy, czy mózg jeszcze reaguje. Złagodzone hasło o zegarku (HRV i EEG reagują na to samo, ale nie są zamienne) | `docs/pitch.md` | slajd z liczbami z A7, B2 i B5; zgodny z `podstawy-naukowe.md` §6 | do zrobienia |
 
 Zasady dla treści pitchu: mówimy „zmęczenie i czujność”, nie „stres”, „wypalenie” ani „przeciążenie”

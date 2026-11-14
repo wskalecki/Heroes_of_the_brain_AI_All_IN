@@ -1,6 +1,6 @@
 # Scenariusz demo
 
-Zadanie D3 z [`zadania.md`](zadania.md). Szkic do przejrzenia przez osoby od pitchu i demo (strumienie C i D).
+Zadanie D3 z [`zadania.md`](zadania.md). Treść slajdów: [`pitch.md`](pitch.md). Szkic do przejrzenia przez osoby od pitchu i demo (strumienie C i D).
 Czasy w tym pliku zmierzono 14.11 na odtworzeniu nagrania Filipa. Na żywo trzeba je sprawdzić w próbach (zadanie C3).
 
 ## Dwa formaty, dwa cele
@@ -81,7 +81,7 @@ przed siebie, aż baner zmieni się z „Kalibracja” na „Możesz pracować�
 | 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz” (drugi spadek w krótkim czasie) | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy.” |
 | 1:55 | operator | przełącza na **Pielęgniarka** | „Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę.” |
 | 2:05 | operator | klika **Rozpocznij przerwę**. Stan „Przerwa trwa”, rezerwa rośnie | „Przerwa naprawdę odnawia rezerwę, a limit jest liczony dla tej osoby, nie dla zegara.” |
-| 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy u 4 z 4 osób, z jednym fałszywym alarmem w 32 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób.” |
+| 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy u 4 z 4 osób, z jednym fałszywym alarmem w 32 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób, a model osobisty rozróżnia stany wyraźnie lepiej niż jeden dla wszystkich. Dlatego liczymy normy dla człowieka, nie dla zegara.” |
 
 **Jeśli próba reakcji pojawi się sama** (wskaźnik zaczął rosnąć): osoba w czepku reaguje normalnie, a narrator mówi
 „system sam poprosił o reakcję, bo wskaźnik zaczął rosnąć”. To dobry moment, nie błąd.
@@ -120,7 +120,7 @@ Nagrajcie jedno ujęcie na żywo i jedno na planie B, potem wybierzcie lepsze. N
 | 0:35–1:05 | „Nowa zmiana” w nocy, kafelki kontekstu, próba reakcji z szybką odpowiedzią | „Minuta kalibracji EEG, potem system śledzi alfę, mrugnięcia i reakcję. W nocy rezerwa spada szybciej.” |
 | 1:05–1:30 | brak reakcji przy otwartych oczach, rezerwa spada, przełączenie na „Pielęgniarka”, przerwa | „Kamera widzi, czy oczy są otwarte. My sprawdzamy, czy mózg jeszcze reaguje.” |
 | 1:30–1:50 | wykres `trafnosc-na-nagraniach.png`, wykres z danych publicznych | „4 z 4 osób, jeden fałszywy alarm w 32 minutach. W danych publicznych alfa rośnie z sennością u 11 z 11 osób.” |
-| 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż na jednej zmianie.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
+| 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż, który sprawdzi, czy osobisty limit przewiduje spadki czujności lepiej niż norma czasu.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
 
 ## Co mówimy, a czego nie
 

@@ -11,6 +11,7 @@ Pozostałe to materiały pomocnicze: wsparcie do dyskusji, a nie decyzje.
 | [`uruchomienie.md`](uruchomienie.md) | Instalacja, testy i użycie pipeline'u |
 | [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md) | Trafność wykrywania zamkniętych oczu na czterech nagraniach zespołu |
 | [`scenariusz-demo.md`](scenariusz-demo.md) | Scenariusz demo na scenie i filmu, komendy, plan awaryjny, co mówimy |
+| [`pitch.md`](pitch.md) | Treść 10 slajdów: personalizacja norm zmęczenia, dowody, zweryfikowane kontra założone |
 | [`heroes-of-the-brain-pomysly.md`](heroes-of-the-brain-pomysly.md) | Pomysł „Wachta”, możliwości sprzętu, plany zapasowe i lista 100 pomysłów |
 | [`datasety-eeg-zrodla.md`](datasety-eeg-zrodla.md) | Otwarte zbiory EEG do sprawdzenia pipeline'u (senność, przeciążenie), z linkami |
 | [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md) | Konkurencja: firmy od wearables EEG i neuroadaptacji |
