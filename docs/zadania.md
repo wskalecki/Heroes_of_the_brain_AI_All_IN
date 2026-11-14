@@ -21,22 +21,22 @@ Priorytety: **MUST** (bez tego nie ma demo), **SHOULD** (wzmacnia pitch), **COUL
 | Strumień | Właściciel | Pliki strumienia |
 |---|---|---|
 | A. Sygnał i aplikacja | Wojtek (z agentem) | `src/wachta/`, `tests/`, `experiments/`, `pyproject.toml`, `docs/uruchomienie.md`, `docs/trafnosc-na-nagraniach.md` |
-| B. Dane i dowody | Adrian (z agentem) | `data/analysis/`, `docs/datasety-eeg-zrodla.md`, `docs/img/` |
+| B. Dane i dowody | Adrian (z agentem) | `data/analysis/`, `docs/datasety-eeg-zrodla.md` |
 | C. Pomiary | Filip | nowe pliki w `data/recordings/` (nagrania, adnotacje, `checkpoints.csv`) |
 | D. Pitch i demo | Rudy | `docs/pitch.md`, `docs/scenariusz-demo.md`, `docs/rynek-*.md` |
 
 Role Filipa i Rudego to propozycja, mogą się zamienić.
 
 Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, `docs/README.md`, `docs/decyzje.md`,
-`docs/plan-projektu.md`, `docs/zadania.md`.
+`docs/plan-projektu.md`, `docs/zadania.md`. Wspólny jest też folder `docs/img/` z wykresami na slajdy.
 
 ## A. Sygnał i aplikacja
 
 | ID | Priorytet | Zadanie | Wynik | Gotowe, gdy | Status |
 |---|---|---|---|---|---|
-| A1 | MUST | Rdzeń: filtr strumieniowy, cechy okna, kalibracja na osobę, wskaźnik, stany, rezerwa | `src/wachta/`, `tests/`, `pyproject.toml` | `pytest` przechodzi | w toku: `claude/sleepy-lamport-v2kzl7` |
-| A2 | MUST | Trafność pipeline'u na 4 nagraniach z adnotacjami | `experiments/validate-on-recordings.py`, `docs/trafnosc-na-nagraniach.md` | tabela na osobę: wykrycie `eyes_closed` i fałszywe alarmy poza nim | do zrobienia |
-| A3 | MUST | Odtwarzanie nagrania, serwer i dashboard | `src/wachta/sources.py`, `src/wachta/server.py`, `src/wachta/web/` | dashboard działa w trybie odtwarzania i zmienia stan w bloku `eyes_closed` | do zrobienia |
+| A1 | MUST | Rdzeń: filtr strumieniowy, cechy okna, kalibracja na osobę, wskaźnik, stany, rezerwa | `src/wachta/`, `tests/`, `pyproject.toml` | `pytest` przechodzi | zrobione |
+| A2 | MUST | Trafność pipeline'u na 4 nagraniach z adnotacjami | `experiments/validate-on-recordings.py`, `docs/trafnosc-na-nagraniach.md` | tabela na osobę: wykrycie `eyes_closed` i fałszywe alarmy poza nim | zrobione: 4 z 4 bloków, 1 fałszywy alarm |
+| A3 | MUST | Odtwarzanie nagrania, serwer i dashboard | `src/wachta/sources.py`, `src/wachta/server.py`, `src/wachta/web/` | dashboard działa w trybie odtwarzania i zmienia stan w bloku `eyes_closed` | w toku: `claude/sleepy-lamport-v2kzl7` |
 | A4 | MUST | Tryb na żywo z BrainAccess Board | źródło `board` w `sources.py`, `docs/uruchomienie.md` | na laptopie ze sprzętem płyną próbki, a zamknięcie oczu zmienia stan | do zrobienia (wymaga sprzętu, uruchamia Wojtek) |
 | A5 | SHOULD | Narzędzie punktu pomiarowego: odlicza kroki, zapisuje znaczniki i KSS | `src/wachta/session.py` | zapisuje adnotacje i wiersz w `checkpoints.csv` w formatach z sekcji „Kontrakty” | do zrobienia |
 | A6 | COULD | Prognoza czasu do progu, test czasu reakcji w przeglądarce, krzywe z Garmin Connect | — | — | do zrobienia |
@@ -102,10 +102,11 @@ W BrainAccess Board jako nazwę zadania wpisz `<imie>-t0`, `<imie>-t1` albo `<im
 Kolumny z zegarka wypełnia tylko osoba z Garminem, reszta zostawia je puste. KSS to skala senności 1–9.
 
 **Wynik pipeline'u** (jedna wiadomość na sekundę, JSON przez WebSocket):
-`state` (`calibrating`, `ok`, `warn`, `stop`, `no_signal`), `reserve` (0–100), `fast` (wskaźnik szybki, z-score),
-`slow` (wskaźnik wolny), `quality` (0–1), `t` (sekundy od startu).
+`state` (`calibrating`, `ok`, `warn`, `stop`, `break`, `no_signal`), `reserve` (0–100), `fast` (wskaźnik szybki, z-score),
+`slow` (wskaźnik wolny), `quality` (0–1), `t` (sekundy od startu). Pełna lista pól: `src/wachta/index.py`.
 
-**Stałe i definicje cech:** źródłem prawdy jest `src/wachta/config.py`. Notebooki mogą je importować po scaleniu A1.
+**Stałe i definicje cech:** źródłem prawdy jest `src/wachta/config.py`. Notebooki mogą je importować (`pip install -e .`).
+Próg wskaźnika szybkiego to 2,5, a nie 2,0 jak w notebooku 03: uzasadnienie w [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md).
 
 **Wykresy na slajdy:** PNG do 300 kB w `docs/img/`, nazwa mówi, co jest na wykresie.
 
@@ -115,3 +116,4 @@ Kolumny z zegarka wypełnia tylko osoba z Garminem, reszta zostawia je puste. KS
 - Analiza jakości nagrań i wskaźnika w `data/analysis/` (notebooki 01–03).
 - Research konkurencji, rynku i prawa w `docs/rynek-*.md`.
 - Decyzja o kierunku i plan projektu w `docs/`.
+- Rdzeń pipeline'u w `src/wachta/` z testami i wynik trafności w [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md).

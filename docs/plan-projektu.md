@@ -59,8 +59,7 @@ plik .fif z data/recordings → ReplaySource ─────────┼→ b
 odczyty Venu 2 i KSS (ręcznie, punkty pomiarowe) ───┘
 ```
 
-Kod powstaje w `src/wachta/`, testy w `tests/`, skrypty analityczne w `experiments/`. Instrukcja uruchomienia pojawi się
-w `uruchomienie.md` razem z kodem.
+Kod jest w `src/wachta/`, testy w `tests/`, skrypty analityczne w `experiments/`. Jak uruchomić: [`uruchomienie.md`](uruchomienie.md).
 
 Logika cech i stałe pochodzą z notebooków w `data/analysis/` (okna 2 s z krokiem 1 s, próg artefaktu 300 µV,
 kalibracja z pierwszych 60 czystych okien, mediana z 5 okien, próg z-score 2).
