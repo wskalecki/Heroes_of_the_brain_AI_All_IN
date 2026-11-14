@@ -18,5 +18,6 @@ Pozostałe to materiały pomocnicze: wsparcie do dyskusji, a nie decyzje.
 | [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) | Wielkość rynku, bariera prawna (EU AI Act art. 5) i ocena segmentów |
 | [`jury-i-kryteria.md`](jury-i-kryteria.md) | Jury kategorii, kryteria oceny z regulaminu, pytania i opakowanie use case'u |
 | [`podstawy-naukowe.md`](podstawy-naukowe.md) | Literatura: EEG i sygnały fizjologiczne (HRV, wearables) w ocenie senności, personalizacja, co wolno twierdzić w pitchu |
+| [`analiza-i-adaptacja.md`](analiza-i-adaptacja.md) | Analiza wyników B1–B5, wady obecnej adaptacji, rozbieżności w dokumentach i projekt adaptacji v2 (trzy pętle, stany, walidacja) |
 
 Kopie plików z pomysłami i listą zbiorów są też w `pomysly-adi/` (tam jako osobisty zbiór Adiego).
