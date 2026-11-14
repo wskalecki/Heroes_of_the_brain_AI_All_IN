@@ -48,7 +48,7 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | B1 | MUST | Notebook 03 na prawdziwych etykietach: bloki z adnotacji zamiast epizodów wykrytych z sygnału; kontrast `reading` i `math` wobec `neutral` | `data/analysis/` (notebook 03 albo nowy), poprawka w `data/analysis/README.md` | wnioski nie są już „kołowe”; jest wykres na slajd | w toku: `claude/charming-tesla-jkdhq5` |
 | B2 | SHOULD | Czujny kontra senny na naszych 8 kanałach, zbiór Cui i in. (figshare, 172 MB) | `data/analysis/04-drowsiness-public-dataset.ipynb`, wykres w `docs/img/` | AUC na osobę; porównanie: kalibracja osobista kontra jeden próg dla wszystkich | w toku: `claude/charming-tesla-jkdhq5` |
 | B3 | COULD | EEG a serce: HRV z EKG w COG-BCI wobec wskaźnika EEG. Zamiennie ds004902 (wyspani kontra po deprywacji snu) | kolejny notebook, wykres w `docs/img/` | jeden wykres i dwa zdania wniosku | w toku: `claude/charming-tesla-jkdhq5` |
-| B4 | SHOULD | Dopisać zbiory o zmęczeniu z planu do listy zbiorów | `docs/datasety-eeg-zrodla.md` | link, zawartość, rozmiar i licencja każdego zbioru | w toku: `claude/charming-tesla-jkdhq5` |
+| B4 | SHOULD | Dopisać zbiory o zmęczeniu z planu do listy zbiorów | `docs/datasety-eeg-zrodla.md` | link, zawartość, rozmiar i licencja każdego zbioru | zrobione: `claude/charming-tesla-jkdhq5` |
 
 ## C. Pomiary
 
