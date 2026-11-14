@@ -6,6 +6,29 @@ ocenę senności, test reakcji i wskaźnik EEG.
 
 Czas na osobę: ok. 20 min. Najlepiej po północy, po dniu hackathonu. Kolejność: najpierw film demo i próby (C3), potem pomiar.
 
+## Wariant dla jednej osoby, bez nocy (stan na 14.11)
+
+Pomiar robi tylko Wojtek i bez sesji nocnej. Wtedy:
+
+- **Dwie sesje tym samym protokołem:** `T1` teraz i `T2` późnym wieczorem, po całym dniu hackathonu. Bez kawy przez godzinę przed każdą.
+- **Monotonia 15 min zamiast 10** (`--monotony-min 15`), bo bez nocy senność narasta wolniej.
+- **Odcięcie bodźców:** słuchawki z ANC i biały szum, przyciemnione światło, wzrok w jeden punkt (np. kropka na ścianie).
+  **Bez opaski na oczy**: z zamkniętymi oczami system przez cały czas widzi „oczy zamknięte”, a nam chodzi o otwarte oczy.
+- **Te same warunki w obu sesjach:** miejsce, światło, pozycja, głośność szumu.
+- **Główny wynik to przebieg minuta po minucie** w każdej sesji (wykres `--minutes-figure`), a porównanie `T1` z `T2` jest dodatkiem.
+
+```bash
+python -m wachta.session --person wojtek --checkpoint T1 --monotony-min 15
+```
+
+```bash
+python experiments/analyze-night-checkpoint.py --fit wojtek-t1=t1.fit wojtek-t2=t2.fit --minutes-figure docs/img/monotonia-minuta-po-minucie.png --figure docs/img/sesje-porownanie.png
+```
+
+Uwaga do interpretacji: w danych publicznych (notebook 06, PR #31) alfa przy otwartych oczach **nie przewidywała** lapsu
+w kolejnej minucie (AUC 0,52). Wzrost alfy w monotonii opisujemy więc jako obserwację u jednej osoby, a nie jako ostrzeżenie
+przed spadkiem czujności. Najmocniejszym sygnałem pozostaje test reakcji.
+
 ## Sprzęt
 
 - Czepek BrainAccess i laptop z BrainAccess Board.
@@ -59,6 +82,8 @@ Plik FIT jest opcjonalny. Jeśli nie zawiera odstępów R–R (zależy od ustawi
 Odczyt prawdziwego pliku z Venu 2 nie był jeszcze sprawdzony: przy pierwszym uruchomieniu zwróćcie uwagę na komunikaty.
 
 ## Co z tego wolno powiedzieć
+
+- Przy jednej osobie: „studium przypadku, jedna osoba, dwie sesje”. Bez statystyki i bez słowa „nocny”, jeśli sesji nocnej nie było.
 
 - Jeśli w nocy rośnie KSS, lapsy w teście reakcji **i** alfa w monotonii przy mrugających oczach: „u naszych osób wskaźnik EEG
   rośnie razem z sennością i wolniejszymi reakcjami, przy otwartych oczach”. Z liczbą osób, bez statystyki.

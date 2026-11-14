@@ -47,14 +47,15 @@ Kamera w aucie sprawdza, czy oczy są zamknięte. Żeby odróżnić to od senno�
 mrugnięcia na F3/F4 (przy referencji Fp1 mrugnięcie to krótkie, duże wychylenie). Spadek czujności bez mrugnięć jest
 oznaczany jako „oczy zamknięte”, a spadek przy mrugających oczach jako „senność przy otwartych oczach”.
 
-Mrugnięcia na minutę w blokach protokołu (detektor z `src/wachta/blinks.py`, próg z pierwszych 20 s nagrania):
+Mrugnięcia na minutę w blokach protokołu (detektor z `src/wachta/blinks.py`, próg z pierwszych 20 s nagrania).
+Poprawione 14.11 wieczorem: wcześniejsza wersja liczyła część mrugnięć podwójnie, bo po filtrze 1 Hz mrugnięcie ma dwie fazy.
 
 | Osoba | Rozmowa | Oczy zamknięte | Czytanie | Liczenie |
 |---|---|---|---|---|
-| adi | 4,2 | 0,0 | 9,6 | 12,9 |
-| filip | 19,6 | 1,0 | 3,0 | 0,0 |
-| rudy | 13,6 | 0,0 | 8,0 | 31,6 |
-| wojtek | 13,0 | 12,4 | 1,0 | 0,0 |
+| adi | 3 | 0 | 7 | 9 |
+| filip | 15 | 1 | 3 | 0 |
+| rudy | 12 | 0 | 6 | 25 |
+| wojtek | 11 | 10 | 1 | 0 |
 
 | Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Próba reakcji przed alarmem w bloku | Próby reakcji poza blokiem |
 |---|---|---|---|
