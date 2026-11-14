@@ -2,8 +2,9 @@
 
 Repozytorium drużyny na hackathon **Heroes of the Brain 2026** (kategoria: Adaptive Systems).
 
-> **Status projektu: faza pomysłów.** Żaden kierunek nie jest jeszcze potwierdzony.
-> Materiały w `pomysly-adi/` to inspiracja i punkt wyjścia do dyskusji, nie decyzja.
+> **Status projektu: budujemy.** Kierunek: zmęczenie i czujność pracowników zmianowych mierzone na człowieku,
+> a nie na zegarze (EEG kalibruje, zegarek pilnuje). Plan: [`docs/plan-projektu.md`](docs/plan-projektu.md),
+> zadania: [`docs/zadania.md`](docs/zadania.md), decyzje: [`docs/decyzje.md`](docs/decyzje.md).
 
 ## Sprzęt
 
@@ -16,7 +17,7 @@ Repozytorium drużyny na hackathon **Heroes of the Brain 2026** (kategoria: Adap
 | Ścieżka | Co tu jest |
 |---|---|
 | `pomysly-adi/` | Pomysły i notatki Adiego (inspiracja, nic potwierdzonego) |
-| `docs/` | Dokumentacja: pomysły, zbiory danych, research rynku i konkurencji |
+| `docs/` | Dokumentacja: decyzje, plan projektu, pomysły, zbiory danych, research rynku i konkurencji |
 | `data/recordings/` | Nagrania testowe z BrainAccess MINI (za zgodą uczestników) |
 | `data/analysis/` | Notebooki z analizą nagrań i porównaniem z danymi publicznymi |
 | `AGENTS.md` | Zasady pracy w repo — obowiązują ludzi i agentów AI |
