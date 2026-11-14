@@ -1,0 +1,2 @@
+person,checkpoint,started_at,kss,body_battery,stress,heart_rate,hrv_ms,recording_file,notes
+wojtek,T1,2026-11-14T21:16:33+01:00,5,5,83,91,,subj-1_ses-S001_task-wojtek-t1_run-001_20261114_211630_eeg_BA_MINI_073_e99a5f32-5520-4be2-a127-cce8cec697c5-raw.fif,"Adnotacje przesunięte o 3 s (zapis w Board ruszył przed Enter, potwierdzone na alfie); słuchawki ANC i biały szum; bez testu PVT"
