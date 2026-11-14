@@ -8,6 +8,7 @@ import numpy as np
 from scipy.signal import butter, iirnotch, sosfilt, sosfilt_zi, tf2sos
 
 from .baseline import Baseline
+from .blinks import BlinkDetector
 from .config import CHANNELS, Z_FEATURES, Config
 from .features import window_features
 from .index import VigilanceIndex
@@ -45,6 +46,8 @@ class Pipeline:
         self._filter = StreamFilter(self.cfg)
         self._buffer = np.zeros((len(CHANNELS), 0))
         self._consumed = 0
+        self._pushed = 0
+        self.blinks = BlinkDetector(self.cfg)
         self.baseline = Baseline(Z_FEATURES, self.cfg.cal_windows)
 
     def recalibrate(self) -> None:
@@ -57,7 +60,10 @@ class Pipeline:
         chunk = np.asarray(eeg_volts, dtype=float) * 1e6
         if chunk.ndim != 2 or chunk.shape[0] != len(CHANNELS):
             raise ValueError(f"Expected shape ({len(CHANNELS)}, n), got {chunk.shape}")
-        self._buffer = np.concatenate([self._buffer, self._filter(chunk)], axis=1)
+        filtered = self._filter(chunk)
+        self.blinks.push(filtered, self._pushed)
+        self._pushed += filtered.shape[1]
+        self._buffer = np.concatenate([self._buffer, filtered], axis=1)
 
         cfg = self.cfg
         results = []
@@ -84,7 +90,12 @@ class Pipeline:
             "features": {k: round(v, 4) for k, v in features.items()},
             "z": None if z is None else {k: round(v, 3) for k, v in z.items()},
         }
-        result.update(self.index.update(t_end, z, bool(bad), calibrated))
+        result.update(self.index.update(
+            t_end, z, bool(bad), calibrated,
+            last_blink=self.blinks.last_blink(), blinks_ready=self.blinks.ready,
+        ))
+        rate = self.blinks.rate_per_min(t_end)
+        result["blinks_per_min"] = None if rate is None else round(rate, 1)
         return result
 
 
