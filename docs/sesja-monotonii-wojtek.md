@@ -10,7 +10,8 @@ Studium przypadku: jedna osoba, jedna sesja, bez testu reakcji PVT. Liczby polic
 - Warunki: słuchawki z ANC i biały szum, wzrok w jeden punkt, wieczorem po całym dniu hackathonu.
 - Ocena senności po sesji: **KSS 5** (ani czujny, ani senny).
 - Garmin Venu 2 z paskiem HRM (aktywność „Yoga”, 18 min 37 s): tętno średnio **96**, maks. 120; oddech 13 na minutę (11–15);
-  stres Garmina 82 → 79, średnio 78. Z zegarka mamy tylko podsumowanie, bez przebiegu minutowego.
+  stres Garmina 82 → 79, średnio 78. Plik `.fit` ma tętno co sekundę (1115 próbek), ale **nie ma odstępów R–R**,
+  więc zmienności rytmu serca (RMSSD) nie da się policzyć. Plik zostaje lokalnie, w repo tylko wyniki.
 
 ## Wyniki
 
@@ -24,6 +25,8 @@ Studium przypadku: jedna osoba, jedna sesja, bez testu reakcji PVT. Liczby polic
 | Okna nad progiem próby reakcji (1,5) | 11,5% |
 | Próby reakcji, które obecny system wywołałby w monotonii | 11 w 15 min (ok. 44 na godzinę) |
 | Mrugnięcia na minutę w monotonii | od 0 do 13, bez trendu |
+| Tętno z paska: oczy otwarte / oczy zamknięte / liczenie / monotonia | 93 / 90 / 93 / 97 bpm |
+| Tętno w monotonii minuta po minucie | od 90 do 103, bez trendu spadkowego |
 
 ![Monotonia minuta po minucie](img/monotonia-minuta-po-minucie.png)
 
@@ -33,7 +36,8 @@ Przesunięcie sprawdziliśmy na sygnale: alfa rośnie ok. 65 s od początku plik
 ## Wnioski
 
 1. **Senności w tej sesji nie było, i EEG to pokazuje.** Wskaźnik alfy przez 15 minut wahał się blisko poziomu z kalibracji,
-   bez trendu w górę. Zgadza się to z KSS 5 i z wysokim tętnem i stresem z zegarka, które wskazują raczej na pobudzenie
+   bez trendu w górę. Zgadza się to z KSS 5 i z tętnem z paska: w monotonii było wyższe niż w spoczynku (97 wobec 93)
+   i nie spadało, a przy senności tętno zwykle spada (`podstawy-naukowe.md` §1). Wszystko wskazuje raczej na pobudzenie
    (dzień hackathonu) niż na senność. To wynik zerowy dla senności, a nie dowód, że wskaźnik ją wykrywa.
 2. **Zero fałszywych alarmów przez 15 minut z otwartymi oczami** przy bardzo czystym sygnale (0,9% odrzuconych okien wobec
    3–15% w nagraniach z południa). Wskaźnik ani razu nie zbliżył się do progu alarmu.
@@ -46,7 +50,9 @@ Przesunięcie sprawdziliśmy na sygnale: alfa rośnie ok. 65 s od początku plik
 
 - Jedna osoba, jedna sesja. Bez porównania z drugą sesją (`T2`) i bez testu reakcji.
 - Kalibracja to pierwsza minuta tej samej sesji, więc wskaźnik pokazuje zmianę względem początku sesji, a nie względem stanu wypoczętego.
-- Z zegarka tylko podsumowanie aktywności; przebieg tętna minuta po minucie wymaga pliku `.fit`.
+- Plik z zegarka nie zawiera odstępów R–R, więc brak RMSSD. Tętno jest wyrównane do bloków z dokładnością ok. 3 s
+  (start aktywności 21:16:31, start protokołu 21:16:33, start nagrania EEG ok. 21:16:30).
+- Plik `.fit` ma też oddech i stres Garmina co sekundę; tych przebiegów nie analizowaliśmy.
 
 ## Co wolno powiedzieć
 
