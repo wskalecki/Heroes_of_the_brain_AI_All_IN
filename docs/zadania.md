@@ -41,7 +41,7 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | A5 | SHOULD | Narzędzie punktu pomiarowego: odlicza kroki, zapisuje znaczniki i KSS | `src/wachta/session.py` | zapisuje adnotacje i wiersz w `checkpoints.csv` w formatach z sekcji „Kontrakty” | zrobione: `feat/checkpoint-session` |
 | A6 | COULD | Prognoza czasu do progu, test czasu reakcji w przeglądarce, krzywe z Garmin Connect | `src/wachta/pvt.py`, `src/wachta/pvt.html` (`minutes_to_warn` / `minutes_to_stop` w `src/wachta/index.py`) | test PVT-B działa w przeglądarce i zapisuje wynik do `data/recordings/pvt.csv` | zrobione: `feat/pvt-test` (PVT-B + prognoza w `index.py`; odczyty Garmin w `checkpoints.csv`) |
 | A7 | MUST | Stan oczu z EEG: mrugnięcia na F3/F4, rozdzielenie spadku czujności na „oczy zamknięte” i „senność przy otwartych oczach” | `src/wachta/blinks.py`, `src/wachta/index.py`, dashboard | na nagraniach zespołu blok `eyes_closed` jest klasyfikowany jako „oczy zamknięte”; tabela w `docs/trafnosc-na-nagraniach.md` | zrobione |
-| A8 | MUST | Próba reakcji wywoływana przez EEG: gdy wskaźnik zbliża się do progu, dashboard prosi o reakcję; > 355 ms albo brak = potwierdzony spadek | `src/wachta/index.py`, `src/wachta/server.py`, `src/wachta/web/` | próba pojawia się przy rosnącym wskaźniku i ręcznie, czas reakcji wpływa na stan i rezerwę | zrobione |
+| A8 | MUST | Próba reakcji po zdarzeniu ostrym i z harmonogramu (issue #14; wcześniej z podprogowego wzrostu alfy, usunięte po notebooku 06); brak reakcji albo wolniej niż osobista norma = niezaliczona próba | `src/wachta/index.py`, `src/wachta/server.py`, `src/wachta/web/` | próba pojawia się przy rosnącym wskaźniku i ręcznie, czas reakcji wpływa na stan i rezerwę | zrobione |
 | A9 | SHOULD | Kontekst w rezerwie: czas od przebudzenia, pora doby (model dwuprocesowy, uproszczony) | `src/wachta/config.py`, `src/wachta/index.py`, `--wake`, `--clock` | rezerwa spada szybciej w nocy i po długim czuwaniu; parametry opisane jako założenia | zrobione |
 
 ## B. Dane i dowody
@@ -52,7 +52,12 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | B2 | SHOULD | Czujny kontra senny na naszych 8 kanałach, zbiór Cui i in. (figshare, 172 MB) | `data/analysis/04-drowsiness-public-dataset.ipynb`, wykres w `docs/img/` | AUC na osobę; porównanie: kalibracja osobista kontra jeden próg dla wszystkich | zrobione: `claude/charming-tesla-jkdhq5` |
 | B3 | COULD | EEG a serce: HRV z EKG w COG-BCI wobec wskaźnika EEG. Zamiennie ds004902 (wyspani kontra po deprywacji snu) | kolejny notebook, wykres w `docs/img/` | jeden wykres i dwa zdania wniosku | zrobione: `claude/charming-tesla-jkdhq5` |
 | B4 | SHOULD | Dopisać zbiory o zmęczeniu z planu do listy zbiorów | `docs/datasety-eeg-zrodla.md` | link, zawartość, rozmiar i licencja każdego zbioru | zrobione: `claude/charming-tesla-jkdhq5` |
-| B5 | SHOULD | COG-BCI, zadanie PVT: czy alfa O1/O2 przy otwartych oczach przewiduje lapsy (RT > 500 ms) w kolejnej minucie | kolejny notebook, wykres w `docs/img/` | jedna liczba na slajd (np. AUC na osobę) i dwa zdania wniosku | do zrobienia |
+| B5 | SHOULD | COG-BCI, zadanie PVT: czy alfa O1/O2 przy otwartych oczach przewiduje lapsy (RT > 500 ms) w kolejnej minucie | kolejny notebook, wykres w `docs/img/` | jedna liczba na slajd (np. AUC na osobę) i dwa zdania wniosku | zrobione: notebook 06, wynik negatywny (AUC 0,52, alfa nie wyprzedza lapsów) |
+| B6 | MUST | Spójność dowodów z wynikami notebooka 06 i sesji T1: slajdy 7–8 w `pitch.md` (uzgodnić z D), zdanie o „wtrąceniach alfy” w `podstawy-naukowe.md` §1 oznaczyć jako niepotwierdzone w naszych danych, `neutral` w `data/recordings/README.md` to rozmowa | `docs/pitch.md`, `docs/podstawy-naukowe.md`, `data/recordings/README.md` | żaden dokument nie twierdzi, że alfa przy otwartych oczach ostrzega przed spadkiem czujności; issues #27, #30 | do zrobienia |
+| B7 | MUST | Reaktywność alfy jako test „marker działa u tej osoby”: na 5 nagraniach (4 z południa + T1) stosunek wyrazistości alfy oczy zamknięte / otwarte, czułość detektora, progi „tak / słabo / nie” i ile sekund zamkniętych oczu wystarcza do kalibracji | notebook w `data/analysis/`, tabela z proponowanymi wartościami | A może wpisać progi do `config.py` (issue #18) | do zrobienia |
+| B8 | SHOULD | Harmonogram prób reakcji (issue #23): symulacja na COG-BCI (PVT) trzech wariantów: stały co X min, po zdarzeniu ostrym, z podprogowej alfy (dziś 11 prób w 15 min na T1). Miara: próby na godzinę kontra odsetek złapanych lapsów | notebook, wykres w `docs/img/` | rekomendowane odstępy dla A (issues #14, #15) | do zrobienia |
+| B9 | SHOULD | Sesja T1 jako kontrola negatywna (zawężenie issue #21): dołożyć T1 do analizy nagrań (zero fałszywych alarmów w 15 min, 0,9% odrzuconych okien wobec 3–15%), opcjonalnie oddech i stres Garmina co sekundę z pliku `.fit` (lokalnie, bez commitowania) | notebook 03 albo nowy | tabela „ciche warunki kontra sala hackathonu”; T2, jeśli powstanie | do zrobienia |
+| B10 | COULD | Serce a EEG na lapsach i 1/RT zamiast mediany RT (issue #22) | notebook 05 | jeden wykres, dwa zdania | do zrobienia |
 
 ## C. Pomiary
 
@@ -83,6 +88,7 @@ Zasady dla treści pitchu: mówimy „zmęczenie i czujność”, nie „stres�
 
 - A1 → A2 i A3 → A4. A4 wymaga laptopa ze sprzętem.
 - A7 → A8 (próba korzysta ze stanu oczu). D5 czeka na liczby z A7 i B5.
+- B7 → A: issue #18 (kalibracja z reaktywnością alfy). B8 → A: issues #14 i #15 (harmonogram prób). B6 przed nagraniem filmu i finalnymi slajdami.
 - D4 czeka na liczby z A2 i B2. Do tego czasu zostaw na slajdzie miejsce, nie wpisuj szacunków.
 - D1 w wersji finalnej czeka na D2.
 - Pozostałe zadania są niezależne i mogą iść równolegle.

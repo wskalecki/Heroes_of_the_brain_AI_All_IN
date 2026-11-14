@@ -77,14 +77,14 @@ przed siebie, aż baner zmieni się z „Kalibracja” na „Możesz pracować�
 | 1:00 | osoba w czepku | na znak narratora **zamyka oczy na 15 s** | „Teraz mikrosen.” |
 | 1:07–1:13 | — | baner: **„Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund (mikrosen). Zjedź na najbliższy parking.”** Czerwony pas na wykresie, kafelek „Oczy: zamknięte” | „Po kilku sekundach system nie tylko alarmuje, ale zmienia plan: kierowca ma zjechać.” |
 | 1:20 | narrator | wskazuje panel przełożonego: „Najwięcej rezerwy ma Rudy” | „Przełożony nie widzi fal mózgowych, tylko gotowość. I od razu wie, kto może przejąć kurs.” |
-| 1:35 | operator | klika **Sprawdź reakcję**. Osoba w czepku **celowo nie reaguje** | „Druga sytuacja, której kamera nie widzi: oczy otwarte, a reakcji brak. Tu ją symulujemy.” |
-| 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz” (drugi spadek w krótkim czasie) | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy.” |
+| 1:30 | — | ok. 12–20 s po otwarciu oczu **system sam prosi o reakcję** („Sprawdzenie po spadku czujności”). Osoba w czepku **celowo nie reaguje** | „Po każdym spadku czujności system sprawdza, czy mózg wrócił. Oczy są już otwarte, a reakcji brak. Tu ją symulujemy.” |
+| 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz: reakcja za wolna albo jej brak” | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy. Stan zostaje, dopóki kolejna próba nie wypadnie w normie.” |
 | 1:55 | operator | przełącza na **Pielęgniarka** | „Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę.” |
 | 2:05 | operator | klika **Rozpocznij przerwę**. Stan „Przerwa trwa”, rezerwa rośnie | „Przerwa naprawdę odnawia rezerwę, a limit jest liczony dla tej osoby, nie dla zegara.” |
-| 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy u 4 z 4 osób, z jednym fałszywym alarmem w 32 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób, a model osobisty rozróżnia stany wyraźnie lepiej niż jeden dla wszystkich. Dlatego liczymy normy dla człowieka, nie dla zegara.” |
+| 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy w 5 z 5 nagrań, z jednym fałszywym alarmem w 48 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób, a model osobisty rozróżnia stany wyraźnie lepiej niż jeden dla wszystkich. Dlatego liczymy normy dla człowieka, nie dla zegara.” |
 
-**Jeśli próba reakcji pojawi się sama** (wskaźnik zaczął rosnąć): osoba w czepku reaguje normalnie, a narrator mówi
-„system sam poprosił o reakcję, bo wskaźnik zaczął rosnąć”. To dobry moment, nie błąd.
+**Kiedy system sam prosi o reakcję:** tylko po spadku czujności (12–20 s po otwarciu oczu) i z harmonogramu co 20 min.
+Rosnący wskaźnik sam w sobie już jej nie wywołuje (issue #14), więc w demo nie pojawi się przypadkowo.
 
 **Jeśli alarm nie przyjdzie po 15 s zamkniętych oczu:** osoba w czepku trzyma oczy zamknięte jeszcze 10 s. U dwóch osób
 w naszych nagraniach alarm przychodził z przerwami. Jeśli dalej nic, przejdźcie na plan B.
@@ -94,14 +94,15 @@ w naszych nagraniach alarm przychodził z przerwami. Jeśli dalej nic, przejdźc
 **Kiedy przełączyć na B:** Board nie widzi czepka, baner przez ponad 20 s pokazuje „Brak wiarygodnego sygnału”
 mimo poprawienia czepka, albo alarm nie przychodzi po 25 s zamkniętych oczu.
 
-**Przebieg B** (komenda B, zmierzony 14.11):
+**Przebieg B** (komenda B, zmierzony 14.11 w nocy po zmianach z issues #11 i #14):
 
 | Od startu serwera | Co się dzieje | Co robi operator |
 |---|---|---|
 | 0–61 s | kalibracja na nagraniu Filipa | narrator: „To nagranie Filipa z dzisiejszego dnia, przetwarzane tym samym kodem co na żywo.” |
 | ok. 61 s | „Możesz pracować” | klika **Nowa zmiana** |
-| ok. 125 s | próba reakcji pojawia się sama | **nie reaguje** (nagrania nie da się zapytać o reakcję) |
-| ok. 130 s | „Przerwa teraz. Oczy zamknięte (mikrosen)”, panel: „Najwięcej rezerwy ma Rudy” | dalej jak w scenariuszu na żywo od 1:20 |
+| ok. 130 s | „Przerwa teraz. Oczy zamknięte (mikrosen)”, panel: „Najwięcej rezerwy ma Rudy” | narrator jak w scenariuszu na żywo od 1:20 |
+| ok. 180 s | Filip otwiera oczy, „stop” znika, stan „Zaplanuj przerwę” | — |
+| ok. 193 s | próba reakcji „Sprawdzenie po spadku czujności” | **nie reaguje**; po 3 s „Przerwa teraz: reakcja za wolna albo jej brak” |
 
 Kalibrację planu B najlepiej zrobić w tle zawczasu: uruchomić komendę B razem z A i przełączyć kartę przeglądarki.
 Wtedy „Nowa zmiana” na B daje zamknięcie oczu Filipa ok. 60 s później.
@@ -119,7 +120,7 @@ Nagrajcie jedno ujęcie na żywo i jedno na planie B, potem wybierzcie lepsze. N
 | 0:15–0:35 | slajd: problem | „Normy mierzą czas pracy, a nie człowieka.” Jedna liczba ze źródłem (z `rynek-*.md`) |
 | 0:35–1:05 | „Nowa zmiana” w nocy, kafelki kontekstu, próba reakcji z szybką odpowiedzią | „Minuta kalibracji EEG, potem system śledzi alfę, mrugnięcia i reakcję. W nocy rezerwa spada szybciej.” |
 | 1:05–1:30 | brak reakcji przy otwartych oczach, rezerwa spada, przełączenie na „Pielęgniarka”, przerwa | „Kamera widzi, czy oczy są otwarte. My sprawdzamy, czy mózg jeszcze reaguje.” |
-| 1:30–1:50 | wykres `trafnosc-na-nagraniach.png`, wykres z danych publicznych | „4 z 4 osób, jeden fałszywy alarm w 32 minutach. W danych publicznych alfa rośnie z sennością u 11 z 11 osób.” |
+| 1:30–1:50 | wykres `trafnosc-na-nagraniach.png`, wykres z danych publicznych | „5 z 5 nagrań, jeden fałszywy alarm w 48 minutach. W danych publicznych alfa rośnie z sennością u 11 z 11 osób.” |
 | 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż, który sprawdzi, czy osobisty limit przewiduje spadki czujności lepiej niż norma czasu.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
 
 ## Co mówimy, a czego nie
@@ -129,7 +130,7 @@ Na podstawie [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 i [`jury-i-kryteri
 | Mówimy | Nie mówimy |
 |---|---|
 | „zmęczenie”, „czujność”, „reakcja” | „stres”, „wypalenie”, „przeciążenie”, „skupienie” |
-| „zamknięte oczy wykryliśmy u 4 z 4 osób” | „wykrywamy senność z trafnością X%” |
+| „zamknięte oczy wykryliśmy w 5 z 5 nagrań (4 osoby)” | „wykrywamy senność z trafnością X%” |
 | „senność przy otwartych oczach pokazują dane publiczne” | że wykryliśmy ją na naszych nagraniach (nikt w nich nie był senny) |
 | „brak reakcji tu symulujemy” | że próba w demo była prawdziwym spadkiem czujności |
 | „HRV i EEG reagują na to samo, ale nie są zamienne” | „zegarek zastąpi EEG” |

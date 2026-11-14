@@ -3,8 +3,8 @@
 For every recording whose annotations contain a ``monotony`` block, the recording
 goes through the same pipeline as the demo (calibration on the ``eyes_open``
 block) and we summarise how the vigilance index behaves during monotonous
-sitting with open eyes: early versus late minutes, windows above the probe
-threshold, lapses and their kind, blink rate. Results are joined with KSS and
+sitting with open eyes: early versus late minutes, reaction probes the system
+would ask for, lapses and their kind, blink rate. Results are joined with KSS and
 PVT-B from ``checkpoints.csv`` and ``pvt.csv``. A Garmin FIT file recorded in
 parallel (chest strap paired with the watch) adds heart rate and, if the file
 contains beat-to-beat intervals, RMSSD per block.
@@ -105,8 +105,6 @@ def analyze_signals(eeg_volts: np.ndarray, blocks: Sequence[Block], cfg: Config 
         "fast_early": None if fast_early is None else round(fast_early, 2),
         "fast_late": None if fast_late is None else round(fast_late, 2),
         "fast_change": None if fast_early is None or fast_late is None else round(fast_late - fast_early, 2),
-        "above_probe_pct": round(100.0 * np.mean([r["fast"] is not None and r["fast"] >= cfg.probe_z for r in inside]), 1)
-        if inside else None,
         "probes": sum(1 for r in inside if r["probe"]),
         "lapses": len(lapses),
         "lapses_eyes_open": lapses.count("eyes_open"),
@@ -227,7 +225,7 @@ def _pl(value: Any, digits: int = 1, signed: bool = False) -> str:
 
 def format_table(rows: Sequence[dict[str, Any]]) -> str:
     head = ("| Osoba | Punkt | KSS | PVT: lapsy | PVT: mediana RT | Alfa (z) min. 1–2 | Alfa (z) ostatnie 2 min | Zmiana | "
-            "Okna nad progiem próby | Spadki (oczy otwarte / zamknięte) | Mrugnięcia/min początek → koniec | "
+            "Próby reakcji | Spadki (oczy otwarte / zamknięte) | Mrugnięcia/min początek → koniec | "
             "Tętno spoczynek → monotonia | RMSSD spoczynek → monotonia | Oczy zamknięte wykryte |")
     lines = [head, "|" + "---|" * (head.count("|") - 1)]
     for r in rows:
@@ -236,7 +234,7 @@ def format_table(rows: Sequence[dict[str, Any]]) -> str:
         lines.append(
             f"| {r['person']} | {r['checkpoint']} | {_pl(r.get('kss'))} | {_pl(r.get('pvt_lapses'))} | "
             f"{_pl(r.get('median_rt_ms'), 0)} ms | {_pl(r.get('fast_early'), 2)} | {_pl(r.get('fast_late'), 2)} | "
-            f"{_pl(r.get('fast_change'), 2, signed=True)} | {_pl(r.get('above_probe_pct'))}% | "
+            f"{_pl(r.get('fast_change'), 2, signed=True)} | {_pl(r.get('probes'))} | "
             f"{r.get('lapses_eyes_open', '—')} / {r.get('lapses_eyes_closed', '—')} | "
             f"{_pl(r.get('blinks_early'), 0)} → {_pl(r.get('blinks_late'), 0)} | "
             f"{_pl(rest.get('hr'), 0)} → {_pl(mono.get('hr'), 0)} | {_pl(rest.get('rmssd'), 0)} → {_pl(mono.get('rmssd'), 0)} | "

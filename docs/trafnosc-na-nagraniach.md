@@ -1,6 +1,7 @@
 # Trafność pipeline'u na nagraniach zespołu
 
-Stan na 14.11.2026. To wynik skryptu `experiments/validate-on-recordings.py` na czterech nagraniach z `data/recordings/`.
+Stan na 14.11.2026, noc. To wynik skryptu `experiments/validate-on-recordings.py` na pięciu nagraniach z `data/recordings/`
+(cztery z południa i sesja monotonii Wojtka `wojtek-t1`).
 
 ## Co sprawdzamy
 
@@ -16,9 +17,10 @@ Stan na 14.11.2026. To wynik skryptu `experiments/validate-on-recordings.py` na 
 | adi | 10,1% | tak | 12 s | 69% | 0 w 7,0 min | 0,0% | 0,93 |
 | filip | 3,2% | tak | 8 s | 90% | 1 w 12,6 min | 0,8% | 0,97 |
 | rudy | 15,3% | tak | 7 s | 92% | 0 w 5,8 min | 0,0% | 0,99 |
+| wojtek-t1 | 0,7% | tak | 9 s | 71% | 0 w 16,0 min | 0,0% | 0,88 |
 | wojtek | 10,8% | tak | 13 s | 74% | 0 w 6,3 min | 1,3% | 0,89 |
 
-Razem: wykryto 4 z 4 bloków, 1 fałszywy alarm w 32 min poza blokiem (po kalibracji).
+Razem: wykryto 5 z 5 bloków, 1 fałszywy alarm w 48 min poza blokiem (po kalibracji).
 
 ![Wskaźnik czujności w czasie dla czterech nagrań](img/trafnosc-na-nagraniach.png)
 
@@ -41,7 +43,7 @@ Kolumny:
   Prawdziwa senność daje słabsze zmiany. To uzupełni wykres z danych publicznych (zadanie B2).
 - **Wskaźnik wolny i rezerwa nie są tu sprawdzane.** Ich parametry są założeniami.
 
-## Stan oczu i próby reakcji (zadania A7, A8)
+## Stan oczu, zdarzenia i próby reakcji (zadania A7, A8, issues #11, #14)
 
 Kamera w aucie sprawdza, czy oczy są zamknięte. Żeby odróżnić to od senności przy otwartych oczach, pipeline liczy
 mrugnięcia na F3/F4 (przy referencji Fp1 mrugnięcie to krótkie, duże wychylenie). Spadek czujności bez mrugnięć jest
@@ -57,12 +59,13 @@ Poprawione 14.11 wieczorem: wcześniejsza wersja liczyła część mrugnięć po
 | rudy | 12 | 0 | 6 | 25 |
 | wojtek | 11 | 10 | 1 | 0 |
 
-| Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Próba reakcji przed alarmem w bloku | Próby reakcji poza blokiem |
-|---|---|---|---|
-| adi | 100% okien | tak | 0,0 na 10 min |
-| filip | 100% okien | tak | 3,2 na 10 min |
-| rudy | 100% okien | tak | 1,7 na 10 min |
-| wojtek | 43% okien | tak | 8,0 na 10 min |
+| Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Zdarzenia w bloku | „Stop” trwa po bloku | Próba reakcji po bloku | Próby bez wcześniejszego zdarzenia |
+|---|---|---|---|---|---|
+| adi | 100% okien | 1 | 0 s | po 12 s | 0 |
+| filip | 100% okien | 1 | 5 s | po 18 s | 0 |
+| rudy | 100% okien | 1 | 7 s | po 20 s | 0 |
+| wojtek-t1 | 90% okien | 1 | 0 s | po 13 s | 0 |
+| wojtek | 43% okien | 1 | 6 s | po 19 s | 0 |
 
 Jak to czytać:
 
@@ -73,10 +76,14 @@ Jak to czytać:
   do oceny stanu oczu. Liczą się tylko razem ze wzrostem alfy.
 - **Senności przy otwartych oczach nie da się tu sprawdzić**, bo nikt w tych nagraniach nie był senny. Dowody na nią pochodzą
   z danych publicznych (notebooki 04 i 05) i literatury (`podstawy-naukowe.md`). Własne dane mają dać nocne punkty pomiarowe (C4).
-- **Próba reakcji pojawia się przed alarmem u wszystkich czterech osób**, czyli gdy wskaźnik dopiero rośnie. Ceną są próby poza
-  blokiem: od 0 do 8 na 10 minut, najwięcej przy najbardziej zaszumionym sygnale (Wojtek). Wyższy próg próby (1,8 lub 2,0
-  zamiast 1,5) zmniejsza ich liczbę, ale u Wojtka próba przestaje wyprzedzać alarm. Ustawienie do dostrojenia na większej
-  liczbie nagrań.
+- **Jedno zamknięcie oczu to jedno zdarzenie** (issue #11): krótkie spadki alfy w środku bloku (6–11 s) nie dzielą go już na dwa.
+  „Stop” trwa najwyżej 7 s po otwarciu oczu, potem stan wraca do „uwaga”.
+- **Próba reakcji pojawia się po każdym bloku zamkniętych oczu, 12–20 s po otwarciu oczu, i nigdy bez wcześniejszego
+  zdarzenia** (issue #14). Wcześniejsza wersja wywoływała próbę z podprogowego wzrostu alfy: do 8 prób na 10 minut poza blokiem
+  i 11 w 15 minut monotonii Wojtka. Notebook 06 pokazał, że taki sygnał nie wyprzedza lapsów (AUC 0,52), więc go usunęliśmy.
+  Do tego dochodzi próba z harmonogramu co 20 min (założenie, do dostrojenia w B8).
+- Próba jest zaliczona względem osobistej normy: po trzech zaliczonych próbach progiem jest 1,5 × własna mediana czasu reakcji,
+  wcześniej 355 ms (PVT-B).
 - Czasu reakcji nie da się sprawdzić na nagraniach: próba wymaga człowieka przed ekranem.
 
 ## Jak odtworzyć

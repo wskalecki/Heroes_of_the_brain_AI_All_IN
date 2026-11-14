@@ -39,7 +39,7 @@ CLIENT_FIELDS = (
     "lapse_count", "calibration", "minutes_to_warn", "minutes_to_stop", "work_min",
     "drain_per_hour", "bad", "on_break", "lapse_kind", "lapses_eyes_closed", "lapses_eyes_open",
     "eye_state", "blinks_per_min", "probes_done", "probe_lapses", "last_rt_ms", "context_factor",
-    "clock_h", "awake_h",
+    "clock_h", "awake_h", "probe_threshold_ms", "probe_failed_recently",
 )
 
 
@@ -152,7 +152,9 @@ async def _run_worker(worker: Worker, hub: Hub) -> None:
                     worker.drop_stale_probe()
                     if result["probe"] and worker.primary and hub.clients and worker.pending_probe is None:
                         await hub.broadcast({"type": "probe", "worker": worker.id, "id": worker.new_probe(),
-                                             "timeout_ms": worker.cfg.probe_timeout_ms})
+                                             "timeout_ms": worker.cfg.probe_timeout_ms,
+                                             "threshold_ms": result["probe_threshold_ms"],
+                                             "reason": result["probe_reason"]})
             return
         except asyncio.CancelledError:
             raise
@@ -194,6 +196,7 @@ def create_app(workers: list[Worker], cfg: Config) -> FastAPI:
                 "drain_per_hour": cfg.drain_per_hour,
                 "probe_lapse_ms": cfg.probe_lapse_ms,
                 "probe_timeout_ms": cfg.probe_timeout_ms,
+                "probe_interval_s": cfg.probe_interval_s,
             },
             "workers": [worker.describe() for worker in workers],
         }
