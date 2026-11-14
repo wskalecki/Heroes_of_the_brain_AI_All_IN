@@ -108,7 +108,8 @@ class Worker:
         elif action == "recalibrate":
             self.pipeline.recalibrate()
         elif action == "reset":
-            self.pipeline = Pipeline(self.cfg)
+            # New shift, same person: keep the calibration and blink threshold.
+            self.pipeline.new_shift()
             self.history.clear()
             self.trace.clear()
 
@@ -218,9 +219,13 @@ def create_app(workers: list[Worker], cfg: Config) -> FastAPI:
                 if message.get("action") == "probe_response":
                     worker.probe_response(message.get("id"), message.get("rt_ms"))
                     continue
-                worker.handle(str(message.get("action")))
                 if message.get("action") == "reset":
-                    await websocket.send_json(hello())
+                    # "Nowa zmiana" starts a new shift for the whole team at once, calibrations kept.
+                    for member in workers:
+                        member.handle("reset")
+                    await hub.broadcast(hello())
+                    continue
+                worker.handle(str(message.get("action")))
         except WebSocketDisconnect:
             pass
         finally:

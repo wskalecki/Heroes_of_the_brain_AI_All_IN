@@ -50,6 +50,10 @@ class Pipeline:
         self.blinks = BlinkDetector(self.cfg)
         self.baseline = Baseline(Z_FEATURES, self.cfg.cal_windows)
 
+    def new_shift(self) -> None:
+        """Start a new shift for the same, already calibrated person: full reserve, clock back to start."""
+        self.index = VigilanceIndex(self.cfg)
+
     def recalibrate(self) -> None:
         """Start a new personal baseline from the next clean windows."""
         self.baseline = Baseline(Z_FEATURES, self.cfg.cal_windows)

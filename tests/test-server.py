@@ -173,3 +173,22 @@ def test_probe_reaches_the_page_and_the_answer_is_recorded():
         assert message["data"]["probe_lapses"] == 1 and message["data"]["last_rt_ms"] == 512
         # A second answer to the same probe is ignored.
         assert not worker.probe_response(probe["id"], 100)
+
+
+def test_new_shift_resets_the_whole_team():
+    cfg = Config()
+    workers = [Worker(f"w{i}", ReplaySource(_noise(80, seed=i), SFREQ, name=f"T{i}", speed=200.0), cfg) for i in range(2)]
+    app = create_app(workers, cfg)
+    with TestClient(app) as client, client.websocket_connect("/ws") as ws:
+        ws.receive_json()
+        for _ in range(300):
+            ws.receive_json()
+            if all(w.history and w.history[-1]["state"] != "calibrating" for w in workers):
+                break
+        before = [w.pipeline.index for w in workers]
+        ws.send_json({"action": "reset", "worker": "w0"})
+        message = ws.receive_json()
+        while message["type"] != "hello":
+            message = ws.receive_json()
+        assert all(w.pipeline.index is not b for w, b in zip(workers, before))
+        assert all(w.pipeline.baseline.ready for w in workers)
