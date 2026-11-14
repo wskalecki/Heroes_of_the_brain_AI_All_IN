@@ -64,6 +64,15 @@ def evaluate(name: str, path: Path, cfg: Config) -> dict:
     false_alarms = [t for t in starts if not target.onset <= t <= target.end + cfg.win_s]
     outside_minutes = len(outside) * cfg.step_s / 60.0
 
+    # Eye state (A7) and reaction probes (A8).
+    lapse_in_block = [r for r in inside if r["lapse"]]
+    eyes_closed_share = (
+        100.0 * np.mean([r["lapse_kind"] == "eyes_closed" for r in lapse_in_block]) if lapse_in_block else float("nan")
+    )
+    probe_times = [r["t"] for r in calibrated if r["probe"]]
+    probes_outside = [t for t in probe_times if not target.onset - 10 <= t <= target.end]
+    probes_before_lapse = [t for t in probe_times if target.onset <= t <= (hits[0] if hits else target.end)]
+
     return {
         "name": name,
         "results": results,
@@ -77,6 +86,9 @@ def evaluate(name: str, path: Path, cfg: Config) -> dict:
         "false_alarms_per_10min": len(false_alarms) / outside_minutes * 10.0 if outside_minutes else float("nan"),
         "false_time_pct": 100.0 * np.mean([r["lapse"] for r in outside]) if outside else float("nan"),
         "outside_minutes": outside_minutes,
+        "eyes_closed_share": eyes_closed_share,
+        "probes_outside_per_10min": len(probes_outside) / outside_minutes * 10.0 if outside_minutes else float("nan"),
+        "probe_before_lapse": bool(probes_before_lapse),
         "auc": auc(
             [r["fast"] for r in inside if r["fast"] is not None],
             [r["fast"] for r in outside if r["fast"] is not None],
@@ -110,6 +122,13 @@ def print_table(rows: list[dict]) -> None:
         alarms_text = f"{alarms} fałszywych alarmów"
     print(f"Razem: wykryto {detected} z {len(rows)} bloków, {alarms_text} "
           f"w {pl(minutes, 0)} min poza blokiem (po kalibracji).")
+    print()
+    print("| Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Próba reakcji przed alarmem w bloku | "
+          "Próby reakcji poza blokiem |")
+    print("|---|---|---|---|")
+    for row in rows:
+        print(f"| {row['name']} | {pl(row['eyes_closed_share'], 0)}% okien | "
+              f"{'tak' if row['probe_before_lapse'] else 'nie'} | {pl(row['probes_outside_per_10min'])} na 10 min |")
 
 
 def save_figure(rows: list[dict], cfg: Config, path: Path) -> None:

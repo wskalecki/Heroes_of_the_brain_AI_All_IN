@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wachta</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="brand-name">Wachta</span>
+      <span class="brand-tag">zmęczenie mierzone na człowieku, nie na zegarze</span>
+    </div>
+    <div class="top-controls">
+      <div class="segmented" role="group" aria-label="Scenariusz">
+        <button type="button" data-scenario="driver" aria-pressed="true">Kierowca</button>
+        <button type="button" data-scenario="nurse" aria-pressed="false">Pielęgniarka</button>
+      </div>
+      <span id="source-badge" class="badge" data-kind="off">łączenie</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card worker" aria-labelledby="worker-title">
+      <h2 id="worker-title" class="card-title">Pracownik: <span id="worker-name">—</span></h2>
+
+      <div id="state" class="state" data-tone="neutral" role="status" aria-live="polite">
+        <span id="state-icon" class="state-icon" aria-hidden="true"></span>
+        <div>
+          <div id="state-label" class="state-label">Łączenie z serwerem</div>
+          <div id="state-advice" class="state-advice"></div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-label">Rezerwa czujności</div>
+        <div class="hero-value"><span id="reserve-value">—</span><span class="hero-unit">%</span></div>
+        <div id="reserve-meter" class="meter" data-tone="good" role="meter" aria-label="Rezerwa czujności"
+             aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="reserve-fill" class="meter-fill"></div>
+          <span class="meter-mark" id="mark-stop"></span>
+          <span class="meter-mark" id="mark-warn"></span>
+        </div>
+        <p id="meter-legend" class="meter-legend"></p>
+      </div>
+
+      <dl class="tiles">
+        <div class="tile"><dt>Czas pracy</dt><dd id="tile-work">—</dd><p class="tile-sub" id="sub-work"></p></div>
+        <div class="tile"><dt>Tempo zużycia</dt><dd id="tile-drain">—</dd><p class="tile-sub" id="sub-drain"></p></div>
+        <div class="tile"><dt>Oczy</dt><dd id="tile-eyes">—</dd><p class="tile-sub" id="sub-eyes"></p></div>
+        <div class="tile"><dt>Spadki czujności</dt><dd id="tile-lapses">—</dd><p class="tile-sub" id="sub-lapses"></p></div>
+        <div class="tile"><dt>Ostatnia reakcja</dt><dd id="tile-rt">—</dd><p class="tile-sub" id="sub-rt"></p></div>
+        <div class="tile"><dt>Jakość sygnału</dt><dd id="tile-quality">—</dd><p class="tile-sub" id="sub-quality"></p></div>
+      </dl>
+
+      <div class="actions">
+        <button type="button" id="btn-break" class="button">Rozpocznij przerwę</button>
+        <button type="button" id="btn-probe" class="button button-quiet">Sprawdź reakcję</button>
+        <button type="button" id="btn-calibrate" class="button button-quiet">Kalibruj od nowa</button>
+        <button type="button" id="btn-reset" class="button button-quiet">Nowa zmiana</button>
+      </div>
+    </section>
+
+    <section class="charts">
+      <figure class="card chart" id="chart-fast">
+        <figcaption>
+          <div>
+            <h2 class="card-title">Wskaźnik czujności, ostatnie 3 minuty</h2>
+            <p class="card-sub">Alfa z tyłu głowy względem własnej kalibracji. Powyżej progu przez 3 s: spadek czujności.</p>
+          </div>
+          <button type="button" class="link" data-table-toggle aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="plot" tabindex="0" aria-label="Wykres wskaźnika czujności. Strzałki w lewo i prawo pokazują wartości."></div>
+        <div class="table-view" hidden></div>
+      </figure>
+
+      <figure class="card chart" id="chart-reserve">
+        <figcaption>
+          <div>
+            <h2 class="card-title">Rezerwa czujności w czasie zmiany</h2>
+            <p class="card-sub" id="reserve-sub">Ubywa z czasem pracy, szybciej przy narastającym zmęczeniu i po każdym spadku czujności.</p>
+          </div>
+          <button type="button" class="link" data-table-toggle aria-pressed="false">Tabela</button>
+        </figcaption>
+        <div class="plot" tabindex="0" aria-label="Wykres rezerwy czujności. Strzałki w lewo i prawo pokazują wartości."></div>
+        <div class="table-view" hidden></div>
+      </figure>
+    </section>
+
+    <section class="card team" aria-labelledby="team-title">
+      <h2 id="team-title" class="card-title">Panel przełożonego</h2>
+      <p class="card-sub">Przełożony widzi tylko gotowość do pracy. Bez surowego sygnału i bez wskaźników.</p>
+      <ul id="team-list" class="team-list"></ul>
+      <p id="team-advice" class="team-advice" hidden></p>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Surowy sygnał EEG nie opuszcza tego komputera.</span>
+    <span id="time-note"></span>
+  </footer>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+  <div id="probe" class="probe" hidden role="alertdialog" aria-labelledby="probe-title" aria-describedby="probe-text">
+    <button type="button" id="probe-target" class="probe-target">
+      <span id="probe-title" class="probe-title">Reakcja!</span>
+      <span id="probe-text" class="probe-text">Naciśnij spację albo kliknij</span>
+    </button>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
