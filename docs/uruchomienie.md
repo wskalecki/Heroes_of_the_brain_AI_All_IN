@@ -76,7 +76,9 @@ Na żywo z BrainAccess Board (Board uruchomiony, czepek połączony, `pip instal
 python -m wachta.server --source board --name Wojtek --team rudy:0 adi:60
 ```
 
-Kalibracja trwa ok. 60 s spokojnego patrzenia przed siebie. Przyciski na stronie: przerwa, ponowna kalibracja, nowa zmiana.
+Kalibracja trwa ok. 60 s spokojnego patrzenia przed siebie. Przyciski na stronie: przerwa, próba reakcji, ponowna kalibracja,
+nowa zmiana. „Nowa zmiana” zaczyna zmianę od nowa dla całego zespołu naraz (rezerwa 100%, zegar od `--clock`), ale zachowuje
+kalibrację, więc można skalibrować osobę przed demo. Przebieg demo: [`scenariusz-demo.md`](scenariusz-demo.md).
 
 Co widać na stronie poza stanem i rezerwą:
 
