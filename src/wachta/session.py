@@ -489,8 +489,22 @@ def run_session(
         candidates = find_candidate_recordings(
             recordings_dir, person, checkpoint, started_epoch=started_epoch
         )
-        default_rec = str(candidates[0]) if candidates else ""
-        hint = f" [domyślnie: {candidates[0].name}]" if candidates else ""
+        # Only suggest a file that belongs to this session (task name or written after the start);
+        # otherwise Enter would attach the annotations to an older recording of the same person.
+        token = f"{person.lower()}-{checkpoint.lower()}"
+        strong = [
+            c for c in candidates
+            if token in c.name.lower()
+            or (started_epoch is not None and c.stat().st_mtime >= started_epoch - 5.0)
+        ]
+        if not strong:
+            out.write(
+                f"\nNie widzę nagrania z zadaniem '{token}' w {recordings_dir}. "
+                "Skopiuj plik z BrainAccess Board do tego folderu i wpisz jego ścieżkę "
+                "(Enter = bez nagrania).\n"
+            )
+        default_rec = str(strong[0]) if strong else ""
+        hint = f" [domyślnie: {strong[0].name}]" if strong else ""
         entered = input_fn(
             f"Ścieżka do pliku .fif{hint} (Enter = domyślny / brak): "
         ).strip()
@@ -503,9 +517,17 @@ def run_session(
     if args.annotations_out:
         annotations_written = write_annotations(args.annotations_out, steps)
     elif recording_path is not None:
-        annotations_written = write_annotations(
-            annotations_path_for(recording_path), steps
-        )
+        target = annotations_path_for(recording_path)
+        overwrite = True
+        if target.exists():
+            answer = input_fn(
+                f"Plik adnotacji {target.name} już istnieje. Nadpisać? [t/N]: "
+            ).strip().lower()
+            overwrite = answer in ("t", "tak", "y", "yes")
+            if not overwrite:
+                out.write("Adnotacje nie zostały zapisane (istniejący plik bez zmian).\n")
+        if overwrite:
+            annotations_written = write_annotations(target, steps)
 
     notes = args.notes
     if notes is None and not args.no_prompt_notes:

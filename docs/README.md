@@ -13,6 +13,7 @@ Pozostałe to materiały pomocnicze: wsparcie do dyskusji, a nie decyzje.
 | [`scenariusz-demo.md`](scenariusz-demo.md) | Scenariusz demo na scenie i filmu, komendy, plan awaryjny, co mówimy |
 | [`pitch.md`](pitch.md) | Treść 10 slajdów: personalizacja norm zmęczenia, dowody, zweryfikowane kontra założone |
 | [`protokol-nocny.md`](protokol-nocny.md) | Nocny punkt pomiarowy: monotonia, test reakcji, pasek HRM, analiza dzień kontra noc |
+| [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) | Wyniki pierwszej sesji monotonii (Wojtek, T1): brak senności, zero fałszywych alarmów |
 | [`heroes-of-the-brain-pomysly.md`](heroes-of-the-brain-pomysly.md) | Pomysł „Wachta”, możliwości sprzętu, plany zapasowe i lista 100 pomysłów |
 | [`datasety-eeg-zrodla.md`](datasety-eeg-zrodla.md) | Otwarte zbiory EEG do sprawdzenia pipeline'u (senność, przeciążenie), z linkami |
 | [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md) | Konkurencja: firmy od wearables EEG i neuroadaptacji |
