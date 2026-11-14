@@ -95,3 +95,49 @@ def test_state_endpoint_reports_the_latest_result():
         state = client.get("/api/state").json()
         assert state["w0"]["name"] == "Test"
         assert state["w0"]["latest"]["t"] > 0
+
+
+class _FakeBoardDB:
+    """Mimics brainaccess_board.ReadDB: the handle is closed after construction."""
+
+    def __init__(self):
+        self.open = False
+        self.calls = 0
+
+    def _connect(self):
+        self.open = True
+
+    def _close(self):
+        self.open = False
+
+    def _list_devices(self, only_lsl=False):
+        if not self.open:
+            return {"data": {}, "markers": {}}
+        channels = ["O2", "O1", "P4", "P3", "C4", "C3", "F4", "F3", "Accel_x"]
+        return {"data": {"dev-1": {"channels": channels, "channels_unit": ["uV"] * 8 + ["g"], "srate": 250.0}},
+                "markers": {}}
+
+    def get_data_since(self, device, last_timestamp=0.0):
+        self.calls += 1
+        if self.calls == 1:
+            return {"data": np.zeros((9, 10)), "last_timestamp": 1.0}
+        data = np.arange(9 * 5, dtype=float).reshape(9, 5)
+        return {"data": data, "last_timestamp": float(self.calls)}
+
+
+def test_board_source_reopens_the_database_and_reorders_channels(monkeypatch):
+    from wachta.sources import BoardSource
+
+    fake = _FakeBoardDB()
+    monkeypatch.setattr(BoardSource, "_connect", staticmethod(lambda: fake))
+    source = BoardSource(poll_s=0.0)
+
+    async def first():
+        async for chunk in source.chunks():
+            return chunk
+
+    chunk = asyncio.run(first())
+    assert chunk.shape == (8, 5)
+    # F3 is row 7 in the Board order; microvolts are converted to volts.
+    assert np.allclose(chunk[0], np.arange(35, 40) * 1e-6)
+    assert not fake.open

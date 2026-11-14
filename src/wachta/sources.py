@@ -91,7 +91,12 @@ class BoardSource:
     @staticmethod
     def _pick_device(database) -> tuple[str, list[int], np.ndarray, float]:
         """Find the device that has all eight channels; return its id, row order and unit scale."""
-        devices = database._list_devices()["data"]
+        # ReadDB closes its handle right after opening, so reopen it for the device listing.
+        database._connect()
+        try:
+            devices = database._list_devices()["data"]
+        finally:
+            database._close()
         seen = {}
         for device, info in devices.items():
             names = [str(ch).strip() for ch in info["channels"]]
