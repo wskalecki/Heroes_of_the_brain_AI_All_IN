@@ -1,6 +1,5 @@
 onset,duration,description
-0.000,300.000,neutral
-300.000,63.000,eyes_closed
-363.000,62.000,reading
-430.000,54.000,math
-484.000,25.496,control
+0.000,60.000,eyes_open
+60.000,60.000,eyes_closed
+120.000,60.000,math
+180.000,900.000,monotony

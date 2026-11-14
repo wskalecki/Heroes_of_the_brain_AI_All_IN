@@ -1,0 +1,2 @@
+person,checkpoint,started_at,kss,body_battery,stress,heart_rate,hrv_ms,recording_file,notes
+wojtek,T1,2026-11-14T21:16:33+01:00,5,5,83,91,,subj-1_ses-S001_task-wojtek_test_run-001_20261114_123243_eeg_BA_MINI_073_d6c924bc-11bd-4a36-a11d-a233cf05d4c6-raw.fif,
