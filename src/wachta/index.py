@@ -255,7 +255,10 @@ class VigilanceIndex:
             "lapse_count": self.lapse_count,
             "lapses_eyes_closed": self.lapse_kinds["eyes_closed"],
             "lapses_eyes_open": self.lapse_kinds["eyes_open"],
-            "eye_state": self._eye_state(t, last_blink, blinks_ready),
+            # During a lapse the eye state follows the lapse kind, so the banner and the tile agree.
+            "eye_state": {"eyes_closed": "closed", "eyes_open": "open"}.get(
+                self.lapse_kind, self._eye_state(t, last_blink, blinks_ready)
+            ),
             "probe": probe,
             "probes_done": self.probes_done,
             "probe_lapses": self.probe_lapses,
