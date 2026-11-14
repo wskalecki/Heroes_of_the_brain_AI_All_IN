@@ -91,3 +91,24 @@ def test_table_renders_without_heart_data():
            "eyes_closed_detected": True}
     table = format_table([row])
     assert "| wojtek | N1 | 7 | 3 | 312 ms | 0,10 | 1,40 | +1,30 | 12,0% | 1 / 0 | 14 → 9 | — → — | — → — | tak |" in table
+
+
+def test_minute_by_minute_course_of_monotony(tmp_path):
+    from wachta.night import save_minutes_figure
+
+    eeg, blocks = _night_recording()
+    out = analyze_signals(eeg, blocks)
+    minutes = out["minutes"]
+    assert [m["minute"] for m in minutes] == list(range(1, 11))
+    assert minutes[-1]["fast"] > minutes[0]["fast"] + 2
+    assert any(m["lapse"] for m in minutes[-3:]) and not minutes[0]["lapse"]
+    rows = [{"person": "wojtek", "checkpoint": "T1", **out, "hr_minutes": [60 + k for k in range(10)]}]
+    assert save_minutes_figure(rows, tmp_path / "m.png").stat().st_size > 10_000
+
+
+def test_heart_per_minute():
+    from wachta.night import heart_per_minute
+
+    start = datetime(2026, 11, 15, 1, 0, tzinfo=timezone.utc)
+    hr = [(start + timedelta(seconds=s), 60.0 + s // 60) for s in range(180)]
+    assert heart_per_minute(start, Block(60, 120, "monotony"), hr) == [61.0, 62.0]

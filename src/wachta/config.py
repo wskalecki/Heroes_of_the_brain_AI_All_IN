@@ -51,7 +51,8 @@ class Config:
     blink_min_uv: float = 20.0
     blink_min_s: float = 0.04
     blink_max_s: float = 0.5
-    blink_refractory_s: float = 0.3
+    # After the 1 Hz high-pass a blink is biphasic; 0.5 s keeps both lobes as one blink.
+    blink_refractory_s: float = 0.5
     eyes_closed_after_s: float = 10.0  # no blink for this long: eyes probably closed
     lapse_blink_lookback_s: float = 2.0  # a blink this soon before the lapse or later: eyes open
     lapse_kind_settle_s: float = 5.0     # count the lapse by the kind it has after this long
