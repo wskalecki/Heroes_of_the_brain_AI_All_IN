@@ -61,7 +61,7 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | C1 | SHOULD | Punkt pomiarowy T0 czterech osób wg protokołu z planu | `.fif` z adnotacjami w `data/recordings/`, wiersze w `checkpoints.csv` | 4 osoby, każda z KSS | do zrobienia |
 | C2 | SHOULD | Punkty T1 (w połowie) i T2 (przed zamrożeniem kodu) | jak wyżej | po 4 osoby na punkt | do zrobienia |
 | C3 | MUST | Operator demo: dwie próby, jedna na żywo i jedna w trybie odtwarzania | uwagi w `docs/scenariusz-demo.md` | próby odbyte, lista problemów przekazana do A i D | do zrobienia |
-| C4 | SHOULD | Nocny punkt pomiarowy z testem PVT-B (`wachta.pvt`) zaraz po nagraniu, żeby mieć własne dane senności przy otwartych oczach | jak C1, plus wiersze w `pvt.csv` | min. 2 osoby po północy | do zrobienia |
+| C4 | SHOULD | Nocny punkt pomiarowy z testem PVT-B (`wachta.pvt`) zaraz po nagraniu, żeby mieć własne dane senności przy otwartych oczach | jak C1, plus wiersze w `pvt.csv` | min. 2 osoby po północy | protokół i analiza gotowe (`protokol-nocny.md`, `experiments/analyze-night-checkpoint.py`), czeka na pomiar |
 
 C1 nie czeka na A5. Kroki mają stałą długość, więc wystarczy stoper uruchomiony razem z nagraniem,
 a adnotacje wpisuje się z tabeli w sekcji „Kontrakty”.
