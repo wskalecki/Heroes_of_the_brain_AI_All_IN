@@ -39,7 +39,7 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | A3 | MUST | Odtwarzanie nagrania, serwer i dashboard | `src/wachta/sources.py`, `src/wachta/server.py`, `src/wachta/web/` | dashboard działa w trybie odtwarzania i zmienia stan w bloku `eyes_closed` | w toku: `claude/sleepy-lamport-v2kzl7` |
 | A4 | MUST | Tryb na żywo z BrainAccess Board | źródło `board` w `sources.py`, `docs/uruchomienie.md` | na laptopie ze sprzętem płyną próbki, a zamknięcie oczu zmienia stan | do zrobienia (wymaga sprzętu, uruchamia Wojtek) |
 | A5 | SHOULD | Narzędzie punktu pomiarowego: odlicza kroki, zapisuje znaczniki i KSS | `src/wachta/session.py` | zapisuje adnotacje i wiersz w `checkpoints.csv` w formatach z sekcji „Kontrakty” | zrobione: `feat/checkpoint-session` |
-| A6 | COULD | Prognoza czasu do progu, test czasu reakcji w przeglądarce, krzywe z Garmin Connect | `src/wachta/pvt.py`, `src/wachta/pvt.html` (`minutes_to_warn` / `minutes_to_stop` w `src/wachta/index.py`) | test PVT-B działa w przeglądarce i zapisuje wynik do `data/recordings/pvt.csv` | zrobione: `feat/pvt-test` (PVT-B + prognoza w `index.py`; odczyty Garmin w `checkpoints.csv`) |
+| A6 | COULD | Prognoza czasu do progu, test czasu reakcji w przeglądarce, krzywe z Garmin Connect | `src/wachta/pvt.py`, `src/wachta/pvt.html`, `src/wachta/summary.py`, `experiments/summarize-checkpoints.py` (`minutes_to_warn` / `minutes_to_stop` w `src/wachta/index.py`) | test PVT-B działa w przeglądarce i zapisuje wynik do `data/recordings/pvt.csv`, podsumowanie łączy KSS, PVT-B i odczyty Garmin | zrobione: `feat/pvt-test`, `feat/checkpoints-summary` |
 
 ## B. Dane i dowody
 
