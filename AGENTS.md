@@ -1,0 +1,56 @@
+# AGENTS.md — zasady pracy w tym repozytorium
+
+Ten plik czytają zarówno ludzie, jak i agenci AI (Claude Code, Copilot itp.).
+Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
+
+## Kontekst projektu
+
+- Hackathon **Heroes of the Brain 2026**, kategoria Adaptive Systems.
+- Sprzęt: BrainAccess MINI, 8 suchych elektrod (F3, F4, C3, C4, P3, P4, O1, O2), 250 Hz, dane w MNE.
+- **Pomysł na projekt nie jest jeszcze potwierdzony.** Folder `pomysly-adi/` to inspiracja,
+  nie specyfikacja. Nie buduj niczego na jego podstawie bez ustalenia z zespołem.
+
+## Język
+
+- Dokumentacja, notatki i komunikacja w repo: **po polsku**.
+- Kod, nazwy zmiennych, funkcji, plików i commity: **po angielsku** (łatwiej o spójność i narzędzia).
+
+## Struktura i porządek
+
+- Nazwy plików i folderów: małe litery, myślniki zamiast spacji, bez polskich znaków
+  (`pomysly-adi/`, `signal-processing.py`).
+- Nowe pomysły i notatki osobiste: każdy ma swój folder `pomysly-<imie>/`.
+- Kod projektu (gdy powstanie): `src/`, eksperymenty i prototypy: `experiments/`,
+  dokumentacja: `docs/`. Nie twórz tych folderów "na zapas" — dopiero gdy jest co do nich włożyć.
+- Jeden plik = jedna odpowiedzialność. Nie trzymamy w repo plików "roboczych kopii"
+  typu `final_v2_poprawione.md`.
+
+## Git
+
+- Nie commituj bezpośrednio na `main`. Pracuj na gałęzi i otwórz PR (szczegóły: `CONTRIBUTING.md`).
+- Commity małe i opisowe, w trybie rozkazującym po angielsku: `Add alpha band power calculation`.
+- Nie commituj: plików generowanych, cache'ów, `venv/`, notebooków z wielkimi outputami
+  (wyczyść outputy przed commitem), dużych plików binarnych.
+
+## Dane i bezpieczeństwo — zasady twarde
+
+1. **Surowe nagrania EEG prawdziwych osób nie trafiają do repo.** To dane biometryczne.
+   Do testów używamy danych syntetycznych albo krótkich, anonimowych próbek za zgodą zespołu.
+2. **Żadnych sekretów w repo**: kluczy API, tokenów, haseł, adresów prywatnych.
+   Konfiguracja przez zmienne środowiskowe i plik `.env` (który jest w `.gitignore`).
+3. Dane uczestników demo (imiona, nagrania) — tylko za ich wyraźną zgodą.
+
+## Zasady dla agentów AI
+
+- Zanim coś zmienisz, przeczytaj `README.md` i ten plik.
+- Nie refaktoruj i nie "porządkuj" cudzych plików bez wyraźnej prośby.
+- Nie usuwaj niczyich notatek ani pomysłów — nawet jeśli wyglądają na nieaktualne.
+- Nie twórz PR-ów, nie pushuj na `main` i nie zmieniaj ustawień repo bez wyraźnego polecenia.
+- Duże zmiany (nowa struktura folderów, nowe zależności) — najpierw zaproponuj, potem rób.
+- Trzymaj się języka: dokumentacja po polsku, kod i commity po angielsku.
+
+## Decyzje zespołowe
+
+Decyzje o kierunku projektu (wybór pomysłu, stack technologiczny, podział pracy)
+zapadają wspólnie i są zapisywane w `docs/decyzje.md` (plik powstanie przy pierwszej decyzji).
+Dopóki decyzji nie ma — wszystko jest otwarte.

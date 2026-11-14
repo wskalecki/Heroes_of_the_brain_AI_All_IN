@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Środowisko i sekrety
+.env
+.env.*
+!.env.example
+
+# Dane EEG — surowe nagrania nie trafiają do repo (patrz AGENTS.md)
+data/raw/
+*.edf
+*.bdf
+*.fif
+*.eeg
+# Wyjątek: nagrania uczestników z ich zgodą (adi, filip, rudy, wojtek)
+!data/recordings/*.fif
+
+# System / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Node (gdyby doszło demo webowe)
+node_modules/
+dist/
