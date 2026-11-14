@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wachta — test czasu reakcji (PVT-B)</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+         background: #111; color: #eee; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .panel { max-width: 560px; padding: 24px; }
+  h1 { font-size: 26px; margin-top: 0; }
+  label { display: block; margin: 14px 0 4px; }
+  input { width: 100%; box-sizing: border-box; font-size: 18px; padding: 6px 8px; }
+  button { margin-top: 18px; font-size: 18px; padding: 10px 20px; cursor: pointer; }
+  .muted { color: #999; font-size: 14px; }
+  .error { color: #ff6b6b; }
+  table { border-collapse: collapse; margin-top: 8px; }
+  td { padding: 4px 16px 4px 0; }
+  td:last-child { font-variant-numeric: tabular-nums; font-weight: 600; }
+  #arena { display: none; position: fixed; inset: 0; background: #000; align-items: center;
+           justify-content: center; user-select: none; touch-action: manipulation; cursor: none; }
+  #counter { min-height: 1.2em; font-family: ui-monospace, "SF Mono", Menlo, monospace;
+             font-size: 18vmin; color: #ff3b30; font-variant-numeric: tabular-nums; }
+  #counter.feedback { color: #ffd60a; }
+  #counter.warning { color: #8e8e93; }
+  #progress { position: fixed; left: 0; bottom: 0; height: 4px; width: 0; background: #3a3a3c; }
+  a { color: #64d2ff; }
+</style>
+</head>
+<body>
+<div class="panel" id="setup">
+  <h1>Test czasu reakcji (PVT-B, 3 min)</h1>
+  <p>Patrz na środek ekranu. Gdy pojawi się <b>czerwony licznik</b>, jak najszybciej naciśnij
+     <b>spację</b> (albo dotknij ekranu). Nie naciskaj, zanim licznik się pojawi.</p>
+  <label for="person">Uczestnik</label>
+  <input id="person" autocomplete="off">
+  <label for="checkpoint">Punkt pomiarowy (T0 / T1 / T2)</label>
+  <input id="checkpoint" autocomplete="off">
+  <button id="start" type="button">Start</button>
+  <p class="muted">Wyłącz powiadomienia i usiądź wygodnie. Przerwanie testu bez zapisu: klawisz Esc.</p>
+  <p class="error" id="setup-error"></p>
+</div>
+
+<div id="arena"><div id="counter"></div><div id="progress"></div></div>
+
+<div class="panel" id="result" hidden>
+  <h1>Wynik</h1>
+  <table id="summary"></table>
+  <p class="muted" id="save-status"></p>
+  <p><a id="download" hidden>Pobierz surowe dane (JSON)</a></p>
+  <button id="again" type="button">Nowy test</button>
+</div>
+
+<script>
+/*__PVT_CONFIG__*/
+(function () {
+  "use strict";
+
+  const cfg = Object.assign({
+    duration_s: 180, isi_min_s: 1, isi_max_s: 4, feedback_s: 1,
+    lapse_ms: 355, false_start_ms: 100, timeout_ms: 30000,
+    person: "", checkpoint: "", save_url: "/api/result"
+  }, window.PVT_CONFIG || {});
+
+  const $ = (id) => document.getElementById(id);
+  const setup = $("setup"), arena = $("arena"), counter = $("counter"), progress = $("progress");
+  const result = $("result"), summary = $("summary"), saveStatus = $("save-status"), download = $("download");
+
+  const params = new URLSearchParams(location.search);
+  $("person").value = params.get("person") || cfg.person || "";
+  $("checkpoint").value = params.get("checkpoint") || cfg.checkpoint || "";
+
+  // state: idle | waiting | pending | stimulus | feedback | done
+  let state = "idle";
+  let rts = [], anticipations = 0, testEnd = 0, onset = 0;
+  let timer = null, rafId = null, progressTimer = null, testStart = 0;
+  let meta = {};
+
+  const now = () => performance.now();
+
+  function eventTime(ev) {
+    // Event timestamps share the performance.now() clock in current browsers; fall back otherwise.
+    const t = ev && ev.timeStamp;
+    const n = now();
+    return (t > 0 && Math.abs(n - t) < 5000) ? t : n;
+  }
+
+  function clearTimers() {
+    clearTimeout(timer); timer = null;
+    if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+  }
+
+  function randomWaitMs() {
+    const lo = Math.max(0, cfg.isi_min_s - cfg.feedback_s);
+    const hi = Math.max(lo, cfg.isi_max_s - cfg.feedback_s);
+    return (lo + Math.random() * (hi - lo)) * 1000;
+  }
+
+  function scheduleNext() {
+    clearTimers();
+    counter.textContent = ""; counter.className = "";
+    const remaining = testEnd - now();
+    if (remaining <= 0) { finish(); return; }
+    state = "waiting";
+    const waitMs = randomWaitMs();
+    if (waitMs >= remaining) {
+      timer = setTimeout(finish, remaining + 5);
+      return;
+    }
+    timer = setTimeout(() => (now() >= testEnd ? finish() : showStimulus()), waitMs);
+  }
+
+  function showStimulus() {
+    state = "pending";
+    rafId = requestAnimationFrame((frameTime) => {
+      counter.className = ""; counter.textContent = "0";
+      onset = frameTime;
+      state = "stimulus";
+      tick();
+    });
+  }
+
+  function tick() {
+    rafId = requestAnimationFrame(() => {
+      if (state !== "stimulus") return;
+      const elapsed = now() - onset;
+      if (elapsed >= cfg.timeout_ms) { record(cfg.timeout_ms, "brak reakcji"); return; }
+      counter.textContent = String(Math.floor(elapsed));
+      tick();
+    });
+  }
+
+  function showFeedback(text, cls) {
+    state = "feedback";
+    counter.className = cls; counter.textContent = text;
+    timer = setTimeout(scheduleNext, cfg.feedback_s * 1000);
+  }
+
+  function record(rt, label) {
+    clearTimers();
+    rts.push(Math.round(rt * 10) / 10);
+    showFeedback(label || String(Math.round(rt)), "feedback");
+  }
+
+  function respond(ev) {
+    const t = eventTime(ev);
+    if (state === "stimulus") {
+      record(Math.max(0, t - onset));
+    } else if (state === "waiting" || state === "pending") {
+      anticipations += 1;
+      clearTimers();
+      showFeedback("FS", "warning");
+    } else if (state === "feedback") {
+      anticipations += 1;
+    }
+  }
+
+  function start() {
+    const person = $("person").value.trim();
+    const checkpoint = $("checkpoint").value.trim();
+    if (!person || !checkpoint) {
+      $("setup-error").textContent = "Wpisz uczestnika i punkt pomiarowy.";
+      return;
+    }
+    if (/[\\/\r\n]/.test(person)) {
+      $("setup-error").textContent = "Imię uczestnika nie może zawierać ukośników ani nowych linii.";
+      return;
+    }
+    $("setup-error").textContent = "";
+    meta = { person, checkpoint, started_at: new Date().toISOString() };
+    rts = []; anticipations = 0;
+    setup.hidden = true; result.hidden = true;
+    arena.style.display = "flex";
+    testStart = now();
+    testEnd = testStart + cfg.duration_s * 1000;
+    progressTimer = setInterval(() => {
+      progress.style.width = Math.min(100, (now() - testStart) / (cfg.duration_s * 10)) + "%";
+    }, 250);
+    scheduleNext();
+  }
+
+  function stopArena() {
+    clearTimers();
+    clearInterval(progressTimer);
+    arena.style.display = "none";
+    progress.style.width = "0";
+  }
+
+  function abort() {
+    stopArena();
+    state = "idle";
+    setup.hidden = false;
+  }
+
+  function addRow(label, value) {
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.textContent = label;
+    const b = document.createElement("td"); b.textContent = (value === null || value === undefined || value === "") ? "—" : value;
+    tr.append(a, b); summary.append(tr);
+  }
+
+  function showSummary(row) {
+    summary.textContent = "";
+    addRow("Uczestnik / punkt", row.person + " / " + row.checkpoint);
+    addRow("Bodźce", row.n_stimuli);
+    addRow("Mediana czasu reakcji [ms]", row.median_rt_ms);
+    addRow("Średni czas reakcji [ms]", row.mean_rt_ms);
+    addRow("Szybkość reakcji 1/RT [1/s]", row.mean_speed);
+    addRow("Lapsy (≥ " + cfg.lapse_ms + " ms)", row.lapses);
+    addRow("Falstarty", row.false_starts);
+    addRow("Wynik (performance score)", row.performance_score);
+  }
+
+  let downloadUrl = null;
+
+  function offerDownload(payload) {
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    downloadUrl = URL.createObjectURL(blob);
+    download.href = downloadUrl;
+    download.download = "pvt-" + payload.person + "-" + payload.checkpoint + ".json";
+    download.hidden = false;
+  }
+
+  async function finish() {
+    if (state === "done") return;
+    state = "done";
+    stopArena();
+    result.hidden = false;
+    download.hidden = true;
+    summary.textContent = "";
+    saveStatus.textContent = "Zapisywanie…";
+    const payload = Object.assign({}, meta, {
+      duration_s: cfg.duration_s, rts_ms: rts, anticipations: anticipations
+    });
+    try {
+      const response = await fetch(cfg.save_url, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || ("HTTP " + response.status));
+      showSummary(data.result);
+      saveStatus.textContent = "Zapisano do " + data.saved_to + ".";
+    } catch (err) {
+      saveStatus.textContent = "Nie udało się zapisać wyniku (" + err.message + "). Pobierz surowe dane i wczytaj je: " +
+        "python -m wachta.pvt --import <plik.json>";
+      offerDownload(payload);
+    }
+  }
+
+  $("start").addEventListener("click", start);
+  $("again").addEventListener("click", () => {
+    if (downloadUrl) { URL.revokeObjectURL(downloadUrl); downloadUrl = null; }
+    result.hidden = true; setup.hidden = false; state = "idle";
+  });
+
+  document.addEventListener("keydown", (ev) => {
+    if (arena.style.display !== "flex") return;
+    if (ev.code === "Escape") { ev.preventDefault(); abort(); return; }
+    if (ev.code === "Space" || ev.key === " ") {
+      ev.preventDefault();
+      if (!ev.repeat) respond(ev);
+    }
+  });
+  arena.addEventListener("pointerdown", (ev) => {
+    if (ev.pointerType === "mouse" && ev.button !== 0) return;
+    ev.preventDefault();
+    respond(ev);
+  });
+})();
+</script>
+</body>
+</html>
