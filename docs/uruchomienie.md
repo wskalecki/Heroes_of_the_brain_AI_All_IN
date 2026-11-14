@@ -56,12 +56,6 @@ python -m wachta.pvt --person wojtek --checkpoint T1
 
 Jeśli test był otwarty bez działającego serwera i zapisał surowy plik JSON, można go dograć przez `python -m wachta.pvt --import <plik.json>`.
 
-Połączone podsumowanie punktów pomiarowych (`checkpoints.csv` + `pvt.csv`, zmiany względem `T0` i wykres na slajd):
-
-```bash
-python experiments/summarize-checkpoints.py --figure docs/img/checkpoints-summary.png
-```
-
 ## Pipeline w kodzie
 
 ```python
