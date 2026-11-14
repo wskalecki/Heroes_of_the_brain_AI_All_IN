@@ -33,11 +33,12 @@ class RepoChecks(unittest.TestCase):
 
     def test_secret_patterns(self):
         patterns = self.mod.SECRET_PATTERNS
+        # Samples are assembled at run time so this file does not itself look like a leaked secret.
         samples = {
-            "private key": "-----BEGIN RSA PRIVATE KEY-----",
-            "AWS access key": "AKIAABCDEFGHIJKLMNOP",
-            "GitHub token": "ghp_" + "a" * 36,
-            "generic secret assignment": 'api_key = "abcdefghijklmnopqrstuvwxyz123456"',
+            "private key": "-----BEGIN RSA " + "PRIVATE KEY-----",
+            "AWS access key": "AKIA" + "ABCDEFGHIJKLMNOP",
+            "GitHub token": "gh" + "p_" + "a" * 36,
+            "generic secret assignment": "api" + "_key = " + '"' + "abcdefghijklmnopqrstuvwxyz123456" + '"',
         }
         for name, text in samples.items():
             self.assertTrue(patterns[name].search(text), name)
