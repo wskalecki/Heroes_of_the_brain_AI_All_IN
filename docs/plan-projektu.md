@@ -107,6 +107,8 @@ Liczby trzeba sprawdzić w pełnych tekstach przed wstawieniem na slajd.
 
 ## Podział pracy i harmonogram
 
+Zadania z właścicielami, plikami i statusem są w [`zadania.md`](zadania.md). Poniżej kolejność w czasie.
+
 | Blok | Claude | Wojtek | Adrian | Filip | Rudy |
 |---|---|---|---|---|---|
 | 0–0,5 h | plan i decyzja do repo | scala PR, akceptuje plan | — | przygotowuje punkt T0 | szkielet slajdów |

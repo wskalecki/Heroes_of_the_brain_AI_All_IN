@@ -7,8 +7,9 @@ Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
 
 - Hackathon **Heroes of the Brain 2026**, kategoria Adaptive Systems.
 - Sprzęt: BrainAccess MINI, 8 suchych elektrod (F3, F4, C3, C4, P3, P4, O1, O2), 250 Hz, dane w MNE.
-- **Pomysł na projekt nie jest jeszcze potwierdzony.** Folder `pomysly-adi/` to inspiracja,
-  nie specyfikacja. Nie buduj niczego na jego podstawie bez ustalenia z zespołem.
+- **Kierunek jest ustalony:** zmęczenie i czujność mierzone na człowieku, nie na zegarze.
+  Decyzja: `docs/decyzje.md`, plan: `docs/plan-projektu.md`, podział zadań: `docs/zadania.md`.
+- Folder `pomysly-adi/` to inspiracja, nie specyfikacja. Buduj według planu i zadań, nie według listy pomysłów.
 
 ## Język
 
@@ -43,6 +44,8 @@ Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
 ## Zasady dla agentów AI
 
 - Zanim coś zmienisz, przeczytaj `README.md` i ten plik.
+- Zanim zaczniesz pracę, przeczytaj `docs/plan-projektu.md` i `docs/zadania.md`. Bierz zadania tylko ze strumienia
+  osoby, z którą pracujesz, trzymaj się plików tego strumienia i zmieniaj status zadania w tym samym PR co pracę.
 - Nie refaktoruj i nie "porządkuj" cudzych plików bez wyraźnej prośby.
 - Nie usuwaj niczyich notatek ani pomysłów — nawet jeśli wyglądają na nieaktualne.
 - Nie twórz PR-ów, nie pushuj na `main` i nie zmieniaj ustawień repo bez wyraźnego polecenia.
@@ -52,5 +55,5 @@ Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
 ## Decyzje zespołowe
 
 Decyzje o kierunku projektu (wybór pomysłu, stack technologiczny, podział pracy)
-zapadają wspólnie i są zapisywane w `docs/decyzje.md` (plik powstanie przy pierwszej decyzji).
-Dopóki decyzji nie ma — wszystko jest otwarte.
+zapadają wspólnie i są zapisywane w `docs/decyzje.md`.
+Punkty otwarte są wypisane przy każdej decyzji. Czego tam nie ma, to nie jest ustalone.

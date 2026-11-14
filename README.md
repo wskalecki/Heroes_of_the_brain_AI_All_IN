@@ -4,7 +4,7 @@ Repozytorium drużyny na hackathon **Heroes of the Brain 2026** (kategoria: Adap
 
 > **Status projektu: budujemy.** Kierunek: zmęczenie i czujność pracowników zmianowych mierzone na człowieku,
 > a nie na zegarze (EEG kalibruje, zegarek pilnuje). Plan: [`docs/plan-projektu.md`](docs/plan-projektu.md),
-> decyzje: [`docs/decyzje.md`](docs/decyzje.md).
+> zadania: [`docs/zadania.md`](docs/zadania.md), decyzje: [`docs/decyzje.md`](docs/decyzje.md).
 
 ## Sprzęt
 
