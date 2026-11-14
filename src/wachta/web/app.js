@@ -84,14 +84,14 @@ function advice(entry) {
     }
     case "warn":
       if (entry.reserve < app.config.warn_below) return `${plan} w ciągu ${duration(entry.minutes_to_stop)}.`;
-      return `Wykryto spadek czujności. ${plan} przy najbliższej okazji.`;
+      return `Niedawno wykryto spadek czujności. ${plan} przy najbliższej okazji.`;
     case "stop":
       if (entry.lapse && entry.lapse_kind === "eyes_open") {
         return `Senność przy otwartych oczach: oczy są otwarte, ale mózg przestaje reagować. ${act}`;
       }
       if (entry.lapse && entry.lapse_kind === "eyes_closed") return `Oczy zamknięte dłużej niż kilka sekund (mikrosen). ${act}`;
       if (entry.lapse) return `Wykryto spadek czujności. ${act}`;
-      if (entry.lapses_recent >= 2) return `Kolejny spadek czujności w krótkim czasie. ${act}`;
+      if (entry.probe_failed_recently) return `Reakcja za wolna albo jej brak przy sprawdzeniu. ${act}`;
       return `Rezerwa wyczerpana. ${act}`;
     default:
       return "";
@@ -416,7 +416,7 @@ function renderWorker() {
   $("tile-rt").textContent = entry.probes_done ? (entry.last_rt_ms == null ? "brak" : `${Math.round(entry.last_rt_ms)} ms`) : "—";
   $("sub-rt").textContent = entry.probes_done
     ? `prób: ${entry.probes_done}, za wolnych lub bez reakcji: ${entry.probe_lapses}`
-    : `próba pojawi się, gdy wskaźnik zacznie rosnąć`;
+    : `próba pojawi się po spadku czujności i co ${Math.round(app.config.probe_interval_s / 60)} min`;
   $("tile-quality").textContent = `${Math.round(entry.quality * 100)}%`;
   $("btn-break").textContent = entry.on_break ? "Zakończ przerwę" : "Rozpocznij przerwę";
 
@@ -554,11 +554,17 @@ const probe = {
 
   show(message) {
     if (this.active) return;
-    this.active = { id: message.id, worker: message.worker, shownAt: 0 };
+    this.active = {
+      id: message.id,
+      worker: message.worker,
+      shownAt: 0,
+      thresholdMs: message.threshold_ms || app.config.probe_lapse_ms,
+    };
     const target = $("probe-target");
     delete target.dataset.result;
     $("probe-title").textContent = "Reakcja!";
-    $("probe-text").textContent = "Naciśnij spację albo kliknij";
+    const why = { event: "Sprawdzenie po spadku czujności", schedule: "Kontrola okresowa", manual: "Sprawdzenie" };
+    $("probe-text").textContent = `${why[message.reason] || "Sprawdzenie"}: naciśnij spację albo kliknij`;
     $("probe").hidden = false;
     beep();
     // Measure from the first frame the prompt is actually on screen.
@@ -578,12 +584,12 @@ const probe = {
   finish(rtMs) {
     if (!this.active) return;
     clearTimeout(this.timer);
-    const { id, worker } = this.active;
+    const { id, worker, thresholdMs } = this.active;
     this.active = null;
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ action: "probe_response", worker, id, rt_ms: rtMs == null ? null : Math.round(rtMs) }));
     }
-    const lapse = rtMs == null || rtMs > app.config.probe_lapse_ms;
+    const lapse = rtMs == null || rtMs > thresholdMs;
     $("probe-target").dataset.result = lapse ? "lapse" : "ok";
     $("probe-title").textContent = rtMs == null ? "Brak reakcji" : `${Math.round(rtMs)} ms`;
     $("probe-text").textContent = lapse ? "Reakcja za wolna: to liczy się jako spadek czujności" : "Reakcja w normie";

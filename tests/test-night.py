@@ -86,11 +86,11 @@ def test_rmssd_drops_artefacts_and_needs_enough_beats():
 
 def test_table_renders_without_heart_data():
     row = {"person": "wojtek", "checkpoint": "N1", "kss": 7, "pvt_lapses": 3, "median_rt_ms": 312.0,
-           "fast_early": 0.1, "fast_late": 1.4, "fast_change": 1.3, "above_probe_pct": 12.0,
+           "fast_early": 0.1, "fast_late": 1.4, "fast_change": 1.3, "probes": 2,
            "lapses_eyes_open": 1, "lapses_eyes_closed": 0, "blinks_early": 14.0, "blinks_late": 9.0,
            "eyes_closed_detected": True}
     table = format_table([row])
-    assert "| wojtek | N1 | 7 | 3 | 312 ms | 0,10 | 1,40 | +1,30 | 12,0% | 1 / 0 | 14 → 9 | — → — | — → — | tak |" in table
+    assert "| wojtek | N1 | 7 | 3 | 312 ms | 0,10 | 1,40 | +1,30 | 2 | 1 / 0 | 14 → 9 | — → — | — → — | tak |" in table
 
 
 def test_minute_by_minute_course_of_monotony(tmp_path):
