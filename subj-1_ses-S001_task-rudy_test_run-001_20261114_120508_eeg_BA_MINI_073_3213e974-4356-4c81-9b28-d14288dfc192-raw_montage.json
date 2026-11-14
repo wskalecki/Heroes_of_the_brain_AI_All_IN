@@ -1,0 +1,73 @@
+{
+  "template_name": "template_mini",
+  "template": "mini",
+  "reference": "Fp1",
+  "template_json": {
+    "device": "BrainAccess",
+    "template": "mini",
+    "template_name": "template_mini",
+    "channels": [
+      "F3",
+      "F4",
+      "C3",
+      "C4",
+      "P3",
+      "P4",
+      "O1",
+      "O2"
+    ],
+    "active": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "pin": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "bias": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "gain": [
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8,
+      8
+    ],
+    "reference": "Fp1",
+    "ground": "Fp2",
+    "cap_manufacturer": "Neurotechnology",
+    "cap_model": "BrainAccess CAP",
+    "electrode_coupling": "Dry",
+    "electrode_material": "Gold-plated",
+    "electrode_pad_channels": [
+      "Fp1",
+      "Fp2"
+    ],
+    "srate": 250,
+    "impedance_mode": false,
+    "test_signal": false
+  }
+}
