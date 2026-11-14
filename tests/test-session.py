@@ -273,3 +273,21 @@ class SessionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_monotony_block_is_appended_and_written_to_annotations(tmp_path):
+    from wachta.session import build_steps, write_annotations
+
+    steps = build_steps(60.0, monotony_minutes=10)
+    assert [s.label for s in steps] == ["eyes_open", "eyes_closed", "math", "monotony"]
+    assert steps[-1].duration_s == 600.0
+    path = write_annotations(tmp_path / "a.csv", steps)
+    last = path.read_text(encoding="utf-8").strip().splitlines()[-1]
+    assert last == "180.000,600.000,monotony"
+    assert [s.label for s in build_steps(60.0)] == ["eyes_open", "eyes_closed", "math"]
+
+
+def test_night_checkpoints_are_valid():
+    from wachta.session import VALID_CHECKPOINTS
+
+    assert {"N1", "N2"} <= set(VALID_CHECKPOINTS)

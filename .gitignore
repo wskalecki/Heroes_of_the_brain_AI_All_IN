@@ -19,6 +19,8 @@ data/raw/
 *.eeg
 # Wyjątek: nagrania uczestników z ich zgodą (adi, filip, rudy, wojtek)
 !data/recordings/*.fif
+# Pliki z zegarka i paska (tętno, odstępy R–R) zostają lokalnie, commitujemy tylko wyniki analizy
+*.fit
 
 # System / IDE
 .DS_Store
