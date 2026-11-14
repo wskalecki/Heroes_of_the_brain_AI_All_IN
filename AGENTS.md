@@ -36,6 +36,7 @@ Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
 ## Dane i bezpieczeństwo — zasady twarde
 
 1. **Surowe nagrania EEG prawdziwych osób nie trafiają do repo.** To dane biometryczne.
+   **Wyjątek:** nagrania członków zespołu w `data/recordings/` (tylko `.fif` z adnotacjami), za wyraźną zgodą nagranej osoby, zgodnie z `docs/decyzje.md`.
    Do testów używamy danych syntetycznych albo krótkich, anonimowych próbek za zgodą zespołu.
 2. **Żadnych sekretów w repo**: kluczy API, tokenów, haseł, adresów prywatnych.
    Konfiguracja przez zmienne środowiskowe i plik `.env` (który jest w `.gitignore`).

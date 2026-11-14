@@ -32,7 +32,7 @@ Instalacja, testy i uruchomienie: [`docs/uruchomienie.md`](docs/uruchomienie.md)
 
 1. Przeczytaj [`AGENTS.md`](AGENTS.md) zanim zaczniesz pracę.
 2. Nie commitujemy na `main` — pracujemy na gałęziach i robimy PR-y (szczegóły w [`CONTRIBUTING.md`](CONTRIBUTING.md)).
-3. **Nigdy nie commitujemy surowych nagrań EEG z prawdziwych osób** ani żadnych sekretów (klucze API, tokeny).
+3. **Nie commitujemy surowych nagrań EEG z prawdziwych osób** (wyjątek: nagrania zespołu w `data/recordings/` za zgodą nagranych osób, patrz `docs/decyzje.md`) **ani żadnych sekretów** (klucze API, tokeny).
 4. Nazwy plików i folderów: małe litery, bez polskich znaków i spacji (`pomysly-adi`, nie `Pomysły Adi`).
 
 ## Zespół

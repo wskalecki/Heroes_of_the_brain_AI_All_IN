@@ -1,7 +1,7 @@
 # Plan projektu: Wachta (nazwa robocza)
 
 Zmęczenie mierzone na człowieku, nie na zegarze. Plan na hackathon Heroes of the Brain 2026
-(do oddania mniej niż 12 h od spisania) i krótki zarys tego, co dalej.
+(termin oddania: niedziela 15.11 do 11:00, cel zespołu: gotowe ok. 10:00) i krótki zarys tego, co dalej.
 
 Decyzja o kierunku jest zapisana w [`decyzje.md`](decyzje.md). Ten plik mówi, co budujemy, kto co robi i w jakiej kolejności.
 
@@ -28,6 +28,7 @@ publicznych i literatury oraz studium jednej osoby z zegarkiem Garmin Venu 2.
 | Epizody alfy z notebooka 01 pokrywają się z blokami `eyes_closed` z protokołu | `data/recordings/README.md` | Mamy prawdziwe etykiety, można policzyć trafność |
 | Reguła „przeciążenie” nie zadziałała ani razu; w zadaniu MATB alfa ciemieniowa rośnie zamiast spadać | notebooki 02 i 03 | Przeciążenia nie obiecujemy |
 | Odrzucanie artefaktów i kalibracja na osobę są konieczne; flaga kontaktu elektrod nic nie mówi | notebooki 01–03 | Jakość sygnału oceniamy sami |
+| Alfa przy otwartych oczach **nie przewiduje** lapsu w następnej minucie (AUC 0,52, 29 osób); 15 min monotonii (T1, KSS 5) dało zero fałszywych alarmów, a próba z podprogowej alfy wyskoczyłaby 11 razy | notebook 06, [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) | Próba reakcji z harmonogramu albo po zdarzeniu, nie z podprogowej alfy (issue #14); „EEG ostrzega przed spadkiem” nie wchodzi do pitchu |
 | Zmęczenie i senność to stan fizyczny, dozwolony w celach bezpieczeństwa; obciążenie poznawcze to szara strefa, a stres i wypalenie są zakazane | [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) §3, AI Act motyw 18 | Mówimy „zmęczenie i czujność”, nie „przeciążenie kognitywne” |
 | W zarządzaniu zmęczeniem działa już SmartCap (EEG w czapce); research rynku rekomendował wejście przez IT ops | [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md), [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) | Na slajdzie musi być różnica względem SmartCap; segment wejścia jest punktem otwartym |
 | Logowanie bibliotek do Garmin Connect jest zepsute od marca 2026; HRV z nadgarstka bywa niewiarygodne | źródła na końcu | Odczyty z Venu 2 wpisujemy ręcznie; API tylko jako próba na 20 min |
@@ -116,7 +117,7 @@ Zadania z właścicielami, plikami i statusem są w [`zadania.md`](zadania.md). 
 | 6–8,5 h | rezerwa, panel przełożonego, poprawki | próba demo na żywo | COULD albo liczby do slajdów | pomiary T2, operator demo | model biznesowy, ryzyka |
 | ostatnie 2 h | tylko poprawki błędów | dwie próby demo, nagranie zapasowe | wykresy na slajdy | próby demo | finalny pitch |
 
-Role Filipa i Rudego to propozycja, do zamiany między nimi. Kod zamrażamy 2 h przed oddaniem.
+Role Filipa i Rudego to propozycja, do zamiany między nimi. Kod zamrażamy 2 h przed oddaniem (ok. 8:00 w niedzielę).
 
 ## Demo i pitch
 

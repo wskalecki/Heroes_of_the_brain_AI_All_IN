@@ -1,6 +1,6 @@
 # Nagrania testowe (14.11.2026)
 
-Cztery nagrania z BrainAccess MINI (8 kanałów: F3, F4, C3, C4, P3, P4, O1, O2, 250 Hz),
+Cztery nagrania z południa (oraz nagranie T1 z wieczora, opisane niżej) z BrainAccess MINI (8 kanałów: F3, F4, C3, C4, P3, P4, O1, O2, 250 Hz),
 zrobione na członkach zespołu za ich zgodą. Służą do budowy i sprawdzenia pipeline'u.
 
 Każde nagranie ma cztery pliki o wspólnym prefiksie:
@@ -18,11 +18,11 @@ Każda osoba przechodziła te same bloki, w tej kolejności:
 
 | Etykieta | Co robił uczestnik |
 |---|---|
-| `neutral` | spoczynek, oczy otwarte |
+| `neutral` | **swobodna rozmowa i normalne funkcjonowanie** (mówienie, ruch), nie cichy spoczynek |
 | `eyes_closed` | oczy zamknięte (punkt odniesienia dla alfy) |
 | `reading` | czytanie tekstu |
 | `math` | liczenie w pamięci (obciążenie poznawcze) |
-| `control` | blok kontrolny do końca nagrania |
+| `control` | **otwieranie i zamykanie oczu, zaciskanie szczęki i machanie głową** (bez osobnych znaczników czasu wewnątrz bloku) |
 
 ## Timeline (sekundy od początku nagrania)
 
@@ -58,5 +58,12 @@ raw.set_annotations(mne.Annotations(ann.onset, ann.duration, ann.description))
 - Kontakt elektrod 100% na wszystkich kanałach we wszystkich nagraniach.
 - Silny brum sieci 50 Hz w nagraniu adi (wszystkie kanały) i punktowo na P4 (filip) i P3 (rudy).
   Przed analizą potrzebny filtr notch 50 Hz.
-- Bloki `control` są krótkie (20–43 s) i widać w nich wzrost mocy we wszystkich pasmach,
-  prawdopodobnie ruch lub zdejmowanie czapki pod koniec nagrania.
+- Bloki `control` są krótkie (20–43 s) i widać w nich wzrost mocy we wszystkich pasmach: to celowe ruchy (mruganie, szczęka, głowa),
+  a nie zdejmowanie czapki. Przy referencji Fp1 artefakty oczu trafiają na wszystkie 8 kanałów naraz.
+- Ponieważ `neutral` to rozmowa, jest hałaśliwą bazą (mięśnie, ruch). Czysty spoczynek z oczami otwartymi ma dopiero nagranie `wojtek-t1`.
+
+## Nagranie T1 (wojtek-t1, wieczór)
+
+Plik `subj-1_ses-S001_task-wojtek-t1_...` (tylko `.fif` i adnotacje): 60 s oczy otwarte, 60 s oczy zamknięte, 60 s liczenie, 15 min monotonii
+(oczy otwarte, słuchawki z ANC i biały szum). Adnotacje są przesunięte o 3 s (nagranie ruszyło przed narzędziem sesji, sprawdzone na alfie).
+Opis i wyniki: [`docs/sesja-monotonii-wojtek.md`](../../docs/sesja-monotonii-wojtek.md). Wpis w `checkpoints.csv`.
