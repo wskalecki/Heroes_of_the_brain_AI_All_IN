@@ -66,7 +66,7 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 | Liczba | Źródło |
 |---|---|
-| Zamknięte oczy wykryte u 4 z 4 osób, 1 fałszywy alarm w 32 min | [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md), wykres `img/trafnosc-na-nagraniach.png` |
+| Zamknięte oczy wykryte w 5 z 5 nagrań (4 osoby), 1 fałszywy alarm w 48 min | [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md), wykres `img/trafnosc-na-nagraniach.png` |
 | Senność w danych publicznych: alfa rośnie u 11 z 11 osób, AUC 0,75 (0,52–0,91) | notebook 04, wykres `img/drowsiness-public-auc-and-calibration.png` |
 | Model osobisty: trafność 0,83 (AUC 0,90) wobec 0,66–0,72 dla jednego modelu dla wszystkich | notebook 04, tabela strategii |
 | Kontekst (czas jazdy, pora doby) podnosi AUC z 0,76 do 0,88 | Lu i in. 2022, `podstawy-naukowe.md` poz. 3 |
