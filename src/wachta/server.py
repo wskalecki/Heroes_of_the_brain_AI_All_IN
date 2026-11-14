@@ -13,7 +13,9 @@ import asyncio
 import contextlib
 import dataclasses
 import logging
+import time
 from collections import deque
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -35,7 +37,9 @@ TRACE_EVERY = 5            # keep every n-th window in the long reserve trace
 CLIENT_FIELDS = (
     "t", "state", "reserve", "fast", "slow", "quality", "lapse", "new_lapse", "lapses_recent",
     "lapse_count", "calibration", "minutes_to_warn", "minutes_to_stop", "work_min",
-    "drain_per_hour", "bad", "on_break",
+    "drain_per_hour", "bad", "on_break", "lapse_kind", "lapses_eyes_closed", "lapses_eyes_open",
+    "eye_state", "blinks_per_min", "probes_done", "probe_lapses", "last_rt_ms", "context_factor",
+    "clock_h", "awake_h",
 )
 
 
@@ -50,8 +54,9 @@ def _client_entry(result: dict) -> dict:
 class Worker:
     """One person: a source of samples, a pipeline and the recent results."""
 
-    def __init__(self, worker_id: str, source, cfg: Config) -> None:
+    def __init__(self, worker_id: str, source, cfg: Config, primary: bool = False) -> None:
         self.id = worker_id
+        self.primary = primary
         self.source = source
         self.cfg = cfg
         self.pipeline = Pipeline(cfg)
@@ -59,9 +64,34 @@ class Worker:
         self.trace: deque[list[float]] = deque(maxlen=4000)   # [work_min, reserve]
         self.error: str | None = None
         self._windows = 0
+        self.pending_probe: int | None = None
+        self._probe_seq = 0
+        self._probe_sent = 0.0
+        self.last_t = 0.0
+
+    def new_probe(self) -> int:
+        self._probe_seq += 1
+        self.pending_probe = self._probe_seq
+        self._probe_sent = time.monotonic()
+        return self._probe_seq
+
+    def drop_stale_probe(self) -> None:
+        """Forget a probe nobody answered (e.g. the page was closed); it does not count as a lapse."""
+        if self.pending_probe is not None and time.monotonic() - self._probe_sent > self.cfg.probe_timeout_ms / 1000 + 5:
+            self.pending_probe = None
+
+    def probe_response(self, probe_id, rt_ms) -> bool:
+        """Accept the first answer to the pending probe; later or stale answers are ignored."""
+        if probe_id != self.pending_probe:
+            return False
+        self.pending_probe = None
+        value = None if rt_ms is None else float(rt_ms)
+        self.pipeline.index.record_probe(self.last_t, value)
+        return True
 
     def record(self, result: dict) -> dict:
         entry = _client_entry(result)
+        self.last_t = entry["t"]
         self.history.append(entry)
         if entry["state"] != "calibrating" and self._windows % TRACE_EVERY == 0:
             self.trace.append([entry["work_min"], entry["reserve"]])
@@ -69,7 +99,9 @@ class Worker:
         return entry
 
     def handle(self, action: str) -> None:
-        if action == "break_start":
+        if action == "probe_now":
+            self.pipeline.index.request_probe()
+        elif action == "break_start":
             self.pipeline.index.start_break()
         elif action == "break_end":
             self.pipeline.index.end_break()
@@ -115,6 +147,11 @@ async def _run_worker(worker: Worker, hub: Hub) -> None:
                     await hub.broadcast({"type": "status", "worker": worker.id, "error": None})
                 for result in worker.pipeline.push(chunk):
                     await hub.broadcast({"type": "update", "worker": worker.id, "data": worker.record(result)})
+                    # Probes go to the person in the main view only, and only if someone can answer.
+                    worker.drop_stale_probe()
+                    if result["probe"] and worker.primary and hub.clients and worker.pending_probe is None:
+                        await hub.broadcast({"type": "probe", "worker": worker.id, "id": worker.new_probe(),
+                                             "timeout_ms": worker.cfg.probe_timeout_ms})
             return
         except asyncio.CancelledError:
             raise
@@ -154,6 +191,8 @@ def create_app(workers: list[Worker], cfg: Config) -> FastAPI:
                 "time_scale": cfg.time_scale,
                 "step_s": cfg.step_s,
                 "drain_per_hour": cfg.drain_per_hour,
+                "probe_lapse_ms": cfg.probe_lapse_ms,
+                "probe_timeout_ms": cfg.probe_timeout_ms,
             },
             "workers": [worker.describe() for worker in workers],
         }
@@ -176,6 +215,9 @@ def create_app(workers: list[Worker], cfg: Config) -> FastAPI:
             while True:
                 message = await websocket.receive_json()
                 worker = by_id.get(message.get("worker"), workers[0])
+                if message.get("action") == "probe_response":
+                    worker.probe_response(message.get("id"), message.get("rt_ms"))
+                    continue
                 worker.handle(str(message.get("action")))
                 if message.get("action") == "reset":
                     await websocket.send_json(hello())
@@ -201,17 +243,37 @@ def _replay_worker(worker_id: str, spec: str, cfg: Config, speed: float, start_s
 
 def build_workers(args: argparse.Namespace, cfg: Config) -> list[Worker]:
     if args.source == "board":
-        workers = [Worker("w0", BoardSource(name=args.name or "Na żywo"), cfg)]
+        workers = [Worker("w0", BoardSource(name=args.name or "Na żywo"), cfg, primary=True)]
     else:
         spec = args.file or next(iter(find_recordings()), None)
         if spec is None:
             raise SystemExit("Brak nagrań w data/recordings. Podaj --file albo użyj --source board.")
         workers = [_replay_worker("w0", spec, cfg, args.speed, args.start)]
+        workers[0].primary = True
         if args.name:
             workers[0].source.name = args.name
     for i, spec in enumerate(args.team, start=1):
         workers.append(_replay_worker(f"w{i}", spec, cfg, args.speed, 0.0))
     return workers
+
+
+def _hours(text: str) -> float:
+    hours, _, minutes = text.partition(":")
+    value = int(hours) + int(minutes or 0) / 60.0
+    if not 0 <= value < 24:
+        raise ValueError(f"Niepoprawna godzina: {text}")
+    return value
+
+
+def context_settings(wake: str | None, clock: str | None) -> dict:
+    """Config fields for the context model from ``--wake`` and ``--clock`` (HH:MM)."""
+    if wake is None and clock is None:
+        return {}
+    start = _hours(clock) if clock else datetime.now().hour + datetime.now().minute / 60.0
+    settings = {"start_clock_h": start}
+    if wake is not None:
+        settings["awake_at_start_h"] = (start - _hours(wake)) % 24.0
+    return settings
 
 
 def main() -> None:
@@ -226,6 +288,8 @@ def main() -> None:
                         help="extra replayed recordings for the supervisor panel")
     parser.add_argument("--time-scale", type=float, default=60.0,
                         help="shift seconds per real second; 60 means one minute of demo is one hour of work")
+    parser.add_argument("--wake", metavar="HH:MM", help="wake-up time of the main worker; turns on the context model")
+    parser.add_argument("--clock", metavar="HH:MM", help="time of day at shift start (default: now); use with --wake")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
@@ -233,7 +297,7 @@ def main() -> None:
     import uvicorn
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    cfg = dataclasses.replace(Config(), time_scale=args.time_scale)
+    cfg = dataclasses.replace(Config(), time_scale=args.time_scale, **context_settings(args.wake, args.clock))
     workers = build_workers(args, cfg)
     log.info("Wachta: http://%s:%s  (%s)", args.host, args.port, ", ".join(w.source.name for w in workers))
     uvicorn.run(create_app(workers, cfg), host=args.host, port=args.port, log_level="warning")

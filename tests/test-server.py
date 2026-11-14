@@ -141,3 +141,35 @@ def test_board_source_reopens_the_database_and_reorders_channels(monkeypatch):
     # F3 is row 7 in the Board order; microvolts are converted to volts.
     assert np.allclose(chunk[0], np.arange(35, 40) * 1e-6)
     assert not fake.open
+
+
+def test_context_settings_from_wake_and_clock():
+    from wachta.server import context_settings
+
+    assert context_settings(None, None) == {}
+    settings = context_settings("23:30", "05:00")
+    assert settings["start_clock_h"] == 5.0
+    assert settings["awake_at_start_h"] == 5.5
+
+
+def test_probe_reaches_the_page_and_the_answer_is_recorded():
+    app, worker = _app(120)
+    worker.primary = True
+    with TestClient(app) as client, client.websocket_connect("/ws") as ws:
+        ws.receive_json()
+        while True:                                   # wait until calibrated
+            message = ws.receive_json()
+            if message["type"] == "update" and message["data"]["state"] != "calibrating":
+                break
+        ws.send_json({"action": "probe_now", "worker": "w0"})
+        probe = ws.receive_json()
+        while probe["type"] != "probe":
+            probe = ws.receive_json()
+        ws.send_json({"action": "probe_response", "worker": "w0", "id": probe["id"], "rt_ms": 512})
+        for _ in range(400):
+            message = ws.receive_json()
+            if message["type"] == "update" and message["data"]["probes_done"] == 1:
+                break
+        assert message["data"]["probe_lapses"] == 1 and message["data"]["last_rt_ms"] == 512
+        # A second answer to the same probe is ignored.
+        assert not worker.probe_response(probe["id"], 100)

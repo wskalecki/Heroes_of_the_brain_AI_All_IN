@@ -48,6 +48,18 @@ function duration(minutes) {
   return rest ? `${hours} h ${rest} min` : `${hours} h`;
 }
 
+// Polish plural: 1 mrugnięcie, 2-4 mrugnięcia, 5+ mrugnięć.
+function plural(n, one, few, many) {
+  if (n === 1) return one;
+  const tens = n % 100;
+  return n % 10 >= 2 && n % 10 <= 4 && (tens < 12 || tens > 14) ? few : many;
+}
+
+function clock(hours) {
+  const total = Math.round(hours * 60) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 function reserveTone(entry) {
   if (!entry || entry.state === "calibrating" || entry.state === "no_signal") return "neutral";
   if (entry.reserve < app.config.stop_below) return "critical";
@@ -74,6 +86,10 @@ function advice(entry) {
       if (entry.reserve < app.config.warn_below) return `${plan} w ciągu ${duration(entry.minutes_to_stop)}.`;
       return `Wykryto spadek czujności. ${plan} przy najbliższej okazji.`;
     case "stop":
+      if (entry.lapse && entry.lapse_kind === "eyes_open") {
+        return `Senność przy otwartych oczach: oczy są otwarte, ale mózg przestaje reagować. ${act}`;
+      }
+      if (entry.lapse && entry.lapse_kind === "eyes_closed") return `Oczy zamknięte dłużej niż kilka sekund (mikrosen). ${act}`;
       if (entry.lapse) return `Wykryto spadek czujności. ${act}`;
       if (entry.lapses_recent >= 2) return `Kolejny spadek czujności w krótkim czasie. ${act}`;
       return `Rezerwa wyczerpana. ${act}`;
@@ -383,8 +399,24 @@ function renderWorker() {
   $("reserve-fill").style.width = `${calibrating ? 0 : entry.reserve}%`;
 
   $("tile-work").textContent = calibrating ? "—" : duration(entry.work_min);
+  $("sub-work").textContent = entry.awake_h == null
+    ? (entry.clock_h == null ? "" : `godzina ${clock(entry.clock_h)}`)
+    : `${decimal(entry.awake_h, 1)} h od przebudzenia, godz. ${clock(entry.clock_h)}`;
   $("tile-drain").textContent = calibrating ? "—" : `${decimal(entry.drain_per_hour, 0)}% / h`;
+  $("sub-drain").textContent = entry.context_factor && entry.context_factor > 1.005
+    ? `pora doby i czuwanie: ×${decimal(entry.context_factor, 2)}`
+    : "";
+  const eyes = { open: "otwarte", closed: "zamknięte" };
+  $("tile-eyes").textContent = eyes[entry.eye_state] || "—";
+  $("sub-eyes").textContent = entry.blinks_per_min == null ? "ustalanie progu mrugnięć" : `${Math.round(entry.blinks_per_min)} ${plural(Math.round(entry.blinks_per_min), "mrugnięcie", "mrugnięcia", "mrugnięć")} / min`;
   $("tile-lapses").textContent = String(entry.lapse_count);
+  $("sub-lapses").textContent = entry.lapse_count
+    ? `oczy zamknięte: ${entry.lapses_eyes_closed}, otwarte: ${entry.lapses_eyes_open}`
+    : "";
+  $("tile-rt").textContent = entry.probes_done ? (entry.last_rt_ms == null ? "brak" : `${Math.round(entry.last_rt_ms)} ms`) : "—";
+  $("sub-rt").textContent = entry.probes_done
+    ? `prób: ${entry.probes_done}, za wolnych lub bez reakcji: ${entry.probe_lapses}`
+    : `próba pojawi się, gdy wskaźnik zacznie rosnąć`;
   $("tile-quality").textContent = `${Math.round(entry.quality * 100)}%`;
   $("btn-break").textContent = entry.on_break ? "Zakończ przerwę" : "Rozpocznij przerwę";
 
@@ -507,8 +539,71 @@ function onMessage(message) {
   } else if (message.type === "status") {
     const worker = app.workers.get(message.worker);
     if (worker) worker.error = message.error;
+  } else if (message.type === "probe") {
+    probe.show(message);
+    return;
   }
   schedule();
+}
+
+// ---------- reaction probe ----------
+
+const probe = {
+  active: null,
+  timer: null,
+
+  show(message) {
+    if (this.active) return;
+    this.active = { id: message.id, worker: message.worker, shownAt: 0 };
+    const target = $("probe-target");
+    delete target.dataset.result;
+    $("probe-title").textContent = "Reakcja!";
+    $("probe-text").textContent = "Naciśnij spację albo kliknij";
+    $("probe").hidden = false;
+    beep();
+    // Measure from the first frame the prompt is actually on screen.
+    requestAnimationFrame(() => {
+      if (!this.active) return;
+      this.active.shownAt = performance.now();
+      target.focus();
+      this.timer = setTimeout(() => this.finish(null), message.timeout_ms || app.config.probe_timeout_ms);
+    });
+  },
+
+  respond() {
+    if (!this.active || !this.active.shownAt) return;
+    this.finish(performance.now() - this.active.shownAt);
+  },
+
+  finish(rtMs) {
+    if (!this.active) return;
+    clearTimeout(this.timer);
+    const { id, worker } = this.active;
+    this.active = null;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ action: "probe_response", worker, id, rt_ms: rtMs == null ? null : Math.round(rtMs) }));
+    }
+    const lapse = rtMs == null || rtMs > app.config.probe_lapse_ms;
+    $("probe-target").dataset.result = lapse ? "lapse" : "ok";
+    $("probe-title").textContent = rtMs == null ? "Brak reakcji" : `${Math.round(rtMs)} ms`;
+    $("probe-text").textContent = lapse ? "Reakcja za wolna: to liczy się jako spadek czujności" : "Reakcja w normie";
+    setTimeout(() => { if (!this.active) $("probe").hidden = true; }, 1500);
+  },
+};
+
+let audio = null;
+function beep() {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.15, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.25);
+    osc.connect(gain).connect(audio.destination);
+    osc.start();
+    osc.stop(audio.currentTime + 0.25);
+  } catch (error) { /* sound is optional */ }
 }
 
 function connect() {
@@ -549,6 +644,14 @@ function init() {
     send(entry && entry.on_break ? "break_end" : "break_start");
   });
   $("btn-calibrate").addEventListener("click", () => send("recalibrate"));
+  $("btn-probe").addEventListener("click", () => send("probe_now"));
+  $("probe-target").addEventListener("pointerdown", (event) => { event.preventDefault(); probe.respond(); });
+  document.addEventListener("keydown", (event) => {
+    if (probe.active && (event.code === "Space" || event.key === "Enter")) {
+      event.preventDefault();
+      probe.respond();
+    }
+  });
   $("btn-reset").addEventListener("click", () => send("reset"));
   connect();
 }

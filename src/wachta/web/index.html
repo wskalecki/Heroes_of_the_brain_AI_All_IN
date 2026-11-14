@@ -46,14 +46,17 @@
       </div>
 
       <dl class="tiles">
-        <div class="tile"><dt>Czas pracy</dt><dd id="tile-work">—</dd></div>
-        <div class="tile"><dt>Tempo zużycia</dt><dd id="tile-drain">—</dd></div>
-        <div class="tile"><dt>Spadki czujności</dt><dd id="tile-lapses">—</dd></div>
-        <div class="tile"><dt>Jakość sygnału</dt><dd id="tile-quality">—</dd></div>
+        <div class="tile"><dt>Czas pracy</dt><dd id="tile-work">—</dd><p class="tile-sub" id="sub-work"></p></div>
+        <div class="tile"><dt>Tempo zużycia</dt><dd id="tile-drain">—</dd><p class="tile-sub" id="sub-drain"></p></div>
+        <div class="tile"><dt>Oczy</dt><dd id="tile-eyes">—</dd><p class="tile-sub" id="sub-eyes"></p></div>
+        <div class="tile"><dt>Spadki czujności</dt><dd id="tile-lapses">—</dd><p class="tile-sub" id="sub-lapses"></p></div>
+        <div class="tile"><dt>Ostatnia reakcja</dt><dd id="tile-rt">—</dd><p class="tile-sub" id="sub-rt"></p></div>
+        <div class="tile"><dt>Jakość sygnału</dt><dd id="tile-quality">—</dd><p class="tile-sub" id="sub-quality"></p></div>
       </dl>
 
       <div class="actions">
         <button type="button" id="btn-break" class="button">Rozpocznij przerwę</button>
+        <button type="button" id="btn-probe" class="button button-quiet">Sprawdź reakcję</button>
         <button type="button" id="btn-calibrate" class="button button-quiet">Kalibruj od nowa</button>
         <button type="button" id="btn-reset" class="button button-quiet">Nowa zmiana</button>
       </div>
@@ -99,6 +102,12 @@
   </footer>
 
   <div id="tooltip" class="tooltip" hidden></div>
+  <div id="probe" class="probe" hidden role="alertdialog" aria-labelledby="probe-title" aria-describedby="probe-text">
+    <button type="button" id="probe-target" class="probe-target">
+      <span id="probe-title" class="probe-title">Reakcja!</span>
+      <span id="probe-text" class="probe-text">Naciśnij spację albo kliknij</span>
+    </button>
+  </div>
   <script src="app.js"></script>
 </body>
 </html>
