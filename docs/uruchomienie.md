@@ -56,6 +56,38 @@ python -m wachta.pvt --person wojtek --checkpoint T1
 
 Jeśli test był otwarty bez działającego serwera i zapisał surowy plik JSON, można go dograć przez `python -m wachta.pvt --import <plik.json>`.
 
+## Dashboard
+
+Serwer liczy wskaźnik dla każdego źródła i wysyła wyniki do przeglądarki. Strona: http://127.0.0.1:8000.
+Działa bez internetu (bez zewnętrznych bibliotek w przeglądarce).
+
+Odtworzenie nagrania Filipa od 500 s, cztery razy szybciej, z dwiema osobami w panelu przełożonego:
+
+```bash
+python -m wachta.server --file filip --start 500 --speed 4 --team rudy:0 adi:60
+```
+
+Blok `eyes_closed` Filipa (600–660 s) pojawia się po ok. 25 s: stan zmienia się na „Przerwa teraz”,
+a panel przełożonego wskazuje osobę z największą rezerwą.
+
+Na żywo z BrainAccess Board (Board uruchomiony, czepek połączony, `pip install -e ".[live]"`):
+
+```bash
+python -m wachta.server --source board --name Wojtek --team rudy:0 adi:60
+```
+
+Kalibracja trwa ok. 60 s spokojnego patrzenia przed siebie. Przyciski na stronie: przerwa, ponowna kalibracja, nowa zmiana.
+
+Przydatne opcje:
+
+- `--time-scale 60` (domyślnie): 1 minuta na ekranie to 1 godzina zmiany, żeby rezerwa zmieniała się w czasie demo. `--time-scale 1` to czas rzeczywisty.
+- `--file` przyjmuje nazwę nagrania zespołu (`adi`, `filip`, `rudy`, `wojtek`) albo ścieżkę do pliku `.fif`.
+- `--team NAZWA:START` dodaje odtwarzane nagrania do panelu przełożonego.
+- `GET /api/state` zwraca ostatni wynik każdego pracownika (do szybkiego sprawdzenia bez przeglądarki).
+
+Tryb na żywo czyta nowe próbki z bazy danych sesji Board (`brainaccess-board`, metoda `get_data_since`) co 0,25 s.
+Nie był jeszcze testowany na sprzęcie.
+
 ## Pipeline w kodzie
 
 ```python
