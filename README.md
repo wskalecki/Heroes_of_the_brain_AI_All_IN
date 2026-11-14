@@ -20,10 +20,13 @@ Repozytorium drużyny na hackathon **Heroes of the Brain 2026** (kategoria: Adap
 | `docs/` | Dokumentacja: decyzje, plan projektu, pomysły, zbiory danych, research rynku i konkurencji |
 | `data/recordings/` | Nagrania testowe z BrainAccess MINI (za zgodą uczestników) |
 | `data/analysis/` | Notebooki z analizą nagrań i porównaniem z danymi publicznymi |
+| `src/wachta/` | Kod: pipeline sygnału, kalibracja na osobę, wskaźnik czujności i rezerwa |
+| `tests/` | Testy (`pytest`) |
+| `experiments/` | Skrypty analityczne, m.in. trafność pipeline'u na nagraniach |
 | `AGENTS.md` | Zasady pracy w repo — obowiązują ludzi i agentów AI |
 | `CONTRIBUTING.md` | Jak dokładać zmiany: gałęzie, commity, PR-y |
 
-Folder `src/` i pozostałe powstaną, gdy wybierzemy pomysł.
+Instalacja, testy i uruchomienie: [`docs/uruchomienie.md`](docs/uruchomienie.md).
 
 ## Zasady w skrócie
 

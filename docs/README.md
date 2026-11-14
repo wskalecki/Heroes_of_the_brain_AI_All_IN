@@ -1,13 +1,15 @@
 # Dokumentacja
 
-Decyzje zespołu, plan pracy i podział zadań są w trzech pierwszych plikach. Pozostałe to materiały pomocnicze:
-wsparcie do dyskusji, a nie decyzje.
+Decyzje zespołu, plan pracy i podział zadań są w trzech pierwszych plikach. Dwa kolejne dotyczą kodu.
+Pozostałe to materiały pomocnicze: wsparcie do dyskusji, a nie decyzje.
 
 | Plik | Zawartość |
 |---|---|
 | [`decyzje.md`](decyzje.md) | Decyzje zespołu: kierunek projektu, zasady dla nagrań, punkty otwarte |
 | [`plan-projektu.md`](plan-projektu.md) | Plan projektu: produkt, zakres na hackathon, architektura, podział pracy, demo |
 | [`zadania.md`](zadania.md) | Zadania według strumieni: właściciel, pliki, warunek ukończenia, status |
+| [`uruchomienie.md`](uruchomienie.md) | Instalacja, testy i użycie pipeline'u |
+| [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md) | Trafność wykrywania zamkniętych oczu na czterech nagraniach zespołu |
 | [`heroes-of-the-brain-pomysly.md`](heroes-of-the-brain-pomysly.md) | Pomysł „Wachta”, możliwości sprzętu, plany zapasowe i lista 100 pomysłów |
 | [`datasety-eeg-zrodla.md`](datasety-eeg-zrodla.md) | Otwarte zbiory EEG do sprawdzenia pipeline'u (senność, przeciążenie), z linkami |
 | [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md) | Konkurencja: firmy od wearables EEG i neuroadaptacji |
