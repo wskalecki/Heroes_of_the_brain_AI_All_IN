@@ -17,6 +17,8 @@ data/raw/
 *.bdf
 *.fif
 *.eeg
+# Wyjątek: nagrania uczestników z ich zgodą (adi, filip, rudy, wojtek)
+!data/recordings/*.fif
 
 # System / IDE
 .DS_Store
