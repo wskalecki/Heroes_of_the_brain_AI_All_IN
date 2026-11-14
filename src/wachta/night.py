@@ -331,6 +331,12 @@ def save_minutes_figure(rows: Sequence[dict[str, Any]], path: Path | str) -> Pat
                         ax.plot(m["minute"], m["fast"], marker="o", ms=9, mfc="none", mec="#d03b3b", mew=1.8)
         if key == "fast":
             ax.axhline(0, color="#c3c2b7", lw=1)
+            threshold = Config().z_enter
+            ax.axhline(threshold, color=ink2, lw=1)
+            ax.annotate(f"próg alarmu {threshold:g}".replace(".", ","), (1, threshold), xytext=(0, 4),
+                        textcoords="offset points", fontsize=8, color=ink2)
+            low, high = ax.get_ylim()
+            ax.set_ylim(min(low, -0.5), max(high, threshold + 0.8))
         if key == "blinks":
             ax.set_ylim(bottom=0, top=max(10.0, ax.get_ylim()[1] * 1.1))
         ax.set_title(title, loc="left", fontsize=9.5, color=ink, fontweight="bold")
