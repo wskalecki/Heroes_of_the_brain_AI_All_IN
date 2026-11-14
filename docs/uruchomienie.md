@@ -86,7 +86,8 @@ Przydatne opcje:
 - `GET /api/state` zwraca ostatni wynik każdego pracownika (do szybkiego sprawdzenia bez przeglądarki).
 
 Tryb na żywo czyta nowe próbki z bazy danych sesji Board (`brainaccess-board`, metoda `get_data_since`) co 0,25 s.
-Nie był jeszcze testowany na sprzęcie.
+Sprawdzony na sprzęcie 14.11.2026: kalibracja i zmiana stanu po zamknięciu oczu działają.
+Przy pracy w czasie rzeczywistym dodaj `--time-scale 1`. Jeśli port 8000 jest zajęty, użyj np. `--port 8001`.
 
 ## Pipeline w kodzie
 
