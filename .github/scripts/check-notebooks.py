@@ -6,7 +6,8 @@ For every tracked .ipynb:
 * every code cell is syntactically valid Python (IPython magics and shell lines are skipped),
 * code cells that were executed have outputs saved only when the notebook is an analysis
   notebook (data/analysis); cleared notebooks are fine elsewhere,
-* no local absolute paths from a developer machine leak into sources or outputs.
+* no local absolute paths from a developer machine leak into sources or outputs,
+* no unfinished placeholders ('(uzupełnić)', TODO, TBD, PLACEHOLDER, FIXME) in markdown cells.
 """
 
 import ast
@@ -17,6 +18,7 @@ import sys
 from pathlib import Path
 
 LEAK = re.compile(r"/home/user/|/root/|/tmp/claude|C:\\Users\\|/Users/[a-z]")
+PLACEHOLDER = re.compile(r"\(uzupełnić\)|\bTODO\b|\bTBD\b|\bPLACEHOLDER\b|\bFIXME\b", re.IGNORECASE)
 
 
 def notebooks() -> list[Path]:
@@ -67,6 +69,8 @@ def main() -> int:
             source = cell_source(cell)
             if LEAK.search(source):
                 errors.append(f"{path}: cell {index}: source contains a local absolute path")
+            if cell.get("cell_type") == "markdown" and PLACEHOLDER.search(source):
+                errors.append(f"{path}: cell {index}: markdown contains an unfinished placeholder ({PLACEHOLDER.search(source).group(0)})")
             if cell.get("cell_type") != "code":
                 continue
             try:
