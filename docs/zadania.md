@@ -38,7 +38,7 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | A2 | MUST | Trafność pipeline'u na 4 nagraniach z adnotacjami | `experiments/validate-on-recordings.py`, `docs/trafnosc-na-nagraniach.md` | tabela na osobę: wykrycie `eyes_closed` i fałszywe alarmy poza nim | zrobione: 4 z 4 bloków, 1 fałszywy alarm |
 | A3 | MUST | Odtwarzanie nagrania, serwer i dashboard | `src/wachta/sources.py`, `src/wachta/server.py`, `src/wachta/web/` | dashboard działa w trybie odtwarzania i zmienia stan w bloku `eyes_closed` | w toku: `claude/sleepy-lamport-v2kzl7` |
 | A4 | MUST | Tryb na żywo z BrainAccess Board | źródło `board` w `sources.py`, `docs/uruchomienie.md` | na laptopie ze sprzętem płyną próbki, a zamknięcie oczu zmienia stan | do zrobienia (wymaga sprzętu, uruchamia Wojtek) |
-| A5 | SHOULD | Narzędzie punktu pomiarowego: odlicza kroki, zapisuje znaczniki i KSS | `src/wachta/session.py` | zapisuje adnotacje i wiersz w `checkpoints.csv` w formatach z sekcji „Kontrakty” | do zrobienia |
+| A5 | SHOULD | Narzędzie punktu pomiarowego: odlicza kroki, zapisuje znaczniki i KSS | `src/wachta/session.py` | zapisuje adnotacje i wiersz w `checkpoints.csv` w formatach z sekcji „Kontrakty” | zrobione: `feat/checkpoint-session` |
 | A6 | COULD | Prognoza czasu do progu, test czasu reakcji w przeglądarce, krzywe z Garmin Connect | — | — | do zrobienia |
 
 ## B. Dane i dowody
