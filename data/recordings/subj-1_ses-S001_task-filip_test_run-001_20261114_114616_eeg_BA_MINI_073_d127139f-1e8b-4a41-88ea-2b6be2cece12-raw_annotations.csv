@@ -1,1 +1,6 @@
-onset,description
+onset,duration,description
+0.000,600.000,neutral
+600.000,60.000,eyes_closed
+660.000,80.000,reading
+740.000,100.000,math
+840.000,40.696,control
