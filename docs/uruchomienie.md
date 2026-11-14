@@ -78,9 +78,19 @@ python -m wachta.server --source board --name Wojtek --team rudy:0 adi:60
 
 Kalibracja trwa ok. 60 s spokojnego patrzenia przed siebie. Przyciski na stronie: przerwa, ponowna kalibracja, nowa zmiana.
 
+Co widać na stronie poza stanem i rezerwą:
+
+- **Oczy:** otwarte albo zamknięte, z liczbą mrugnięć na minutę (z F3/F4). Spadek czujności jest opisany jako
+  „oczy zamknięte (mikrosen)” albo „senność przy otwartych oczach”.
+- **Próba reakcji:** gdy wskaźnik rośnie, ale nie przekroczył jeszcze progu, pojawia się żółte kółko z dźwiękiem.
+  Trzeba nacisnąć spację albo kliknąć. Reakcja wolniejsza niż 355 ms albo jej brak w ciągu 3 s liczy się jako spadek
+  czujności. Przycisk „Sprawdź reakcję” wywołuje próbę ręcznie (do demo).
+
 Przydatne opcje:
 
 - `--time-scale 60` (domyślnie): 1 minuta na ekranie to 1 godzina zmiany, żeby rezerwa zmieniała się w czasie demo. `--time-scale 1` to czas rzeczywisty.
+- `--wake 07:00 --clock 02:30`: godzina przebudzenia i godzina na starcie zmiany (domyślnie teraz). Włącza kontekst:
+  rezerwa spada szybciej w nocy (najmocniej ok. 4:30) i po długim czuwaniu. Parametry to założenia, opisane w `config.py`.
 - `--file` przyjmuje nazwę nagrania zespołu (`adi`, `filip`, `rudy`, `wojtek`) albo ścieżkę do pliku `.fif`.
 - `--team NAZWA:START` dodaje odtwarzane nagrania do panelu przełożonego.
 - `GET /api/state` zwraca ostatni wynik każdego pracownika (do szybkiego sprawdzenia bez przeglądarki).

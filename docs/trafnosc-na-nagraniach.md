@@ -41,6 +41,43 @@ Kolumny:
   Prawdziwa senność daje słabsze zmiany. To uzupełni wykres z danych publicznych (zadanie B2).
 - **Wskaźnik wolny i rezerwa nie są tu sprawdzane.** Ich parametry są założeniami.
 
+## Stan oczu i próby reakcji (zadania A7, A8)
+
+Kamera w aucie sprawdza, czy oczy są zamknięte. Żeby odróżnić to od senności przy otwartych oczach, pipeline liczy
+mrugnięcia na F3/F4 (przy referencji Fp1 mrugnięcie to krótkie, duże wychylenie). Spadek czujności bez mrugnięć jest
+oznaczany jako „oczy zamknięte”, a spadek przy mrugających oczach jako „senność przy otwartych oczach”.
+
+Mrugnięcia na minutę w blokach protokołu (detektor z `src/wachta/blinks.py`, próg z pierwszych 20 s nagrania):
+
+| Osoba | Rozmowa | Oczy zamknięte | Czytanie | Liczenie |
+|---|---|---|---|---|
+| adi | 4,2 | 0,0 | 9,6 | 12,9 |
+| filip | 19,6 | 1,0 | 3,0 | 0,0 |
+| rudy | 13,6 | 0,0 | 8,0 | 31,6 |
+| wojtek | 13,0 | 12,4 | 1,0 | 0,0 |
+
+| Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Próba reakcji przed alarmem w bloku | Próby reakcji poza blokiem |
+|---|---|---|---|
+| adi | 100% okien | tak | 0,0 na 10 min |
+| filip | 100% okien | tak | 3,2 na 10 min |
+| rudy | 100% okien | tak | 1,7 na 10 min |
+| wojtek | 43% okien | tak | 8,0 na 10 min |
+
+Jak to czytać:
+
+- **U trzech osób blok zamkniętych oczu jest prawie bez mrugnięć i cały oznaczony poprawnie.** U Wojtka detektor widzi serię
+  wychyleń w 37.–41. s bloku i przy jego końcu. W tym samym miejscu spada jego alfa, więc to najpewniej krótkie otwarcie oczu,
+  a nie błąd detektora. Bez nagrania wideo nie da się tego rozstrzygnąć.
+- **Przy czytaniu i liczeniu ludzie mrugają rzadko** (u Filipa i Wojtka 0–3 razy na minutę). Same mrugnięcia nie wystarczą więc
+  do oceny stanu oczu. Liczą się tylko razem ze wzrostem alfy.
+- **Senności przy otwartych oczach nie da się tu sprawdzić**, bo nikt w tych nagraniach nie był senny. Dowody na nią pochodzą
+  z danych publicznych (notebooki 04 i 05) i literatury (`podstawy-naukowe.md`). Własne dane mają dać nocne punkty pomiarowe (C4).
+- **Próba reakcji pojawia się przed alarmem u wszystkich czterech osób**, czyli gdy wskaźnik dopiero rośnie. Ceną są próby poza
+  blokiem: od 0 do 8 na 10 minut, najwięcej przy najbardziej zaszumionym sygnale (Wojtek). Wyższy próg próby (1,8 lub 2,0
+  zamiast 1,5) zmniejsza ich liczbę, ale u Wojtka próba przestaje wyprzedzać alarm. Ustawienie do dostrojenia na większej
+  liczbie nagrań.
+- Czasu reakcji nie da się sprawdzić na nagraniach: próba wymaga człowieka przed ekranem.
+
 ## Jak odtworzyć
 
 ```bash
