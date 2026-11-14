@@ -40,6 +40,22 @@ python experiments/validate-on-recordings.py
 
 Wynik i jego ograniczenia: [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md).
 
+## Punkt pomiarowy i test PVT
+
+Narzędzie punktu pomiarowego (protokół 3 × 60 s, KSS i opcjonalnie Garmin Venu 2, zapis adnotacji oraz `data/recordings/checkpoints.csv`):
+
+```bash
+python -m wachta.session --person wojtek --checkpoint T1
+```
+
+Test czasu reakcji PVT-B (3 min) w przeglądarce z zapisem wyników do `data/recordings/pvt.csv`:
+
+```bash
+python -m wachta.pvt --person wojtek --checkpoint T1
+```
+
+Jeśli test był otwarty bez działającego serwera i zapisał surowy plik JSON, można go dograć przez `python -m wachta.pvt --import <plik.json>`.
+
 ## Pipeline w kodzie
 
 ```python
