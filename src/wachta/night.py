@@ -80,6 +80,21 @@ def analyze_signals(eeg_volts: np.ndarray, blocks: Sequence[Block], cfg: Config 
         before = [r for r in results if r["t"] <= t]
         return before[-1]["blinks_per_min"] if before else None
 
+    # Minute-by-minute course of the monotony block (the main view for a single person).
+    minutes = []
+    n_minutes = int(round(monotony.duration / 60.0))
+    for k in range(n_minutes):
+        start, end = monotony.onset + 60.0 * k, monotony.onset + 60.0 * (k + 1)
+        in_minute = [r for r in results if start < r["t"] <= end]
+        fast = _mean(r["fast"] for r in in_minute)
+        minutes.append({
+            "minute": k + 1,
+            "fast": None if fast is None else round(fast, 2),
+            "blinks": blink_rate_at(end),
+            "rejected_pct": round(100.0 * np.mean([r["bad"] for r in in_minute]), 1) if in_minute else None,
+            "lapse": any(r["lapse"] for r in in_minute),
+        })
+
     fast_early = _mean(r["fast"] for r in early)
     fast_late = _mean(r["fast"] for r in late)
     return {
@@ -98,6 +113,7 @@ def analyze_signals(eeg_volts: np.ndarray, blocks: Sequence[Block], cfg: Config 
         "lapses_eyes_closed": lapses.count("eyes_closed"),
         "blinks_early": blink_rate_at(monotony.onset + EARLY_LATE_S),
         "blinks_late": blink_rate_at(monotony.end),
+        "minutes": minutes,
     }
 
 
@@ -172,6 +188,18 @@ def heart_per_block(
             "hr": None if not hr else round(float(np.mean(hr)), 1),
             "rmssd": None if (value := rmssd(beats)) is None else round(value, 1),
         }
+    return out
+
+
+def heart_per_minute(
+    started_at: datetime, block: Block, heart_rate: Sequence[tuple[datetime, float]]
+) -> list[float | None]:
+    """Mean heart rate in each minute of one block."""
+    out = []
+    for k in range(int(round(block.duration / 60.0))):
+        start = started_at + timedelta(seconds=block.onset + 60.0 * k)
+        values = [v for t, v in heart_rate if start <= t < start + timedelta(seconds=60)]
+        out.append(None if not values else round(float(np.mean(values)), 1))
     return out
 
 
@@ -257,6 +285,65 @@ def save_figure(rows: Sequence[dict[str, Any]], path: Path | str) -> Path:
         ax.set_xlim(-0.3, len(order) - 0.4)
     fig.suptitle("Dzień (T) a noc (N): ocena senności, test reakcji i EEG", x=0.01, ha="left", fontsize=12, fontweight="bold", color=ink)
     fig.tight_layout(rect=(0, 0, 1, 0.92))
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out, dpi=130, facecolor=surface)
+    plt.close(fig)
+    return out
+
+
+def save_minutes_figure(rows: Sequence[dict[str, Any]], path: Path | str) -> Path:
+    """Minute-by-minute monotony course, one line per session: alpha index, blinks and heart rate."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    surface, ink, ink2, muted, grid = "#fcfcfb", "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
+    palette = ["#2a78d6", "#eb6834", "#1baf7a", "#6250d6"]
+    sessions = sorted(rows, key=lambda r: (r["person"], r["checkpoint"][0] != "T", r["checkpoint"]))
+    several_people = len({r["person"] for r in rows}) > 1
+    has_heart = any(r.get("hr_minutes") for r in rows)
+    panels = [("fast", "Wskaźnik alfy (z-score względem kalibracji)"), ("blinks", "Mrugnięcia na minutę")]
+    if has_heart:
+        panels.append(("hr", "Tętno z paska [bpm]"))
+
+    plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 9})
+    fig, axes = plt.subplots(1, len(panels), figsize=(3.9 * len(panels), 3.7), facecolor=surface)
+    for ax, (key, title) in zip(axes, panels):
+        ax.set_facecolor(surface)
+        for i, row in enumerate(sessions[: len(palette)]):
+            label = f"{row['person']} {row['checkpoint']}" if several_people else row["checkpoint"]
+            if key == "hr":
+                values = list(enumerate(row.get("hr_minutes") or [], start=1))
+            else:
+                values = [(m["minute"], m[key]) for m in row.get("minutes", [])]
+            points = [(x, y) for x, y in values if y is not None]
+            if not points:
+                continue
+            xs, ys = zip(*points)
+            color = palette[i]
+            ax.plot(xs, ys, color=color, lw=2, marker="o", ms=5, mec=surface, mew=1.5)
+            ax.annotate(label, (xs[-1], ys[-1]), xytext=(6, 0), textcoords="offset points", va="center", fontsize=8, color=ink2)
+            if key == "fast":
+                for m in row.get("minutes", []):
+                    if m["lapse"] and m["fast"] is not None:
+                        ax.plot(m["minute"], m["fast"], marker="o", ms=9, mfc="none", mec="#d03b3b", mew=1.8)
+        if key == "fast":
+            ax.axhline(0, color="#c3c2b7", lw=1)
+        if key == "blinks":
+            ax.set_ylim(bottom=0, top=max(10.0, ax.get_ylim()[1] * 1.1))
+        ax.set_title(title, loc="left", fontsize=9.5, color=ink, fontweight="bold")
+        ax.set_xlabel("minuta monotonii", color=ink2, fontsize=8.5)
+        ax.grid(axis="y", color=grid, lw=0.8)
+        ax.set_axisbelow(True)
+        ax.tick_params(colors=muted, length=0)
+        for side in ("top", "right", "left"):
+            ax.spines[side].set_visible(False)
+        ax.spines["bottom"].set_color("#c3c2b7")
+    fig.suptitle("Monotonia minuta po minucie", x=0.01, ha="left", fontsize=12, fontweight="bold", color=ink)
+    fig.text(0.01, 0.885, "Czerwone kółko: minuta z wykrytym spadkiem czujności.", fontsize=8.5, color=ink2)
+    fig.tight_layout(rect=(0, 0, 1, 0.86))
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=130, facecolor=surface)
