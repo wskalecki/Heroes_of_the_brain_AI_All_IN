@@ -216,6 +216,46 @@ class SessionTests(unittest.TestCase):
             self.assertEqual(row["recording_file"], target.name)
             self.assertEqual(row["notes"], "po polowie hackathonu")
 
+    def _run_wojtek_t1(self, rec_dir, answers):
+        args = build_parser().parse_args(
+            ["--person", "wojtek", "--checkpoint", "t1", "--recordings-dir", str(rec_dir),
+             "--step-seconds", "2", "--no-bell"]
+        )
+        clock = FakeClock(10.0)
+        return run_session(
+            args,
+            input_fn=lambda _prompt: next(answers),
+            out=io.StringIO(),
+            clock=clock,
+            sleep=clock.sleep,
+            now_fn=lambda: datetime(2026, 11, 14, 21, 0, 0, tzinfo=timezone.utc),
+        )
+
+    def test_older_recording_of_the_same_person_is_not_suggested(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            rec_dir = Path(tmp)
+            old = rec_dir / "subj-1_ses-S001_task-wojtek_test_run-001-raw.fif"
+            old.write_bytes(b"old")
+            os.utime(old, (1_000_000, 1_000_000))
+            old_ann = annotations_path_for(old)
+            old_ann.write_text("onset,duration,description\n0.000,300.000,neutral\n", encoding="utf-8")
+            answers = iter(["", "5", "", "", "", "", "", ""])   # start, KSS, 4x Garmin, recording: Enter, notes
+            result = self._run_wojtek_t1(rec_dir, answers)
+            self.assertIsNone(result["annotations_path"])
+            self.assertEqual(old_ann.read_text(encoding="utf-8"), "onset,duration,description\n0.000,300.000,neutral\n")
+
+    def test_existing_annotations_are_kept_unless_confirmed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            rec_dir = Path(tmp)
+            target = rec_dir / "subj-1_ses-S001_task-wojtek-t1_run-001-raw.fif"
+            target.write_bytes(b"new")
+            ann = annotations_path_for(target)
+            ann.write_text("keep\n", encoding="utf-8")
+            answers = iter(["", "5", "", "", "", "", "", "n", ""])  # ... recording: Enter, overwrite: n, notes
+            result = self._run_wojtek_t1(rec_dir, answers)
+            self.assertIsNone(result["annotations_path"])
+            self.assertEqual(ann.read_text(encoding="utf-8"), "keep\n")
+
     def test_find_candidate_recordings_prioritizes_matching_person_and_checkpoint(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             rec_dir = Path(tmp)
