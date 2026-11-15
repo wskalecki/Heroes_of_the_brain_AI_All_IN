@@ -1,7 +1,7 @@
 # Pitch: personalizacja norm zmęczenia
 
 Zadanie D1 z [`zadania.md`](zadania.md). Treść 10 slajdów: jedno zdanie główne, co pokazać i źródło każdej liczby.
-Zasady: [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 (co wolno twierdzić) i [`jury-i-kryteria.md`](jury-i-kryteria.md) §3.
+Zasady: [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 (co wolno twierdzić) i [`pytania-i-odpowiedzi.md`](pytania-i-odpowiedzi.md).
 Przebieg demo: [`scenariusz-demo.md`](scenariusz-demo.md).
 
 ## Pozycjonowanie w jednym zdaniu

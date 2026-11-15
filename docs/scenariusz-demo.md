@@ -11,7 +11,7 @@ Czasy w tym pliku zmierzono 14.11 na odtworzeniu nagrania Filipa. Na żywo trzeb
 | Co musi pokazać | całą pętlę: sygnał → stan → **zmiana zachowania systemu**, w pierwszych 15 s | to samo na żywo i odpowiedzi na pytania |
 | Na czym | najlepsze ujęcie na żywo, a jeśli się nie uda, odtworzenie nagrania | na żywo, a plan awaryjny gotowy w drugim terminalu |
 
-Za zgodność z tematem jest 20 z 50 punktów etapu 1 ([`jury-i-kryteria.md`](jury-i-kryteria.md) §1). Temat to system,
+Za zgodność z tematem jest 20 z 50 punktów etapu 1 ([`pytania-i-odpowiedzi.md`](pytania-i-odpowiedzi.md) §1). Temat to system,
 który **zmienia zachowanie** na podstawie EEG i innych sygnałów biologicznych. Dlatego demo nie kończy się na wykresie:
 pokazujemy rekomendację, próbę reakcji, zmianę obsady w panelu przełożonego i przerwę.
 
@@ -127,7 +127,7 @@ Nagrajcie jedno ujęcie na żywo i jedno na planie B, potem wybierzcie lepsze. N
 
 ## Co mówimy, a czego nie
 
-Na podstawie [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 i [`jury-i-kryteria.md`](jury-i-kryteria.md) §3.
+Na podstawie [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 i [`pitch.md`](pitch.md).
 
 | Mówimy | Nie mówimy |
 |---|---|
@@ -140,7 +140,7 @@ Na podstawie [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 i [`jury-i-kryteri
 
 ## Pytania, na które trzeba mieć odpowiedź
 
-Pełna lista: [`jury-i-kryteria.md`](jury-i-kryteria.md) §4. Dwa nowe po zmianach z 14.11:
+Pełna lista: [`pytania-i-odpowiedzi.md`](pytania-i-odpowiedzi.md) §2. Dwa nowe po zmianach z 14.11:
 
 | Pytanie | Odpowiedź |
 |---|---|
