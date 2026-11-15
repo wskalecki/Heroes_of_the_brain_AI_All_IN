@@ -118,7 +118,7 @@ Nagrajcie jedno ujęcie na żywo i jedno na planie B, potem wybierzcie lepsze. N
 
 | Czas | Obraz | Narracja / napis |
 |---|---|---|
-| 0:00–0:15 | osoba w czepku zamyka oczy, baner zmienia się na „Przerwa teraz”, panel przełożonego wskazuje zmiennika | „Wachta zmienia plan pracy na podstawie EEG: kiedy mózg przestaje reagować, system każe zjechać i wskazuje zmiennika.” |
+| 0:00–0:15 | osoba w czepku zamyka oczy, baner zmienia się na „Przerwa teraz”, panel przełożonego wskazuje zmiennika | „Wachta zmienia plan pracy na podstawie EEG: gdy oczy zamykają się na dłużej niż kilka sekund, system każe zjechać i wskazuje zmiennika.” |
 | 0:15–0:35 | slajd: problem | „Normy mierzą czas pracy, a nie człowieka.” Jedna liczba ze źródłem (z `rynek-*.md`) |
 | 0:35–1:05 | „Nowa zmiana” w nocy, kafelki kontekstu, próba reakcji z szybką odpowiedzią | „Minuta kalibracji EEG, potem system śledzi alfę, mrugnięcia i reakcję. W nocy rezerwa spada szybciej.” |
 | 1:05–1:30 | brak reakcji przy otwartych oczach, rezerwa spada, przełączenie na „Pielęgniarka”, przerwa | „Kamera widzi, czy oczy są otwarte. My sprawdzamy, czy człowiek jeszcze reaguje.” |
