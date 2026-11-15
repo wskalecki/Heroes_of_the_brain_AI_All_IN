@@ -142,6 +142,8 @@ oczach zamkniętych do otwartych) i test „marker działa u tej osoby: tak, sł
 (**założenie**: senna alfa jest słabsza niż przy zamkniętych oczach). Gdy marker jest słaby, system opiera się na próbach i kontekście
 i mówi o tym wprost.
 
+**Po sprawdzeniu w B7 (notebook 07) ten punkt wymaga korekt:** (1) próg alarmu jako ułamek skoku podnosi fałszywe alarmy z 1 do 20 na nagraniach zespołu, więc zostaje stałe `z_enter` = 2,5; (2) 30 s oczu otwartych to za mało (zgodność werdyktu 78%), potrzeba 60 s oczu otwartych (bez rozmowy) i ok. 40 s zamkniętych, z pominięciem pierwszych 10 s; (3) werdykt jest cechą sesji, nie osoby (tydzień później ten sam werdykt u 44–56% osób), więc liczymy go przy każdym założeniu czepka, a „nie” znaczy „dziś, przy tym dopasowaniu”; (4) założenie o słabszej alfie senności nadal niesprawdzone. Progi robocze R_z: tak ≥ 2,5, słabo 1,5–2,5, nie < 1,5 (27 osób z elektrodami żelowymi, wstępne).
+
 ## 6. Plan walidacji (żeby adaptacja nie była tylko ilustracją)
 
 1. **Nocne punkty pomiarowe T0, T1, T2 z testem reakcji i KSS** (zadania C1, C2, C4). Trenować na T0/T1, testować na T2.
