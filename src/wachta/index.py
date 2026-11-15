@@ -3,13 +3,15 @@
 Signals that feed the state:
 
 * fast: z-score of alpha prominence over the occipital channels. A sustained
-  rise means a vigilance lapse.
+  rise is an acute event: eyes closing or an alpha wave right now. It detects,
+  it does not predict (notebook 06: alpha with open eyes does not forecast lapses).
+  Lapses closer than ``lapse_merge_s`` are one event (issue #11).
 * eye state: blinks on the frontal channels (``blinks.py``). A lapse without
   blinks is "eyes closed" (what a driver camera also sees); a lapse while the
-  person keeps blinking is "drowsy with open eyes" (what a camera misses).
-* reaction probes: when the fast index rises towards the threshold, the
-  dashboard asks for a quick reaction. A slow (> 355 ms, PVT-B lapse) or missing
-  response is a confirmed lapse.
+  person keeps blinking is labelled "eyes open".
+* reaction probes (issue #14): after each acute event and on a schedule. A missing
+  response or one slower than the personal norm (1.5 x own median, PVT-B 355 ms
+  until enough responses) is a failed probe.
 * slow: one-minute mean of the z-scored (theta + alpha) / beta ratio. It only
   changes how fast the reserve drains.
 * context: hours awake and time of day (simplified two-process model). Also
@@ -44,8 +46,12 @@ class VigilanceIndex:
         self.probes_done = 0
         self.probe_lapses = 0
         self.last_rt_ms: float | None = None
+        self._passed_rts: list[float] = []
         self._probe_requested = False
+        self._probe_reason: str | None = None
         self._last_probe_t = -math.inf
+        self._next_scheduled_t: float | None = None
+        self._failed_probe_t = -math.inf
         self.reset_detection()
 
     def reset_detection(self) -> None:
@@ -56,11 +62,12 @@ class VigilanceIndex:
         self._lapse_starts: deque[float] = deque()
         self._above = 0
         self._below = 0
-        self._suspect = 0
         self.lapse = False
         self.lapse_kind: str | None = None
         self._lapse_t0 = 0.0
         self._counted_kind: str | None = None
+        self._last_lapse_end = -math.inf
+        self._event_probe_pending = False
 
     def start_break(self) -> None:
         self.on_break = True
@@ -72,17 +79,32 @@ class VigilanceIndex:
         """Ask for a reaction probe at the next window (manual check)."""
         self._probe_requested = True
 
-    def record_probe(self, t: float, rt_ms: float | None) -> bool:
-        """Store a probe result; returns True when it counts as a lapse."""
+    def probe_threshold_ms(self) -> float:
+        """Reaction time above which a probe fails: personal norm once known, else the PVT-B lapse."""
         cfg = self.cfg
+        if len(self._passed_rts) < cfg.probe_norm_min:
+            return cfg.probe_lapse_ms
+        rts = sorted(self._passed_rts)
+        mid = len(rts) // 2
+        median = rts[mid] if len(rts) % 2 else 0.5 * (rts[mid - 1] + rts[mid])
+        return cfg.probe_norm_factor * median
+
+    def record_probe(self, t: float, rt_ms: float | None) -> bool:
+        """Store a probe result; returns True when the probe failed."""
+        cfg = self.cfg
+        threshold = self.probe_threshold_ms()
         self.probes_done += 1
         self.last_rt_ms = rt_ms
-        lapsed = rt_ms is None or rt_ms > cfg.probe_lapse_ms
-        if lapsed:
+        failed = rt_ms is None or rt_ms > threshold
+        if failed:
             self.probe_lapses += 1
             self.reserve = max(0.0, self.reserve - cfg.lapse_penalty)
             self._lapse_starts.append(t)
-        return lapsed
+            self._failed_probe_t = t
+        else:
+            self._passed_rts.append(float(rt_ms))
+            self._failed_probe_t = -math.inf        # a passed probe clears the stop
+        return failed
 
     # -- helpers ---------------------------------------------------------
 
@@ -108,7 +130,11 @@ class VigilanceIndex:
         return sum(1 for _, clean in self._quality_hist if clean) / len(self._quality_hist)
 
     def _update_lapse(self, t: float, fast: float) -> bool:
-        """Hysteresis on the fast index. Returns True when a new lapse starts."""
+        """Hysteresis on the fast index. Returns True when a new acute event starts.
+
+        A lapse that starts within ``lapse_merge_s`` of the previous one continues that
+        event: no new count, no new penalty, no new probe.
+        """
         cfg = self.cfg
         if math.isnan(fast):
             self._above = 0
@@ -117,12 +143,17 @@ class VigilanceIndex:
         self._below = self._below + 1 if fast < cfg.z_exit else 0
         if not self.lapse and self._above * cfg.step_s >= cfg.lapse_min_s:
             self.lapse = True
+            if t - self._last_lapse_end < cfg.lapse_merge_s:
+                return False
             self.lapse_count += 1
             self._lapse_t0 = t
             self._lapse_starts.append(t)
+            self._counted_kind = None
+            self._event_probe_pending = True
             return True
         if self.lapse and self._below * cfg.step_s >= cfg.lapse_exit_s:
             self.lapse = False
+            self._last_lapse_end = t
         return False
 
     def _eye_state(self, t: float, last_blink: float | None, blinks_ready: bool) -> str | None:
@@ -185,27 +216,34 @@ class VigilanceIndex:
         new_lapse = self._update_lapse(t, fast) if calibrated else False
         if self.lapse:
             self.lapse_kind = self._classify_lapse(t, last_blink, blinks_ready)
-            # Count each lapse once, by the kind it settles on after the confirmation period.
+            # Count each event once, by the kind it settles on after the confirmation period.
             if self._counted_kind is None and t - self._lapse_t0 >= cfg.lapse_kind_settle_s:
                 self._counted_kind = self.lapse_kind
                 self.lapse_kinds[self.lapse_kind] += 1
         else:
             if self._counted_kind is None and self.lapse_kind is not None:
+                self._counted_kind = self.lapse_kind
                 self.lapse_kinds[self.lapse_kind] += 1
             self.lapse_kind = None
-            self._counted_kind = None
 
-        # Reaction probe: the index is rising but has not crossed the lapse threshold yet.
-        probe = False
-        if calibrated and not self.on_break and quality >= cfg.quality_min:
-            rising = not math.isnan(fast) and cfg.probe_z <= fast and not self.lapse
-            self._suspect = self._suspect + 1 if rising else 0
+        # Reaction probe: right after an acute event ends, on the schedule, or on request.
+        probe, probe_reason = False, None
+        if calibrated and self._next_scheduled_t is None:
+            self._next_scheduled_t = t + cfg.probe_interval_s
+        if calibrated and not self.on_break and quality >= cfg.quality_min and not self.lapse:
             cooled = t - self._last_probe_t >= cfg.probe_cooldown_s
-            if self._probe_requested or (cooled and self._suspect * cfg.step_s >= cfg.probe_min_s):
+            if self._probe_requested:
+                probe_reason = "manual"
+            elif self._event_probe_pending and cooled and t - self._last_lapse_end >= cfg.probe_event_delay_s:
+                probe_reason = "event"
+            elif self._next_scheduled_t is not None and t >= self._next_scheduled_t and cooled:
+                probe_reason = "schedule"
+            if probe_reason is not None:
                 probe = True
                 self._probe_requested = False
+                self._event_probe_pending = False
                 self._last_probe_t = t
-                self._suspect = 0
+                self._next_scheduled_t = t + cfg.probe_interval_s
 
         while self._lapse_starts and self._lapse_starts[0] < t - cfg.recent_lapse_s:
             self._lapse_starts.popleft()
@@ -231,9 +269,11 @@ class VigilanceIndex:
             state = "no_signal"
         elif self.on_break:
             state = "break"
-        elif self.lapse or self.reserve < cfg.stop_below or recent >= 2:
+        elif self.lapse or self.reserve < cfg.stop_below or t - self._failed_probe_t < cfg.probe_stop_s:
+            # "Stop" means now: a lapse in progress, an exhausted reserve or a failed reaction probe.
             state = "stop"
         elif self.reserve < cfg.warn_below or recent >= 1:
+            # Recent events lower the reserve and raise attention, but do not hold "stop" (issue #11).
             state = "warn"
         else:
             state = "ok"
@@ -260,6 +300,9 @@ class VigilanceIndex:
                 self.lapse_kind, self._eye_state(t, last_blink, blinks_ready)
             ),
             "probe": probe,
+            "probe_reason": probe_reason,
+            "probe_threshold_ms": round(self.probe_threshold_ms(), 1),
+            "probe_failed_recently": t - self._failed_probe_t < cfg.probe_stop_s,
             "probes_done": self.probes_done,
             "probe_lapses": self.probe_lapses,
             "last_rt_ms": self.last_rt_ms,

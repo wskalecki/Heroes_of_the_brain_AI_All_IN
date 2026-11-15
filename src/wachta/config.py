@@ -57,12 +57,21 @@ class Config:
     lapse_blink_lookback_s: float = 2.0  # a blink this soon before the lapse or later: eyes open
     lapse_kind_settle_s: float = 5.0     # count the lapse by the kind it has after this long
 
-    # Reaction probes (A8). Lapse threshold as in PVT-B (Basner et al. 2011).
-    probe_z: float = 1.5           # the fast index above this, but below z_enter ...
-    probe_min_s: float = 2.0       # ... for this long triggers a probe
-    probe_cooldown_s: float = 45.0
-    probe_lapse_ms: float = 355.0
+    # Acute events (issue #11). Lapses closer than this are one event, e.g. one eye closure
+    # interrupted by a short alpha dip. Assumption, not fitted.
+    lapse_merge_s: float = 15.0
+
+    # Reaction probes (issue #14): after each acute event and on a schedule, never from a
+    # sub-threshold alpha rise (notebook 06: alpha with open eyes does not predict lapses).
+    probe_interval_s: float = 1200.0   # scheduled probe every 20 min of real time (assumption)
+    probe_event_delay_s: float = 12.0  # probe after an event only once alpha stayed low this long;
+                                       # dips inside one eye closure lasted 6-11 s in our recordings
+    probe_cooldown_s: float = 30.0     # at least this long between two probes
+    probe_lapse_ms: float = 355.0      # PVT-B lapse threshold (Basner et al. 2011) until a personal norm exists
+    probe_norm_factor: float = 1.5     # personal norm: lapse above 1.5 x own median RT (as in Cui et al.)
+    probe_norm_min: int = 3            # passed responses needed before the personal norm is used
     probe_timeout_ms: float = 3000.0
+    probe_stop_s: float = 120.0        # a failed probe keeps "stop" until a passed probe or this long
 
     # Slow index: fatigue trend
     slow_window_s: float = 60.0

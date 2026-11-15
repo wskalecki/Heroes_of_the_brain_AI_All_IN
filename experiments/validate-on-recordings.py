@@ -25,6 +25,7 @@ BLOCK_NAMES = {
     "reading": "czytanie",
     "math": "liczenie",
     "control": "kontrolne",
+    "monotony": "monotonia",
 }
 
 
@@ -69,9 +70,15 @@ def evaluate(name: str, path: Path, cfg: Config) -> dict:
     eyes_closed_share = (
         100.0 * np.mean([r["lapse_kind"] == "eyes_closed" for r in lapse_in_block]) if lapse_in_block else float("nan")
     )
-    probe_times = [r["t"] for r in calibrated if r["probe"]]
-    probes_outside = [t for t in probe_times if not target.onset - 10 <= t <= target.end]
-    probes_before_lapse = [t for t in probe_times if target.onset <= t <= (hits[0] if hits else target.end)]
+    # Issues #11 and #14: one event per block, "stop" ends soon after the block, probe after the event only.
+    events_in_block = [r["t"] for r in calibrated if r["new_lapse"] and target.onset <= r["t"] <= target.end]
+    stop_after = [r["t"] for r in calibrated if r["state"] == "stop" and target.end < r["t"] <= target.end + 60]
+    probes = [r for r in calibrated if r["probe"]]
+    event_times = [r["t"] for r in calibrated if r["new_lapse"]]
+    probe_after_block = next((r["t"] for r in probes if target.end <= r["t"] <= target.end + 40), None)
+    probes_without_event = [
+        r["t"] for r in probes if r["probe_reason"] != "event" or not any(0 < r["t"] - e <= 90 for e in event_times)
+    ]
 
     return {
         "name": name,
@@ -87,8 +94,10 @@ def evaluate(name: str, path: Path, cfg: Config) -> dict:
         "false_time_pct": 100.0 * np.mean([r["lapse"] for r in outside]) if outside else float("nan"),
         "outside_minutes": outside_minutes,
         "eyes_closed_share": eyes_closed_share,
-        "probes_outside_per_10min": len(probes_outside) / outside_minutes * 10.0 if outside_minutes else float("nan"),
-        "probe_before_lapse": bool(probes_before_lapse),
+        "events_in_block": len(events_in_block),
+        "stop_ends_after_s": (max(stop_after) - target.end) if stop_after else 0.0,
+        "probe_after_block_s": None if probe_after_block is None else probe_after_block - target.end,
+        "probes_without_event": len(probes_without_event),
         "auc": auc(
             [r["fast"] for r in inside if r["fast"] is not None],
             [r["fast"] for r in outside if r["fast"] is not None],
@@ -123,12 +132,13 @@ def print_table(rows: list[dict]) -> None:
     print(f"Razem: wykryto {detected} z {len(rows)} bloków, {alarms_text} "
           f"w {pl(minutes, 0)} min poza blokiem (po kalibracji).")
     print()
-    print("| Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Próba reakcji przed alarmem w bloku | "
-          "Próby reakcji poza blokiem |")
-    print("|---|---|---|---|")
+    print("| Osoba | Spadek w bloku oznaczony jako „oczy zamknięte” | Zdarzenia w bloku | „Stop” trwa po bloku | "
+          "Próba reakcji po bloku | Próby bez wcześniejszego zdarzenia |")
+    print("|---|---|---|---|---|---|")
     for row in rows:
-        print(f"| {row['name']} | {pl(row['eyes_closed_share'], 0)}% okien | "
-              f"{'tak' if row['probe_before_lapse'] else 'nie'} | {pl(row['probes_outside_per_10min'])} na 10 min |")
+        after = "brak" if row["probe_after_block_s"] is None else f"po {pl(row['probe_after_block_s'], 0)} s"
+        print(f"| {row['name']} | {pl(row['eyes_closed_share'], 0)}% okien | {row['events_in_block']} | "
+              f"{pl(row['stop_ends_after_s'], 0)} s | {after} | {row['probes_without_event']} |")
 
 
 def save_figure(rows: list[dict], cfg: Config, path: Path) -> None:

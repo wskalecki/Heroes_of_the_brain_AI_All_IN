@@ -46,15 +46,6 @@ def test_short_spike_is_not_a_lapse():
     assert not any(s["new_lapse"] for s in states)
 
 
-def test_two_lapses_in_two_minutes_keep_the_state_at_stop():
-    index = VigilanceIndex(Config())
-    _run(index, 0, 30)
-    _run(index, 30, 10, _z(alpha_prom=6.0))
-    _run(index, 40, 10)
-    _run(index, 50, 10, _z(alpha_prom=6.0))
-    assert _run(index, 60, 10)["state"] == "stop"
-
-
 def test_reserve_drains_with_work_and_recovers_on_break():
     cfg = dataclasses.replace(Config(), time_scale=3600.0)   # one real second is one shift hour
     index = VigilanceIndex(cfg)
@@ -109,15 +100,6 @@ def test_lapse_while_blinking_is_drowsiness_with_open_eyes():
     assert out["eye_state"] == "open"
 
 
-def test_rising_index_below_threshold_triggers_one_probe_per_cooldown():
-    cfg = Config()
-    index = VigilanceIndex(cfg)
-    _run(index, 0, 30)
-    flags = [index.update(30.0 + i, _z(alpha_prom=2.0), False, True)["probe"] for i in range(60)]
-    assert sum(flags) == 2                       # 60 s of suspicion, 45 s cooldown
-    assert flags.index(True) == 3                # median over 5 windows, then 2 s above probe_z
-
-
 def test_manual_probe_request():
     index = VigilanceIndex(Config())
     _run(index, 0, 30)
@@ -152,3 +134,85 @@ def test_night_and_long_wakefulness_drain_faster():
 def test_context_is_off_by_default():
     out = _run(VigilanceIndex(Config()), 0, 3)
     assert out["context_factor"] == 1.0 and out["clock_h"] is None
+
+
+def test_one_eye_closure_with_a_short_dip_is_one_event():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    starts = [index.update(30.0 + i, _z(alpha_prom=6.0), False, True)["new_lapse"] for i in range(15)]
+    starts += [index.update(45.0 + i, _z(), False, True)["new_lapse"] for i in range(6)]      # dip: lapse ends
+    starts += [index.update(51.0 + i, _z(alpha_prom=6.0), False, True)["new_lapse"] for i in range(15)]
+    assert sum(starts) == 1
+    out = index.update(66.0, _z(alpha_prom=6.0), False, True)
+    assert out["lapse_count"] == 1 and out["lapses_recent"] == 1
+
+
+def test_stop_ends_within_seconds_after_the_eyes_open():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    _run(index, 30, 15, _z(alpha_prom=6.0))
+    states = [index.update(45.0 + i, _z(), False, True)["state"] for i in range(10)]
+    assert "stop" not in states[6:]                  # median over 5 windows + 2 s exit hysteresis
+    assert states[-1] == "warn"                      # the recent event still raises attention
+
+
+def test_two_separate_events_raise_attention_but_do_not_hold_stop():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    _run(index, 30, 10, _z(alpha_prom=6.0))
+    _run(index, 40, 30)                              # 30 s apart: two events
+    _run(index, 70, 10, _z(alpha_prom=6.0))
+    out = _run(index, 80, 10)
+    assert out["lapse_count"] == 2 and out["state"] == "warn"
+
+
+def test_rising_alpha_below_the_threshold_does_not_trigger_a_probe():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    assert not any(index.update(30.0 + i, _z(alpha_prom=2.0), False, True)["probe"] for i in range(120))
+
+
+def test_probe_follows_each_event_once_after_the_eyes_open():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    during = [index.update(30.0 + i, _z(alpha_prom=6.0), False, True) for i in range(15)]
+    assert not any(r["probe"] for r in during)        # no probe while the eyes are closed
+    after = [index.update(45.0 + i, _z(), False, True) for i in range(40)]
+    probes = [(i, r) for i, r in enumerate(after) if r["probe"]]
+    assert len(probes) == 1 and probes[0][1]["probe_reason"] == "event"
+    assert 12 <= probes[0][0] <= 22                  # after the exit hysteresis and the confirmation delay
+
+
+def test_no_probe_in_a_short_dip_inside_one_eye_closure():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    r1 = [index.update(30.0 + i, _z(alpha_prom=6.0), False, True) for i in range(15)]
+    r2 = [index.update(45.0 + i, _z(), False, True) for i in range(8)]                  # short dip
+    r3 = [index.update(53.0 + i, _z(alpha_prom=6.0), False, True) for i in range(15)]
+    assert not any(r["probe"] for r in r1 + r2 + r3)
+
+
+def test_scheduled_probe_every_interval():
+    cfg = dataclasses.replace(Config(), probe_interval_s=60.0)
+    index = VigilanceIndex(cfg)
+    reasons = [r["probe_reason"] for r in (index.update(float(t), _z(), False, True) for t in range(200)) if r["probe"]]
+    assert reasons == ["schedule", "schedule", "schedule"]
+
+
+def test_failed_probe_holds_stop_until_a_passed_probe():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    index.record_probe(30.0, None)
+    assert _run(index, 31, 20)["state"] == "stop"
+    index.record_probe(51.0, 250.0)
+    assert _run(index, 52, 3)["state"] == "warn"
+
+
+def test_personal_norm_replaces_the_fixed_threshold():
+    index = VigilanceIndex(Config())
+    assert index.probe_threshold_ms() == 355.0
+    for rt in (200.0, 220.0, 240.0):
+        assert not index.record_probe(10.0, rt)
+    assert index.probe_threshold_ms() == pytest.approx(330.0)   # 1.5 x median 220 ms
+    assert index.record_probe(20.0, 340.0)                      # passes PVT-B, fails the personal norm
+
