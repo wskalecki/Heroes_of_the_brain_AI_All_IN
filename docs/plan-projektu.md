@@ -7,7 +7,7 @@ Decyzja o kierunku jest zapisana w [`decyzje.md`](decyzje.md). Ten plik mówi, c
 
 ## Produkt w jednym zdaniu
 
-Przepisy mierzą czas pracy, a nie człowieka. Wachta mierzy człowieka: **EEG kalibruje, zegarek pilnuje.**
+Przepisy mierzą czas pracy, a nie człowieka. Wachta mierzy człowieka: **EEG i test reakcji ustalają osobisty profil, model kontekstu pilnuje na co dzień, zegarek jest dodatkowym sygnałem.**
 
 1. Krótka sesja z EEG uczy osobistego wzorca zmęczenia danej osoby.
 2. Na co dzień wystarcza tani czujnik (zegarek) i kontekst: czas pracy, pora doby, sen.
@@ -28,7 +28,7 @@ publicznych i literatury oraz studium jednej osoby z zegarkiem Garmin Venu 2.
 | Epizody alfy z notebooka 01 pokrywają się z blokami `eyes_closed` z protokołu | `data/recordings/README.md` | Mamy prawdziwe etykiety, można policzyć trafność |
 | Reguła „przeciążenie” nie zadziałała ani razu; w zadaniu MATB alfa ciemieniowa rośnie zamiast spadać | notebooki 02 i 03 | Przeciążenia nie obiecujemy |
 | Odrzucanie artefaktów i kalibracja na osobę są konieczne; flaga kontaktu elektrod nic nie mówi | notebooki 01–03 | Jakość sygnału oceniamy sami |
-| Alfa przy otwartych oczach **nie przewiduje** lapsu w następnej minucie (AUC 0,52, 29 osób); 15 min monotonii (T1, KSS 5) dało zero fałszywych alarmów, a próba z podprogowej alfy wyskoczyłaby 11 razy | notebook 06, [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) | Próba reakcji z harmonogramu albo po zdarzeniu, nie z podprogowej alfy (issue #14); „EEG ostrzega przed spadkiem” nie wchodzi do pitchu |
+| Alfa przy otwartych oczach **nie przewiduje** lapsu w następnej minucie (AUC 0,52, 20 osób z co najmniej 3 lapsami z 29); 15 min monotonii (T1, KSS 5) dało zero fałszywych alarmów, a próba z podprogowej alfy wyskoczyłaby 11 razy | notebook 06, [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) | Próba reakcji z harmonogramu albo po zdarzeniu, nie z podprogowej alfy (issue #14); „EEG ostrzega przed spadkiem” nie wchodzi do pitchu |
 | Zmęczenie i senność to stan fizyczny, dozwolony w celach bezpieczeństwa; obciążenie poznawcze to szara strefa, a stres i wypalenie są zakazane | [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) §3, AI Act motyw 18 | Mówimy „zmęczenie i czujność”, nie „przeciążenie kognitywne” |
 | W zarządzaniu zmęczeniem działa już SmartCap (EEG w czapce); research rynku rekomendował wejście przez IT ops | [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md), [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) | Na slajdzie musi być różnica względem SmartCap; segment wejścia jest punktem otwartym |
 | Logowanie bibliotek do Garmin Connect jest zepsute od marca 2026; HRV z nadgarstka bywa niewiarygodne | źródła na końcu | Odczyty z Venu 2 wpisujemy ręcznie; API tylko jako próba na 20 min |
@@ -123,7 +123,7 @@ Role Filipa i Rudego to propozycja, do zamiany między nimi. Kod zamrażamy 2 h 
 
 1. Osoba z zespołu skalibrowana przed wejściem. Dashboard: rezerwa wysoka, „możesz pracować”.
 2. Zamyka oczy na 5–10 s (symulowany mikrosen): „przerwa teraz, zjedź na parking”, a panel przełożonego proponuje zmianę obsady.
-3. Slajdy: trafność na naszych nagraniach, wykres z danych publicznych, studium Venu 2 (jedna osoba, ilustracja), mapa „EEG kalibruje, zegarek pilnuje”.
+3. Slajdy: trafność na naszych nagraniach, wykres z danych publicznych, studium Venu 2 (jedna osoba, ilustracja), mapa „profil z EEG i testu reakcji, kontekst na co dzień”.
 4. Plan awaryjny: ten sam dashboard w trybie odtwarzania nagrania i nagrane wideo.
 
 **Co zweryfikowane, a co założone** (osobny slajd):
