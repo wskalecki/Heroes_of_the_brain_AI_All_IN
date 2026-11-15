@@ -46,7 +46,7 @@ pochodzą z elektrod żelowych i innych montaży.
 
 ## 2026-11-15 — Licencja repozytorium: MIT
 
-**Status:** przyjęte przez Adriana; do potwierdzenia przez resztę zespołu (decyzje o stosie zapadają wspólnie).
+**Status:** przyjęte, potwierdzone przez zespół w dyskusji (15.11).
 
 **Decyzja.** Kod i dokumentacja repozytorium są na licencji MIT (plik `LICENSE`, właściciel praw: „AI All In”).
 Licencja **nie obejmuje** nagrań EEG w `data/recordings/`: to dane biometryczne członków zespołu, udostępnione w repo
