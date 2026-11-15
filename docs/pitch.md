@@ -37,7 +37,7 @@ Pod spodem nazwa zespołu i kategoria (Systemy adaptacyjne).
 
 - Różnice między osobami w spadku sprawności po braku snu są systematyczne i powtarzalne u tej samej osoby (Van Dongen i in. 2004, *Sleep* 27(3):423-33). Źródło: `podstawy-naukowe.md`, poz. 28.
 - Kamera w aucie widzi oczy i głowę. Nasz detektor alfy wykrywa to samo zdarzenie (zamknięcie oczu), więc nie obiecujemy, że zrobimy to lepiej. Różnica: osobisty profil, krótka próba reakcji i zmiana planu pracy zamiast samego alarmu.
-- Lotnictwo już dopuszcza normy oparte na danych (systemy zarządzania ryzykiem zmęczenia, FRMS) jako alternatywę dla sztywnych limitów. Źródło: [IATA FRMS 2025](https://www.iata.org/contentassets/5f976bb3ca2446f3a40e88b18dd61fbb/frms_white-paper_2025.pdf). Jeden z dokumentów roboczych ICAO (zgromadzenie A42) krytykuje, że FRMS nadal opierają się głównie na limitach i samoocenie; przed slajdem znaleźć i podać numer dokumentu.
+- Lotnictwo już dopuszcza normy oparte na danych (systemy zarządzania ryzykiem zmęczenia, FRMS) jako alternatywę dla sztywnych limitów. Źródło: [IATA FRMS 2025](https://www.iata.org/contentassets/5f976bb3ca2446f3a40e88b18dd61fbb/frms_white-paper_2025.pdf).
 
 ### 4. Rozwiązanie
 
@@ -81,7 +81,7 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 | Senność widać w EEG na naszych 8 kanałach (dane publiczne) | Senność przy otwartych oczach na naszych własnych nagraniach (zbieramy, zadanie C4; w sesji T1 jej nie było, KSS 5) |
 | Personalizacja poprawia rozróżnianie stanów (dane publiczne) | Parametry rezerwy (tempo spadku, kary, wpływ nocy) |
 | Działająca pętla na żywo z czepkiem BrainAccess | Że zegarek może zastąpić sesje EEG (nasze dane: nie zastąpi, może uzupełnić) |
-| Zero fałszywych alarmów w 15 min monotonii (T1: jedna osoba, jedna sesja, KSS 5) | Że alfa przy otwartych oczach ostrzega przed spadkiem czujności: **sprawdziliśmy i nie ostrzega** (AUC 0,52 na 29 osobach, notebook 06), więc tego nie obiecujemy |
+| Zero fałszywych alarmów w 15 min monotonii (T1: jedna osoba, jedna sesja, KSS 5) | Że alfa przy otwartych oczach ostrzega przed spadkiem czujności: **sprawdziliśmy i nie ostrzega** (AUC 0,52 na 20 osobach z co najmniej 3 lapsami, z 29 w zbiorze; notebook 06), więc tego nie obiecujemy |
 
 ### 9. Rynek, model, prawo
 
@@ -103,6 +103,7 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 - Miary: lapsy w teście PVT-B, zdarzenia na zmianie, ocena senności (KSS). Porównanie trzech wariantów: norma czasu, model kontekstu, model osobisty.
 - Własne nocne pomiary z testem reakcji już zbieramy (zadanie C4).
 - Zespół: imiona i role.
+- Na ostatnim slajdzie źródła zbiorów (CC BY wymaga podania autorów): COG-BCI (Hinss i in. 2023), zbiór Cui i in. 2022, EEG During Mental Arithmetic Tasks (PhysioNet), pełna lista w [`licencje.md`](licencje.md).
 
 ## Zdania, których nie używamy
 

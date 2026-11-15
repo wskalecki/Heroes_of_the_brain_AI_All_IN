@@ -41,7 +41,7 @@ pokazujemy rekomendację, próbę reakcji, zmianę obsady w panelu przełożoneg
 **A. Na żywo** (noc, kierowca wstał o 7:00, jest 2:30; 1 minuta na ekranie to 30 minut zmiany):
 
 ```bash
-python -m wachta.server --source board --name Wojtek --port 8001 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380 adi:370
+python -m wachta.server --source board --name Wojtek --port 8001 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380-520 adi:370-500
 ```
 
 Strona: http://127.0.0.1:8001
@@ -49,13 +49,14 @@ Strona: http://127.0.0.1:8001
 **B. Plan awaryjny bez sprzętu** (odtworzenie nagrania Filipa, te same ustawienia):
 
 ```bash
-python -m wachta.server --file filip --start 480 --port 8002 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380 adi:370
+python -m wachta.server --file filip --start 480 --port 8002 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380-520 adi:370-500
 ```
 
 Strona: http://127.0.0.1:8002
 
-`--team` dodaje do panelu przełożonego nagrania Rudego i Adiego. Ich bloki zamkniętych oczu wypadają dopiero ok. 7,5 min
-po starcie serwera, więc przez całe demo mają stan „Może pracować”. Nie uruchamiajcie serwera wcześniej niż 5 min przed wejściem.
+`--team` dodaje do panelu przełożonego nagrania Rudego i Adiego. Zapis `rudy:380-520` zapętla je na spokojnym odcinku
+(spokojne czytanie i liczenie, bez bloku zamkniętych oczu), więc przez pierwsze ok. 3 min po „Nowej zmianie” mają stan „Może pracować”,
+a rezerwa spada im tak samo jak innym. Nie uruchamiajcie serwera wcześniej niż 5 min przed wejściem.
 
 Ile zostaje rezerwy w tych ustawieniach (bez spadków czujności; każdy spadek i każda nieudana próba zabiera 8 pkt):
 
@@ -74,8 +75,8 @@ przed siebie, aż baner zmieni się z „Kalibracja” na „Możesz pracować�
 | 0:10 | operator | klika **Nowa zmiana**. Rezerwa 100%, kafelek: 19,5 h od przebudzenia, godz. 02:30 | „Jest 2:30 w nocy. Kierowca nie śpi od 19 godzin. System zna jego wzorzec z minutowej kalibracji EEG i liczy, ile rezerwy mu zostało.” |
 | 0:25 | narrator | wskazuje kafelki „Tempo zużycia” i „Oczy” | „W nocy i po długim czuwaniu rezerwa spada ponad dwa i pół raza szybciej niż w dzień. Na żywo patrzymy na dwie rzeczy: alfę z tyłu głowy i mrugnięcia.” |
 | 0:45 | operator | klika **Sprawdź reakcję**. Osoba w czepku od razu naciska spację | „Kamera w aucie sprawdza, czy oczy są otwarte. My sprawdzamy, czy mózg jeszcze reaguje. Tu: reakcja w normie.” |
-| 1:00 | osoba w czepku | na znak narratora **zamyka oczy na 15 s** | „Teraz mikrosen.” |
-| 1:07–1:13 | — | baner: **„Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund (mikrosen). Zjedź na najbliższy parking.”** Czerwony pas na wykresie, kafelek „Oczy: zamknięte” | „Po kilku sekundach system nie tylko alarmuje, ale zmienia plan: kierowca ma zjechać.” |
+| 1:00 | osoba w czepku | na znak narratora **zamyka oczy na 15 s** | „Teraz zamykam oczy.” |
+| 1:07–1:13 | — | baner: **„Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund. Zjedź na najbliższy parking.”** Czerwony pas na wykresie, kafelek „Oczy: zamknięte” | „Po kilku sekundach system nie tylko alarmuje, ale zmienia plan: kierowca ma zjechać.” |
 | 1:20 | narrator | wskazuje panel przełożonego: „Najwięcej rezerwy ma Rudy” | „Przełożony nie widzi fal mózgowych, tylko gotowość. I od razu wie, kto może przejąć kurs.” |
 | 1:30 | — | ok. 12–20 s po otwarciu oczu **system sam prosi o reakcję** („Sprawdzenie po spadku czujności”). Osoba w czepku **celowo nie reaguje** | „Po każdym spadku czujności system sprawdza, czy mózg wrócił. Oczy są już otwarte, a reakcji brak. Tu ją symulujemy.” |
 | 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz: reakcja za wolna albo jej brak” | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy. Stan zostaje, dopóki kolejna próba nie wypadnie w normie.” |
@@ -94,18 +95,19 @@ w naszych nagraniach alarm przychodził z przerwami. Jeśli dalej nic, przejdźc
 **Kiedy przełączyć na B:** Board nie widzi czepka, baner przez ponad 20 s pokazuje „Brak wiarygodnego sygnału”
 mimo poprawienia czepka, albo alarm nie przychodzi po 25 s zamkniętych oczu.
 
-**Przebieg B** (komenda B, zmierzony 14.11 w nocy po zmianach z issues #11 i #14):
+**Przebieg B** (komenda B, zmierzony 15.11 rano po zmianach z issues #11, #14 i po wyłączeniu wskaźnika wolnego z rezerwy; czasy od kliknięcia „Nowa zmiana”, kalibracja trwa ok. 62 s od startu serwera):
 
-| Od startu serwera | Co się dzieje | Co robi operator |
+| Od „Nowej zmiany” | Co się dzieje | Co robi operator |
 |---|---|---|
-| 0–61 s | kalibracja na nagraniu Filipa | narrator: „To nagranie Filipa z dzisiejszego dnia, przetwarzane tym samym kodem co na żywo.” |
-| ok. 61 s | „Możesz pracować” | klika **Nowa zmiana** |
-| ok. 130 s | „Przerwa teraz. Oczy zamknięte (mikrosen)”, panel: „Najwięcej rezerwy ma Rudy” | narrator jak w scenariuszu na żywo od 1:20 |
-| ok. 180 s | Filip otwiera oczy, „stop” znika, stan „Zaplanuj przerwę” | — |
-| ok. 193 s | próba reakcji „Sprawdzenie po spadku czujności” | **nie reaguje**; po 3 s „Przerwa teraz: reakcja za wolna albo jej brak” |
+| przed kliknięciem (0–62 s od startu serwera) | kalibracja na nagraniu Filipa | narrator: „To nagranie Filipa z dzisiejszego dnia, przetwarzane tym samym kodem co na żywo.” |
+| 0 s | „Możesz pracować”, rezerwa 100%, rezerwa spada ok. 29 pkt/h czasu zmiany | klika **Nowa zmiana** |
+| ok. 70 s | „Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund”, rezerwa ok. 74%, panel: „Najwięcej rezerwy ma Rudy” | narrator jak w scenariuszu na żywo od 1:20 |
+| ok. 124 s | Filip otwiera oczy, „stop” znika, stan „Zaplanuj przerwę” | — |
+| ok. 136 s | próba reakcji „Sprawdzenie po spadku czujności” | **nie reaguje**; po 3 s (ok. 140 s) „Przerwa teraz: reakcja za wolna albo jej brak”, rezerwa ok. 48% |
+| ok. 190 s | Rudy i Adi dochodzą do „Zaplanuj przerwę” (ok. 50%) | koniec planu B |
 
 Kalibrację planu B najlepiej zrobić w tle zawczasu: uruchomić komendę B razem z A i przełączyć kartę przeglądarki.
-Wtedy „Nowa zmiana” na B daje zamknięcie oczu Filipa ok. 60 s później.
+Wtedy „Nowa zmiana” na B daje zamknięcie oczu Filipa ok. 70 s później.
 
 **Plan C:** nagrany film demo odtworzony z laptopa.
 
@@ -143,7 +145,7 @@ Pełna lista: [`jury-i-kryteria.md`](jury-i-kryteria.md) §4. Dwa nowe po zmiana
 | Pytanie | Odpowiedź |
 |---|---|
 | Czym to się różni od kamery? | Kamera widzi zamknięte oczy. My dodatkowo odróżniamy zamknięcie oczu od wzrostu alfy przy mrugających oczach i sprawdzamy reakcję. Senności przy otwartych oczach na własnych danych jeszcze nie zmierzyliśmy (sesja T1: KSS 5, bez senności), więc tego nie twierdzimy. Alarm zmienia plan pracy i obsadę, a nie tylko piszczy |
-| Jak często system przerywa próbą reakcji? | Na naszych nagraniach od 0 do 8 razy na 10 minut, najczęściej przy zaszumionym sygnale. Dziś próbę wywołuje wskaźnik rosnący poniżej progu alarmu i to się zmienia: sprawdziliśmy, że taki wzrost nie zapowiada lapsu (notebook 06), a w 15 minutach monotonii dałby 11 prób bez żadnego spadku czujności. Docelowo próba po zdarzeniu albo z harmonogramu (issue #14) |
+| Jak często system przerywa próbą reakcji? | Tylko po spadku czujności (12–20 s po otwarciu oczu) i z harmonogramu co 20 min, nigdy z samego wzrostu alfy poniżej progu: sprawdziliśmy, że taki wzrost nie zapowiada lapsu (notebook 06, AUC 0,52), a w 15 minutach monotonii dałby 11 prób bez żadnego spadku czujności (issue #14). Odstęp 20 min to założenie |
 
 ## Próby (zadanie C3)
 

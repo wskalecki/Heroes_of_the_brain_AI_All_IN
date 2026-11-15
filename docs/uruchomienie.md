@@ -83,7 +83,7 @@ kalibrację, więc można skalibrować osobę przed demo. Przebieg demo: [`scena
 Co widać na stronie poza stanem i rezerwą:
 
 - **Oczy:** otwarte albo zamknięte, z liczbą mrugnięć na minutę (z F3/F4). Spadek czujności jest opisany jako
-  „oczy zamknięte (mikrosen)” albo „senność przy otwartych oczach”.
+  „oczy zamknięte” albo „senność przy otwartych oczach”.
 - **Próba reakcji:** po wykrytym spadku czujności (gdy oczy znów się otworzą) oraz kontrolnie co 20 minut pojawia się
   żółte kółko z dźwiękiem. Trzeba nacisnąć spację albo kliknąć. Reakcja wolniejsza niż osobista norma (na starcie 355 ms)
   albo jej brak w ciągu 3 s liczy się jako spadek czujności. Przycisk „Sprawdź reakcję” wywołuje próbę ręcznie (do demo).
@@ -94,7 +94,7 @@ Przydatne opcje:
 - `--wake 07:00 --clock 02:30`: godzina przebudzenia i godzina na starcie zmiany (domyślnie teraz). Włącza kontekst:
   rezerwa spada szybciej w nocy (najmocniej ok. 4:30) i po długim czuwaniu. Parametry to założenia, opisane w `config.py`.
 - `--file` przyjmuje nazwę nagrania zespołu (`adi`, `filip`, `rudy`, `wojtek`) albo ścieżkę do pliku `.fif`.
-- `--team NAZWA:START` dodaje odtwarzane nagrania do panelu przełożonego.
+- `--team NAZWA:START` dodaje odtwarzane nagrania do panelu przełożonego. `NAZWA:START-KONIEC` (np. `rudy:380-520`) zapętla nagranie na wybranym odcinku, żeby osoba z panelu nie trafiła na blok zamkniętych oczu ani na zaszumiony początek pliku.
 - `GET /api/state` zwraca ostatni wynik każdego pracownika (do szybkiego sprawdzenia bez przeglądarki).
 
 Tryb na żywo czyta nowe próbki z bazy danych sesji Board (`brainaccess-board`, metoda `get_data_since`) co 0,25 s.

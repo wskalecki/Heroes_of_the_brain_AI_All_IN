@@ -19,7 +19,11 @@ _UNIT_TO_VOLTS = {"microvolts": 1e-6, "uV": 1e-6, "millivolts": 1e-3, "mV": 1e-3
 
 
 class ReplaySource:
-    """Plays an array of samples at ``speed`` times real time, optionally in a loop."""
+    """Plays an array of samples at ``speed`` times real time, optionally in a loop.
+
+    With ``end_s`` the replay is the segment ``start_s``..``end_s`` and loops inside it, so a team member can be
+    kept on a calm stretch of a recording. Without it the whole recording loops from the beginning.
+    """
 
     live = False
 
@@ -32,15 +36,19 @@ class ReplaySource:
         start_s: float = 0.0,
         loop: bool = True,
         chunk_s: float = 0.25,
+        end_s: float | None = None,
     ) -> None:
         if speed <= 0:
             raise ValueError("speed must be positive")
+        if end_s is not None and end_s <= start_s:
+            raise ValueError("end_s must be later than start_s")
         self.eeg = eeg_volts
         self.sfreq = sfreq
         self.name = name
         self.speed = speed
         self.start_s = start_s
         self.loop = loop
+        self.end_s = end_s
         self.chunk = max(1, int(round(chunk_s * sfreq)))
 
     @classmethod
@@ -49,15 +57,18 @@ class ReplaySource:
         return cls(eeg, sfreq, **kwargs)
 
     async def chunks(self) -> AsyncIterator[np.ndarray]:
-        position = min(int(self.start_s * self.sfreq), max(self.eeg.shape[1] - self.chunk, 0))
+        first = min(int(self.start_s * self.sfreq), max(self.eeg.shape[1] - self.chunk, 0))
+        stop = self.eeg.shape[1] if self.end_s is None else min(self.eeg.shape[1], int(self.end_s * self.sfreq))
+        restart = 0 if self.end_s is None else first
+        position = first
         interval = self.chunk / self.sfreq / self.speed
         due = time.monotonic()
         while True:
-            if position >= self.eeg.shape[1]:
+            if position >= stop:
                 if not self.loop:
                     return
-                position = 0
-            yield self.eeg[:, position : position + self.chunk]
+                position = restart
+            yield self.eeg[:, position : min(position + self.chunk, stop)]
             position += self.chunk
             due += interval
             await asyncio.sleep(max(0.0, due - time.monotonic()))
@@ -72,10 +83,11 @@ class BoardSource:
 
     live = True
 
-    def __init__(self, name: str = "na żywo", poll_s: float = 0.25, sfreq: float = 250.0) -> None:
+    def __init__(self, name: str = "na żywo", poll_s: float = 0.25, sfreq: float = 250.0, stale_s: float = 3.0) -> None:
         self.name = name
         self.poll_s = poll_s
         self.sfreq = sfreq
+        self.stale_s = stale_s       # no new samples for this long: report an error and reconnect
 
     @staticmethod
     def _connect():
@@ -118,11 +130,16 @@ class BoardSource:
         # Skip whatever was recorded before we connected.
         backlog = await asyncio.to_thread(database.get_data_since, device, 0.0)
         last = backlog["last_timestamp"] if backlog else 0.0
+        last_data = time.monotonic()
         while True:
             fresh = await asyncio.to_thread(database.get_data_since, device, last)
             if fresh:
                 last = fresh["last_timestamp"]
+                last_data = time.monotonic()
                 yield np.asarray(fresh["data"], dtype=float)[rows] * scale
+            elif time.monotonic() - last_data > self.stale_s:
+                # A stopped stream must not look like a calm worker: surface it and let the worker reconnect.
+                raise RuntimeError(f"Brak nowych próbek z Board od {self.stale_s:.0f} s. Sprawdź czepek i Board.")
             await asyncio.sleep(self.poll_s)
 
 

@@ -24,6 +24,7 @@ const STATES = {
 const FAST_WINDOW_S = 180;
 const MAX_HISTORY = 900;
 const MAX_TRACE = 4000;
+const STALE_MS = 5000;
 
 const app = {
   config: null,
@@ -89,7 +90,7 @@ function advice(entry) {
       if (entry.lapse && entry.lapse_kind === "eyes_open") {
         return `Senność przy otwartych oczach: oczy są otwarte, ale mózg przestaje reagować. ${act}`;
       }
-      if (entry.lapse && entry.lapse_kind === "eyes_closed") return `Oczy zamknięte dłużej niż kilka sekund (mikrosen). ${act}`;
+      if (entry.lapse && entry.lapse_kind === "eyes_closed") return `Oczy zamknięte dłużej niż kilka sekund. ${act}`;
       if (entry.lapse) return `Wykryto spadek czujności. ${act}`;
       if (entry.probe_failed_recently) return `Reakcja za wolna albo jej brak przy sprawdzeniu. ${act}`;
       return `Rezerwa wyczerpana. ${act}`;
@@ -376,12 +377,14 @@ function renderWorker() {
   badge.dataset.kind = app.connected ? (worker.live ? "live" : "replay") : "off";
   badge.textContent = app.connected ? (worker.live ? "na żywo" : "odtworzenie nagrania") : "rozłączono";
 
+  // No update for a while although the page is connected: the server or the stream has stopped.
+  const silent = app.connected && entry && Date.now() - (worker.lastSeen || 0) > STALE_MS;
   const banner = $("state");
-  if (worker.error || !entry) {
+  if (worker.error || !entry || silent) {
     banner.dataset.tone = "neutral";
     setIcon($("state-icon"), "neutral");
-    $("state-label").textContent = worker.error ? "Brak połączenia ze źródłem" : "Czekam na sygnał";
-    $("state-advice").textContent = worker.error || "";
+    $("state-label").textContent = worker.error ? "Brak połączenia ze źródłem" : silent ? "Brak danych" : "Czekam na sygnał";
+    $("state-advice").textContent = worker.error || (silent ? "Od kilku sekund nie ma nowych wyników. Sprawdź czepek i serwer." : "");
     return;
   }
 
@@ -525,12 +528,13 @@ function onMessage(message) {
     probe.cancel();
     app.config = message.config;
     app.primary = message.primary;
-    app.workers = new Map(message.workers.map((w) => [w.id, { ...w }]));
+    app.workers = new Map(message.workers.map((w) => [w.id, { ...w, lastSeen: Date.now() }]));
     placeMeterMarks();
   } else if (message.type === "update") {
     const worker = app.workers.get(message.worker);
     if (!worker) return;
     worker.error = null;
+    worker.lastSeen = Date.now();
     worker.history.push(message.data);
     if (worker.history.length > MAX_HISTORY) worker.history.shift();
     if (message.data.state !== "calibrating") {
@@ -666,6 +670,7 @@ function init() {
     }
   });
   $("btn-reset").addEventListener("click", () => send("reset"));
+  setInterval(schedule, 1000);          // lets the "no data" banner appear even when nothing arrives
   connect();
 }
 

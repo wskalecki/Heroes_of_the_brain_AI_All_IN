@@ -35,7 +35,7 @@ Pliki wspólne (zmiany małe i celowe): `README.md`, `AGENTS.md`, `.gitignore`, 
 | ID | Priorytet | Zadanie | Wynik | Gotowe, gdy | Status |
 |---|---|---|---|---|---|
 | A1 | MUST | Rdzeń: filtr strumieniowy, cechy okna, kalibracja na osobę, wskaźnik, stany, rezerwa | `src/wachta/`, `tests/`, `pyproject.toml` | `pytest` przechodzi | zrobione |
-| A2 | MUST | Trafność pipeline'u na 4 nagraniach z adnotacjami | `experiments/validate-on-recordings.py`, `docs/trafnosc-na-nagraniach.md` | tabela na osobę: wykrycie `eyes_closed` i fałszywe alarmy poza nim | zrobione: 4 z 4 bloków, 1 fałszywy alarm |
+| A2 | MUST | Trafność pipeline'u na 4 nagraniach z adnotacjami | `experiments/validate-on-recordings.py`, `docs/trafnosc-na-nagraniach.md` | tabela na osobę: wykrycie `eyes_closed` i fałszywe alarmy poza nim | zrobione: 5 z 5 bloków (z sesją T1), 1 fałszywy alarm w 48 min |
 | A3 | MUST | Odtwarzanie nagrania, serwer i dashboard | `src/wachta/sources.py`, `src/wachta/server.py`, `src/wachta/web/` | dashboard działa w trybie odtwarzania i zmienia stan w bloku `eyes_closed` | zrobione |
 | A4 | MUST | Tryb na żywo z BrainAccess Board | źródło `board` w `sources.py`, `docs/uruchomienie.md` | na laptopie ze sprzętem płyną próbki, a zamknięcie oczu zmienia stan | zrobione: test na sprzęcie 14.11 (kalibracja, zamknięcie oczu → „Przerwa teraz”) |
 | A5 | SHOULD | Narzędzie punktu pomiarowego: odlicza kroki, zapisuje znaczniki i KSS | `src/wachta/session.py` | zapisuje adnotacje i wiersz w `checkpoints.csv` w formatach z sekcji „Kontrakty” | zrobione: `feat/checkpoint-session` |

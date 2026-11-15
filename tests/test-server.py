@@ -1,6 +1,8 @@
 import asyncio
+from pathlib import Path
 
 import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
 from wachta.config import Config
@@ -38,6 +40,42 @@ def test_replay_source_without_loop_stops_at_the_end():
         return sum([1 async for _ in source.chunks()])
 
     assert asyncio.run(count()) == 2
+
+
+def test_replay_segment_loops_inside_its_bounds():
+    eeg = np.tile(np.arange(10, dtype=float), (8, 1)) * 1e-3          # 10 samples, value = index (SFREQ 1 Hz here)
+    source = ReplaySource(eeg, 1.0, speed=1000.0, chunk_s=1.0, start_s=2.0, end_s=5.0)
+
+    async def take(n):
+        out = []
+        async for chunk in source.chunks():
+            out.append(float(chunk[0, 0] * 1e3))
+            if len(out) == n:
+                break
+        return out
+
+    assert asyncio.run(take(8)) == [2, 3, 4, 2, 3, 4, 2, 3]
+    with pytest.raises(ValueError):
+        ReplaySource(eeg, 1.0, start_s=5.0, end_s=5.0)
+
+
+def test_team_spec_accepts_a_segment_and_hyphenated_recording_names(monkeypatch):
+    from wachta import server
+
+    seen = {}
+
+    class Spy:
+        @classmethod
+        def from_file(cls, path, **kwargs):
+            seen.update(kwargs, path=path)
+            return ReplaySource(_noise(1), SFREQ, name=kwargs["name"])
+
+    monkeypatch.setattr(server, "ReplaySource", Spy)
+    monkeypatch.setattr(server, "resolve_recording", lambda name: Path(f"x/task-{name}_run.fif"))
+    server._replay_worker("w1", "wojtek-t1:380-520", Config(), 1.0, 0.0)
+    assert seen["start_s"] == 380.0 and seen["end_s"] == 520.0 and str(seen["path"]).endswith("task-wojtek-t1_run.fif")
+    server._replay_worker("w1", "rudy", Config(), 1.0, 7.0)
+    assert seen["start_s"] == 7.0 and seen["end_s"] is None
 
 
 def _app(seconds=80):
@@ -143,6 +181,30 @@ def test_board_source_reopens_the_database_and_reorders_channels(monkeypatch):
     assert not fake.open
 
 
+class _SilentBoardDB(_FakeBoardDB):
+    """Delivers the backlog and then nothing: the headset was switched off."""
+
+    def get_data_since(self, device, last_timestamp=0.0):
+        self.calls += 1
+        return {"data": np.zeros((9, 10)), "last_timestamp": 1.0} if self.calls == 1 else None
+
+
+def test_board_source_reports_a_stalled_stream(monkeypatch):
+    import pytest
+
+    from wachta.sources import BoardSource
+
+    monkeypatch.setattr(BoardSource, "_connect", staticmethod(lambda: _SilentBoardDB()))
+    source = BoardSource(poll_s=0.01, stale_s=0.1)
+
+    async def drain():
+        async for _ in source.chunks():
+            pass
+
+    with pytest.raises(RuntimeError, match="Brak nowych próbek"):
+        asyncio.run(drain())
+
+
 def test_context_settings_from_wake_and_clock():
     from wachta.server import context_settings
 
@@ -173,6 +235,15 @@ def test_probe_reaches_the_page_and_the_answer_is_recorded():
         assert message["data"]["probe_lapses"] == 1 and message["data"]["last_rt_ms"] == 512
         # A second answer to the same probe is ignored.
         assert not worker.probe_response(probe["id"], 100)
+
+
+def test_garbage_probe_answers_are_ignored_without_breaking_the_worker():
+    app, worker = _app(5)
+    for bad in ("abc", {"x": 1}, [1]):
+        probe_id = worker.new_probe()
+        assert not worker.probe_response(probe_id, bad)
+        assert worker.pending_probe is None
+    assert worker.pipeline.index.probes_done == 0
 
 
 def test_new_shift_resets_the_whole_team():

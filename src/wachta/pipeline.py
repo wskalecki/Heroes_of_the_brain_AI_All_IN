@@ -49,6 +49,13 @@ class Pipeline:
         self._pushed = 0
         self.blinks = BlinkDetector(self.cfg)
         self.baseline = Baseline(Z_FEATURES, self.cfg.cal_windows)
+        self._bad_before = 0       # windows starting before this sample are not trusted (stream glitch, filter restart)
+
+    def reset_stream(self) -> None:
+        """Restart the filters after a gap or corrupt samples; windows touching the restart are marked bad."""
+        self._filter = StreamFilter(self.cfg)
+        self.blinks.reset_filter()
+        self._bad_before = self._pushed + int(round(self.cfg.settle_s * self.cfg.sfreq))
 
     def new_shift(self) -> None:
         """Start a new shift for the same, already calibrated person: full reserve, clock back to start."""
@@ -64,24 +71,32 @@ class Pipeline:
         chunk = np.asarray(eeg_volts, dtype=float) * 1e6
         if chunk.ndim != 2 or chunk.shape[0] != len(CHANNELS):
             raise ValueError(f"Expected shape ({len(CHANNELS)}, n), got {chunk.shape}")
+        corrupt = not np.isfinite(chunk).all()
+        if corrupt:
+            # NaN or Inf would poison the filter state for good, so zero them and restart the filters afterwards.
+            chunk = np.nan_to_num(chunk, nan=0.0, posinf=0.0, neginf=0.0)
         filtered = self._filter(chunk)
         self.blinks.push(filtered, self._pushed)
         self._pushed += filtered.shape[1]
         self._buffer = np.concatenate([self._buffer, filtered], axis=1)
+        if corrupt:
+            self.reset_stream()
 
         cfg = self.cfg
         results = []
         while self._buffer.shape[1] >= cfg.win_samples:
             t_end = (self._consumed + cfg.win_samples) / cfg.sfreq
             if t_end >= cfg.settle_s:
-                results.append(self._process(self._buffer[:, : cfg.win_samples], t_end))
+                results.append(self._process(self._buffer[:, : cfg.win_samples], t_end, untrusted=self._consumed < self._bad_before))
             self._buffer = self._buffer[:, cfg.step_samples :]
             self._consumed += cfg.step_samples
         return results
 
-    def _process(self, window: np.ndarray, t_end: float) -> dict:
+    def _process(self, window: np.ndarray, t_end: float, untrusted: bool = False) -> dict:
         features = window_features(window, self.cfg.sfreq)
-        bad = features["ptp_uv"] > self.cfg.reject_uv
+        ptp = features["ptp_uv"]
+        # Too large (movement), too flat (headset off, frozen stream), not a number, or right after a stream glitch.
+        bad = untrusted or not np.isfinite(ptp) or ptp > self.cfg.reject_uv or ptp < self.cfg.flat_uv
         if not bad:
             self.baseline.add(features)
         calibrated = self.baseline.ready
