@@ -1,875 +1,909 @@
 #!/usr/bin/env python3
-"""Generate the 2-minute Wachta Stage 1 demo video (1920x1080 MP4, H.264 + AAC).
+"""Build the Wachta stage 1 demo video (1080p, H.264 + AAC) from a live dashboard capture.
 
-Combines:
-1. Real renders of ``src/wachta/web/index.html`` driven by ``VigilanceIndex`` states in headless Chromium.
-2. AI-generated B-roll and Picture-in-Picture webcam frames (truck driver at 2:30 AM, hospital nurse shift, EEG cap subject).
-3. Validation figures from ``docs/img/`` and attribution slide (CC BY 4.0).
-4. Synchronized Polish subtitles, chapter badges, 880 Hz reaction probe beeps, and optional Polish TTS voiceover
-   (automatically uses ``edge-tts`` or macOS ``say`` when available).
+Inputs
+  * a capture made by ``submission/capture-dashboard.js`` (frames, frames.json, events.json): the real dashboard
+    replaying an EEG recording of the team, driven through the demo beats of ``docs/scenariusz-demo.md``;
+  * AI visuals in ``submission/img`` (driver, nurse, operator picture-in-picture) and validation charts in ``docs/img``.
+
+What it adds: dark canvas with a rounded dashboard card, eased camera moves and zooms from element rectangles
+logged during the capture, a cursor and click ripples redrawn from the log, a state-coloured picture-in-picture HUD,
+Ken Burns shots, staggered slides, callout badges, Polish subtitles, and an audio track (ambient pad plus the
+probe beeps and alarm chimes at the moments they really happened).
+
+    python submission/build-demo-video.py CAPTURE_DIR [--out-hq FILE] [--out FILE] [--preview T [T ...]]
+
+Writes a high quality 30 fps file and a 24 fps file small enough for the repository (< 5 MB).
 """
 
 from __future__ import annotations
 
+import argparse
+import bisect
 import json
 import math
-from pathlib import Path
-import shutil
 import subprocess
+import sys
 import tempfile
+import textwrap
 import wave
+from multiprocessing import Pool
+from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-REPO_ROOT = Path("/home/antigravity/wskalecki/Heroes_of_the_brain_AI_All_IN")
-ARTIFACT_DIR = Path(
-    "str(Path(__file__).resolve().parent)"
-)
-WEB_DIR = REPO_ROOT / "src" / "wachta" / "web"
-IMG_DIR = REPO_ROOT / "docs" / "img"
+ROOT = Path(__file__).resolve().parent.parent
+SUB = ROOT / "submission"
+IMG = SUB / "img"
+DOCS_IMG = ROOT / "docs" / "img"
 
-WIDTH = 1920
-HEIGHT = 1080
-FPS = 15
-TOTAL_SECONDS = 114  # 1 min 54 s (strictly under the 2:00 limit)
+W, H = 1920, 1080
+FPS = 30
+TOTAL = 114.0                      # 1:54, under the 2:00 limit
+BG = (11, 17, 32)                  # #0B1120
+CARD_BG = (17, 26, 46)
+CARD_LINE = (36, 50, 80)
+INK = (229, 231, 235)
+MUTED = (148, 163, 184)
+BLUE = (59, 130, 246)
+GREEN = (22, 163, 74)              # #16A34A
+AMBER = (217, 119, 6)              # #D97706
+RED = (220, 38, 38)                # #DC2626
+SLATE = (71, 85, 105)
+
+# Dashboard card in canvas ("scene") coordinates; the capture viewport is 1920 x 1180 CSS px (the page is 1172 px tall).
+VIEW_W, VIEW_H = 1920, 1180
+CARD_X, CARD_Y, CARD_W = 32, 18, 1520
+K = CARD_W / VIEW_W                # canvas px per CSS px
+CARD_H = round(VIEW_H * K)
+
+TEASER = (10.5, 15.0)
+BEATS = {"A": (33.0, 44.0), "B": (44.0, 54.0), "C": (54.0, 64.0), "D": (64.0, 76.0), "E": (76.0, 90.0)}
+LAPSE_OUT = (82.2, 90.0)           # time-lapse part of beat E
+LAPSE_SPEED = 5.0
 
 
-def load_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
-    candidates = (
-        [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+# ---------------------------------------------------------------- fonts
+
+def _font_path(bold: bool) -> str | None:
+    names = ["/usr/share/fonts/opentype/inter/Inter-Bold.otf" if bold else "/usr/share/fonts/opentype/inter/Inter-Regular.otf",
+             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+             "/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "/System/Library/Fonts/Supplemental/Arial.ttf"]
+    return next((n for n in names if Path(n).exists()), None)
+
+
+_FONTS: dict = {}
+
+
+def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
+    key = (size, bold)
+    if key not in _FONTS:
+        path = _font_path(bold)
+        _FONTS[key] = ImageFont.truetype(path, size) if path else ImageFont.load_default()
+    return _FONTS[key]
+
+
+# ---------------------------------------------------------------- easing
+
+def smooth(u: float) -> float:
+    u = min(1.0, max(0.0, u))
+    return u * u * (3 - 2 * u)
+
+
+def spring(u: float) -> float:
+    u = min(1.0, max(0.0, u))
+    return 1.0 - math.exp(-7.0 * u) * math.cos(11.0 * u)
+
+
+def lerp(a: float, b: float, u: float) -> float:
+    return a + (b - a) * u
+
+
+# ---------------------------------------------------------------- capture data
+
+class Capture:
+    def __init__(self, folder: Path) -> None:
+        self.folder = folder
+        data = json.loads((folder / "events.json").read_text())
+        self.data = data
+        self.frames = json.loads((folder / "frames.json").read_text())
+        self.frame_t = [f[0] for f in self.frames]
+        self.events = {e["name"]: e for e in data["events"]}
+        self.updates = [u for u in data["updates"] if not u.get("team")]
+        self.update_t = [u["t"] for u in self.updates]
+        self.probes = data["probes"]
+        self.cursor = data["cursor"]
+        self.cursor_t = [c["t"] for c in self.cursor]
+        self.clicks = [c for c in data["clicks"] if c["x"] >= 0]
+        self.rects = data["rects"]
+        self._cache: tuple[str, Image.Image] | None = None
+
+    def t(self, name: str) -> float:
+        return self.events[name]["t"]
+
+    def frame(self, ts: float) -> Image.Image:
+        i = bisect.bisect_right(self.frame_t, ts) - 1
+        name = self.frames[max(0, i)][1]
+        if self._cache is None or self._cache[0] != name:
+            self._cache = (name, Image.open(self.folder / "frames" / name).convert("RGB"))
+        return self._cache[1]
+
+    def update_at(self, ts: float) -> dict | None:
+        i = bisect.bisect_right(self.update_t, ts) - 1
+        return self.updates[i] if i >= 0 else None
+
+    def cursor_at(self, ts: float) -> tuple[float, float] | None:
+        if not self.cursor or ts < self.cursor_t[0] or ts > self.cursor_t[-1] + 30:
+            return None
+        i = bisect.bisect_right(self.cursor_t, ts) - 1
+        c = self.cursor[i]
+        if i + 1 < len(self.cursor) and self.cursor[i + 1]["t"] - c["t"] < 0.5:
+            n = self.cursor[i + 1]
+            u = (ts - c["t"]) / max(1e-6, n["t"] - c["t"])
+            return lerp(c["x"], n["x"], u), lerp(c["y"], n["y"], u)
+        return c["x"], c["y"]
+
+    def probe_windows(self) -> list[tuple[float, float]]:
+        """Intervals in which the reaction prompt was on screen."""
+        wins = []
+        for p in self.probes:
+            if p["reason"] == "manual" and "B_result" in self.events:
+                end = self.t("B_result") + 1.2
+            elif "D_fail" in self.events and p["reason"] == "event":
+                end = self.t("D_fail") + 1.2
+            else:
+                end = p["t"] + 3.0
+            wins.append((p["t"], end))
+        return wins
+
+    def css_rect(self, sel: str) -> tuple[float, float, float, float]:
+        r = self.rects[sel]
+        return r["x"], r["y"], r["w"], r["h"]
+
+
+def scene_pt(x: float, y: float) -> tuple[float, float]:
+    return CARD_X + x * K, CARD_Y + y * K
+
+
+def scene_center(cap: Capture, *sels: str) -> tuple[float, float]:
+    xs, ys = [], []
+    for sel in sels:
+        x, y, w, h = cap.css_rect(sel)
+        xs += [x, x + w]
+        ys += [y, y + h]
+    return scene_pt((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
+
+
+# ---------------------------------------------------------------- timeline: output time -> capture time
+
+class Timeline:
+    """Segments (out0, out1, src0, speed) that map video time to capture time."""
+
+    def __init__(self, cap: Capture) -> None:
+        e = cap.t
+        self.segments = [
+            (TEASER[0], TEASER[1], e("C_lapse") - 0.35, 1.0),
+            (BEATS["A"][0], BEATS["A"][1], e("A_start") - 0.4, 1.0),
+            (BEATS["B"][0], BEATS["B"][1], e("B_start") - 0.3, 1.0),
+            (BEATS["C"][0], BEATS["C"][1], e("C_lapse") - 4.5, 1.0),
+            (BEATS["D"][0], BEATS["D"][1], e("D_probe") - 3.0, 1.0),
+            (BEATS["E"][0], LAPSE_OUT[0], e("E_nurse") - 3.6, 1.0),
+            (LAPSE_OUT[0], LAPSE_OUT[1], e("E_nurse") - 3.6 + (LAPSE_OUT[0] - BEATS["E"][0]), LAPSE_SPEED),
         ]
-        if bold
-        else [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-            "/System/Library/Fonts/Supplemental/Arial.ttf",
+
+    def src(self, T: float) -> float | None:
+        for out0, out1, src0, speed in self.segments:
+            if out0 <= T < out1:
+                return src0 + (T - out0) * speed
+        return None
+
+    def out_of(self, ts: float, beat: str | None = None) -> float | None:
+        """Video time at which capture time ``ts`` is shown (the first segment containing it, or inside ``beat``)."""
+        for out0, out1, src0, speed in self.segments:
+            if beat and not (BEATS[beat][0] <= out0 < BEATS[beat][1]):
+                continue
+            if src0 <= ts < src0 + (out1 - out0) * speed:
+                return out0 + (ts - src0) / speed
+        return None
+
+
+# ---------------------------------------------------------------- camera
+
+def camera_keys(cap: Capture, tl: Timeline) -> list[tuple[float, float, float, float]]:
+    """Keyframes (T, cx, cy, zoom) in scene coordinates; eased between consecutive keys."""
+    full = (W / 2, H / 2)
+    worker = scene_center(cap, ".worker")
+    state = scene_center(cap, "#state")
+    charts = scene_center(cap, ".charts")
+    fast = scene_center(cap, "#chart-fast")
+    team = scene_center(cap, ".team")
+    probe = scene_center(cap, "#probe-target")
+    btn_probe = scene_center(cap, "#btn-probe", "#state")
+    keys: list[tuple[float, float, float, float]] = []
+
+    def key(T, pos, z):
+        keys.append((T, pos[0], pos[1], z))
+
+    # Teaser: the alarm itself.
+    a, b = TEASER
+    key(a, scene_center(cap, ".worker", "#chart-fast"), 1.15)
+    key(a + 2.2, state, 1.5)
+    key(b, state, 1.55)
+
+    # A: status card at 1.3x, then across both charts while the cursor hovers over them.
+    a, b = BEATS["A"]
+    key(a, full, 1.0)
+    key(a + 1.1, worker, 1.3)
+    key(a + 3.5, worker, 1.3)
+    key(a + 4.7, charts, 1.15)
+    key(b, charts, 1.15)
+
+    # B: probe button, then a snap zoom onto the prompt and back.
+    a, b = BEATS["B"]
+    t_probe = tl.out_of(cap.probes[0]["t"]) or a + 4.0
+    t_result = tl.out_of(cap.t("B_result")) or t_probe + 1.0
+    key(a, full, 1.0)
+    key(a + 0.9, btn_probe, 1.2)
+    key(t_probe - 0.35, btn_probe, 1.2)
+    key(t_probe - 0.05, probe, 1.4)
+    key(t_result + 1.0, probe, 1.4)
+    key(t_result + 2.0, state, 1.15)
+    key(b, state, 1.15)
+
+    # C: along the alpha trace as it crosses the threshold, to the alarm card, down to the supervisor panel.
+    a, b = BEATS["C"]
+    t_lapse = tl.out_of(cap.t("C_lapse"), "C") or a + 4.5
+    team_left = scene_pt(*(lambda r: (r[0] + r[2] * 0.4, r[1] + r[3] * 0.5))(cap.css_rect(".team")))
+    key(a, full, 1.0)
+    key(a + 0.8, fast, 1.35)
+    key(t_lapse + 0.5, fast, 1.35)
+    key(t_lapse + 1.5, state, 1.35)
+    key(t_lapse + 2.2, state, 1.35)
+    key(t_lapse + 3.1, team_left, 1.3)
+    key(b, team_left, 1.3)
+
+    # D: wide, snap to the unanswered prompt, then to the reaction tile and the banner.
+    a, b = BEATS["D"]
+    t_probe = tl.out_of(cap.t("D_probe")) or a + 3.0
+    t_fail = tl.out_of(cap.t("D_fail")) or t_probe + 3.2
+    key(a, full, 1.0)
+    key(t_probe - 0.4, full, 1.0)
+    key(t_probe - 0.05, probe, 1.4)
+    key(t_fail + 1.4, probe, 1.4)
+    key(t_fail + 2.4, worker, 1.3)
+    key(b, worker, 1.3)
+
+    # E: scenario switch in the header, then the left card while the break restores the reserve.
+    a, b = BEATS["E"]
+    t_nurse = tl.out_of(cap.t("E_nurse")) or a + 3.6
+    key(a, full, 1.0)
+    key(t_nurse, full, 1.0)
+    key(t_nurse + 1.0, worker, 1.3)
+    key(b, worker, 1.3)
+    return sorted(keys, key=lambda k: k[0])
+
+
+def camera_at(keys: list[tuple[float, float, float, float]], T: float) -> tuple[float, float, float]:
+    # Keys in the same beat are consecutive; across beats the hard cut falls at the beat boundary.
+    prev = None
+    for k in keys:
+        if k[0] <= T:
+            prev = k
+            continue
+        if prev is None:
+            return k[1], k[2], k[3]
+        if k[0] - prev[0] > 6.0 and prev[0] < T:          # a gap between beats: hold the last key
+            return prev[1], prev[2], prev[3]
+        u = smooth((T - prev[0]) / (k[0] - prev[0]))
+        return lerp(prev[1], k[1], u), lerp(prev[2], k[2], u), lerp(prev[3], k[3], u)
+    return prev[1], prev[2], prev[3]
+
+
+# ---------------------------------------------------------------- drawing helpers
+
+def rounded_mask(size: tuple[int, int], box: tuple[float, float, float, float], radius: float) -> Image.Image:
+    s = 2
+    mask = Image.new("L", (size[0] * s, size[1] * s), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([c * s for c in box], radius=radius * s, fill=255)
+    return mask.resize(size, Image.LANCZOS)
+
+
+def draw_text_wrapped(draw: ImageDraw.ImageDraw, xy, text: str, fnt, fill, width_px: int, spacing: int = 6) -> int:
+    lines: list[str] = []
+    for para in text.split("\n"):
+        words, cur = para.split(), ""
+        for w in words:
+            trial = f"{cur} {w}".strip()
+            if draw.textlength(trial, font=fnt) <= width_px:
+                cur = trial
+            else:
+                lines.append(cur)
+                cur = w
+        lines.append(cur)
+    y = xy[1]
+    for ln in lines:
+        draw.text((xy[0], y), ln, font=fnt, fill=fill)
+        y += fnt.size + spacing
+    return y
+
+
+def fit_contain(img: Image.Image, w: int, h: int) -> Image.Image:
+    s = min(w / img.width, h / img.height)
+    return img.resize((max(1, round(img.width * s)), max(1, round(img.height * s))), Image.LANCZOS)
+
+
+def cover(img: Image.Image, zoom: float, pan: tuple[float, float] = (0.5, 0.5)) -> Image.Image:
+    """Fill the 16:9 frame with ``img`` magnified by ``zoom`` (Ken Burns)."""
+    base = max(W / img.width, H / img.height)
+    vw, vh = W / (base * zoom), H / (base * zoom)
+    x0 = (img.width - vw) * pan[0]
+    y0 = (img.height - vh) * pan[1]
+    return img.resize((W, H), Image.BICUBIC, box=(x0, y0, x0 + vw, y0 + vh))
+
+
+def pasted_alpha(base: Image.Image, tile: Image.Image, pos: tuple[int, int], alpha: float) -> None:
+    """Paste an RGBA tile with its alpha scaled by ``alpha``."""
+    if alpha <= 0.003:
+        return
+    a = tile.getchannel("A").point(lambda v: int(v * min(1.0, alpha)))
+    base.paste(tile.convert("RGB"), pos, a)
+
+
+# ---------------------------------------------------------------- slides (dark, same canvas as the dashboard)
+
+def plate(draw: ImageDraw.ImageDraw, box, fill=CARD_BG, line=CARD_LINE) -> None:
+    draw.rounded_rectangle(box, radius=16, fill=fill, outline=line, width=2)
+
+
+def white_plate(base: Image.Image, img: Image.Image, box: tuple[int, int, int, int]) -> None:
+    x0, y0, x1, y1 = box
+    fig = fit_contain(img.convert("RGB"), x1 - x0 - 24, y1 - y0 - 24)
+    px, py = x0 + (x1 - x0 - fig.width) // 2, y0 + (y1 - y0 - fig.height) // 2
+    mask = rounded_mask(base.size, (px - 12, py - 12, px + fig.width + 12, py + fig.height + 12), 12)
+    base.paste(Image.new("RGB", base.size, (250, 250, 249)), (0, 0), mask)
+    base.paste(fig, (px, py))
+
+
+def badge_tile(text: str, color, width: int, size: int = 24) -> Image.Image:
+    """Callout badge: tinted rounded pill with a dot, as an RGBA tile."""
+    fnt = font(size, True)
+    probe = ImageDraw.Draw(Image.new("RGB", (4, 4)))
+    lines = []
+    cur = ""
+    for w in text.split():
+        trial = f"{cur} {w}".strip()
+        if probe.textlength(trial, font=fnt) <= width - 84:
+            cur = trial
+        else:
+            lines.append(cur)
+            cur = w
+    lines.append(cur)
+    h = 26 + len(lines) * (size + 8)
+    tile = Image.new("RGBA", (width, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(tile)
+    d.rounded_rectangle([0, 0, width - 1, h - 1], radius=h // 2 if len(lines) == 1 else 22, fill=(*color, 235))
+    d.ellipse([22, h // 2 - 8, 38, h // 2 + 8], fill=(255, 255, 255, 255))
+    y = 13
+    for ln in lines:
+        d.text((58, y), ln, font=fnt, fill=(255, 255, 255, 255))
+        y += size + 8
+    return tile
+
+
+def title_block(draw: ImageDraw.ImageDraw, title: str, subtitle: str | None = None) -> None:
+    draw.text((64, 40), title, font=font(38, True), fill=INK)
+    if subtitle:
+        draw.text((64, 94), subtitle, font=font(22), fill=MUTED)
+
+
+class ProblemSlide:
+    """0:15-0:33. The four problem points and the five loop steps spring in one after another."""
+
+    def __init__(self, driver: Image.Image) -> None:
+        self.base = Image.new("RGB", (W, H), BG)
+        d = ImageDraw.Draw(self.base)
+        d.text((72, 48), "Wachta", font=font(52, True), fill=INK)
+        d.text((318, 68), "— zmęczenie i czujność mierzone na człowieku, nie na zegarze", font=font(26), fill=MUTED)
+        plate(d, [72, 145, 1085, 935])
+        plate(d, [1120, 145, 1848, 935])
+        d.text((108, 180), "Problem: przepisy patrzą na zegar, nie na mózg", font=font(32, True), fill=INK)
+        d.text((1152, 575), "Pętla adaptacyjna Wachty (Adaptive Systems):", font=font(24, True), fill=INK)
+        bullets = [
+            ("20% wypadków w transporcie komercyjnym", "wynika ze zmęczenia i senności za kierownicą\n(Komisja Europejska / ERSO 2023)."),
+            ("17–19 godzin bez snu = 0,05% alkoholu we krwi", "sprawność psychomotoryczna spada poniżej bezpiecznego progu\n(Dawson i Reid 1997, Nature)."),
+            ("Sztywna norma czasu pracy traktuje wszystkich tak samo", "po tych samych 8 godzinach jedna osoba ma pełną rezerwę,\na druga wchodzi w zamknięte oczy."),
+            ("Kamera w kabinie widzi dopiero zamknięte powieki", "nie sprawdza czasu reakcji po incydencie i nie wskazuje\nzmiennika w zespole."),
         ]
-    )
-    for path in candidates:
-        if Path(path).exists():
-            return ImageFont.truetype(path, size=size)
-    return ImageFont.load_default()
+        steps = [
+            "1. Kalibracja osobista (60 s czystego EEG na starcie zmiany)",
+            "2. Ciągły pomiar: wyrazistość alfy (O1/O2) + mrugnięcia (F3/F4)",
+            "3. Kontekst pory doby i czasu od przebudzenia",
+            "4. Próba reakcji po spadku czujności i z harmonogramu",
+            "5. Decyzja: „Przerwa teraz” + wskazanie zmiennika z rezerwą",
+        ]
+        self.items: list[tuple[Image.Image, tuple[int, int]]] = []
+        for i, (title, desc) in enumerate(bullets):
+            tile = Image.new("RGBA", (960, 140), (0, 0, 0, 0))
+            td = ImageDraw.Draw(tile)
+            td.ellipse([0, 8, 16, 24], fill=(*RED, 255))
+            td.text((34, 0), title, font=font(25, True), fill=(*INK, 255))
+            td.multiline_text((34, 38), desc, font=font(22), fill=(*MUTED, 255), spacing=6)
+            self.items.append((tile, (108, 262 + i * 155)))
+        thumb = driver.resize((664, 374), Image.LANCZOS).convert("RGBA")
+        self.items.append((thumb, (1152, 178)))
+        for i, s in enumerate(steps):
+            tile = Image.new("RGBA", (700, 40), (0, 0, 0, 0))
+            ImageDraw.Draw(tile).text((0, 4), s, font=font(21), fill=(*MUTED, 255))
+            self.items.append((tile, (1152, 624 + i * 48)))
+        # Left points and right steps start in parallel, 0.3 s apart.
+        self.starts = [0.3 + 0.3 * i for i in range(4)] + [0.3] + [0.7 + 0.3 * i for i in range(5)]
+        self._final: Image.Image | None = None
+
+    def at(self, t: float) -> Image.Image:
+        if t > max(self.starts) + 0.5:
+            if self._final is None:
+                self._final = self._compose(99.0)
+            return self._final
+        return self._compose(t)
+
+    def _compose(self, t: float) -> Image.Image:
+        out = self.base.copy()
+        for (tile, (x, y)), start in zip(self.items, self.starts):
+            u = (t - start) / 0.25
+            if u <= 0:
+                continue
+            p = spring(u)
+            pasted_alpha(out, tile, (x, int(y + (1 - p) * 30)), min(1.0, u * 2.5))
+        return out
 
 
-FONT_TITLE = load_font(52, bold=True)
-FONT_SUBTITLE = load_font(28, bold=False)
-FONT_H2 = load_font(34, bold=True)
-FONT_BODY = load_font(23, bold=False)
-FONT_BODY_BOLD = load_font(25, bold=True)
-FONT_SMALL = load_font(20, bold=False)
-FONT_BADGE = load_font(21, bold=True)
-FONT_CAPTION = load_font(24, bold=True)
+class EvidenceSlides:
+    """1:30-1:48. Validation charts with callout badges that pop in."""
+
+    def __init__(self) -> None:
+        self.s1 = Image.new("RGB", (W, H), BG)
+        d = ImageDraw.Draw(self.s1)
+        title_block(d, "Walidacja na sprzęcie BrainAccess MINI: 5 nagrań zespołu",
+                    "Wykryto 5 z 5 bloków zamkniętych oczu (AUC 0,88–0,99) | 1 fałszywy alarm w 48 min | 0 alarmów w 15 min monotonii (T1)")
+        plate(d, [64, 150, 790, 975])
+        plate(d, [820, 150, 1856, 975])
+        white_plate(self.s1, Image.open(DOCS_IMG / "trafnosc-na-nagraniach.png"), (84, 168, 770, 862))
+        white_plate(self.s1, Image.open(DOCS_IMG / "monotonia-minuta-po-minucie.png"), (840, 168, 1836, 500))
+        d = ImageDraw.Draw(self.s1)
+        d.text((850, 530), "Sesja monotonii T1 (15 min, KSS 5):", font=font(26, True), fill=INK)
+        y = 578
+        for line in ("0,9% odrzuconych okien (słuchawki ANC)", "0 fałszywych alarmów przez 15 minut",
+                     "Zamknięcie oczu wykryte po 9 s (1 zdarzenie)", "0 zbędnych prób reakcji po PR #36"):
+            d.text((876, y), "•  " + line, font=font(23), fill=MUTED)
+            y += 44
+        self.b1 = (badge_tile("5 / 5 bloków zamkniętych oczu wykrytych (BrainAccess MINI)", GREEN, 676), (94, 880), 1.0)
+        self.b2 = (badge_tile("1 fałszywy alarm w 48 min (0 w 15 min monotonii T1)", AMBER, 940), (860, 872), 2.4)
+
+        self.s2 = Image.new("RGB", (W, H), BG)
+        d = ImageDraw.Draw(self.s2)
+        title_block(d, "Walidacja na zbiorach publicznych: dlaczego kalibracja osobista i test reakcji",
+                    "Cui i in. 2022 (11 osób, symulator jazdy) oraz COG-BCI (Hinss i in. 2023, 29 osób, zadanie PVT), na naszych 8 kanałach")
+        plate(d, [64, 150, 940, 975])
+        plate(d, [980, 150, 1856, 975])
+        white_plate(self.s2, Image.open(DOCS_IMG / "drowsiness-public-auc-and-calibration.png"), (84, 250, 920, 590))
+        white_plate(self.s2, Image.open(DOCS_IMG / "pvt-alpha-early-warning-cogbci.png"), (1000, 250, 1836, 590))
+        d = ImageDraw.Draw(self.s2)
+        d.text((94, 172), "1. Senność przy otwartych oczach (Cui i in. 2022):", font=font(26, True), fill=INK)
+        d.text((1010, 172), "2. Uczciwa weryfikacja hipotez (COG-BCI, 29 osób):", font=font(26, True), fill=INK)
+        draw_text_wrapped(d, (94, 620), "Alfa O1/O2 rośnie u 11 z 11 osób (średnie AUC 0,75).\nModel osobisty podnosi AUC z 0,76 do 0,90.",
+                          font(23), MUTED, 810, 8)
+        draw_text_wrapped(d, (1010, 620), "Podprogowa alfa nie wyprzedza lapsu o minutę (AUC 0,52).\nDlatego próby wyzwalane są po zdarzeniu i z harmonogramu.",
+                          font(23), MUTED, 810, 8)
+        self.b3 = (badge_tile("Model osobisty: AUC 0,76 → 0,90 (Cui i in. 2022)", BLUE, 800), (104, 800), 1.2)
+        self.b4 = (badge_tile("Podprogowa alfa nie wyprzedza lapsu: AUC 0,52 (COG-BCI)", SLATE, 800), (1020, 800), 2.6)
+
+    @staticmethod
+    def _badges(base: Image.Image, badges, t: float) -> Image.Image:
+        out = base.copy()
+        for tile, (x, y), start in badges:
+            u = (t - start) / 0.45
+            if u <= 0:
+                continue
+            p = spring(u)
+            w, h = tile.size
+            s = max(0.2, p)
+            scaled = tile.resize((max(1, int(w * s)), max(1, int(h * s))), Image.BICUBIC)
+            pasted_alpha(out, scaled, (x + (w - scaled.width) // 2, y + (h - scaled.height) // 2), min(1.0, u * 2.5))
+        return out
+
+    def slide1(self, t: float) -> Image.Image:
+        return self._badges(self.s1, [self.b1, self.b2], t)
+
+    def slide2(self, t: float) -> Image.Image:
+        return self._badges(self.s2, [self.b3, self.b4], t)
 
 
-def find_artifact_image(prefix: str) -> Path | None:
-    matches = sorted(ARTIFACT_DIR.glob(f"{prefix}_*.jpg")) + sorted(ARTIFACT_DIR.glob(f"{prefix}_*.png"))
-    return matches[-1] if matches else None
-
-
-def build_dashboard_snapshots(tmp_dir: Path) -> dict[str, Image.Image]:
-    """Render key states of the real Wachta web dashboard in headless Chromium."""
-    chrome = shutil.which("chromium") or shutil.which("google-chrome")
-    if not chrome:
-        raise RuntimeError("Chromium / Google Chrome not found")
-
-    rng = np.random.default_rng(42)
-
-    def make_history(n: int, fast_vals: list[float], state: str, reserve: float, **overrides) -> list[dict]:
-        hist = []
-        t0 = 180.0
-        for i in range(n):
-            t = t0 - (n - 1 - i)
-            fv = fast_vals[i]
-            is_lapse = fv >= 2.5 and i >= n - 12 and state == "stop" and overrides.get("lapse", False)
-            entry = {
-                "t": float(t),
-                "state": state if i == n - 1 else ("stop" if is_lapse else "ok"),
-                "reserve": round(reserve + (n - 1 - i) * 0.04, 1),
-                "fast": round(float(fv), 2),
-                "slow": 0.45,
-                "calibration": 1.0,
-                "quality": 0.97,
-                "work_min": round(28.0 + i * 0.5, 1),
-                "drain_per_hour": 26.0,
-                "minutes_to_warn": 74.0,
-                "minutes_to_stop": 135.0,
-                "lapse": bool(is_lapse),
-                "lapse_count": overrides.get("lapse_count", 0),
-                "lapse_kind": overrides.get("lapse_kind", None),
-                "lapses_eyes_closed": overrides.get("lapses_eyes_closed", 0),
-                "lapses_eyes_open": overrides.get("lapses_eyes_open", 0),
-                "eye_state": overrides.get("eye_state", "open"),
-                "blinks_per_min": overrides.get("blinks_per_min", 14.0),
-                "probes_done": overrides.get("probes_done", 0),
-                "probe_lapses": overrides.get("probe_lapses", 0),
-                "last_rt_ms": overrides.get("last_rt_ms", None),
-                "probe_failed_recently": overrides.get("probe_failed_recently", False),
-                "on_break": overrides.get("on_break", False),
-                "clock_h": overrides.get("clock_h", 2.5),
-                "awake_h": overrides.get("awake_h", 19.5),
-                "context_factor": overrides.get("context_factor", 2.6),
-            }
-            hist.append(entry)
-        return hist
-
-    base_fast = np.clip(rng.normal(0.15, 0.45, size=180), -1.4, 1.4).tolist()
-    burst_fast = base_fast[:-14] + [1.2, 2.1, 2.8, 3.6, 4.4, 5.1, 5.5, 5.8, 5.4, 5.2, 4.9, 5.1, 5.3, 5.2]
-    post_burst_fast = burst_fast[15:] + np.clip(rng.normal(0.3, 0.4, size=15), -0.8, 1.1).tolist()
-
-    trace_ok = [[round(k * 2.0, 1), round(100.0 - k * 0.75, 1)] for k in range(16)]
-    trace_lapse = trace_ok + [[32.0, 80.0], [34.0, 78.5], [36.0, 77.0]]
-    trace_failed_probe = trace_lapse + [[38.0, 69.0], [40.0, 68.0]]
-    trace_break = trace_failed_probe + [[42.0, 71.5], [44.0, 75.0], [46.0, 78.5]]
-
-    states_spec = {
-        "ok_fresh": {
-            "scenario": "driver",
-            "history": make_history(180, base_fast, "ok", 92.0, work_min=18.0),
-            "trace": trace_ok[:10],
-            "probe_modal": None,
-        },
-        "probe_prompt_schedule": {
-            "scenario": "driver",
-            "history": make_history(180, base_fast, "ok", 90.0),
-            "trace": trace_ok,
-            "probe_modal": {"title": "Reakcja!", "text": "Kontrola okresowa: naciśnij spację albo kliknij", "result": ""},
-        },
-        "probe_ok": {
-            "scenario": "driver",
-            "history": make_history(180, base_fast, "ok", 89.5, probes_done=1, last_rt_ms=248),
-            "trace": trace_ok,
-            "probe_modal": {"title": "248 ms", "text": "Reakcja w normie", "result": "ok"},
-        },
-        "ok_after_probe": {
-            "scenario": "driver",
-            "history": make_history(180, base_fast, "ok", 88.0, probes_done=1, last_rt_ms=248),
-            "trace": trace_ok,
-            "probe_modal": None,
-        },
-        "microsleep_stop": {
-            "scenario": "driver",
-            "history": make_history(
-                180,
-                burst_fast,
-                "stop",
-                78.0,
-                lapse=True,
-                lapse_count=1,
-                lapse_kind="eyes_closed",
-                lapses_eyes_closed=1,
-                eye_state="closed",
-                blinks_per_min=1.0,
-                probes_done=1,
-                last_rt_ms=248,
-            ),
-            "trace": trace_lapse,
-            "probe_modal": None,
-        },
-        "probe_prompt_event": {
-            "scenario": "driver",
-            "history": make_history(
-                180,
-                post_burst_fast,
-                "warn",
-                76.5,
-                lapse=False,
-                lapse_count=1,
-                lapses_eyes_closed=1,
-                eye_state="open",
-                blinks_per_min=12.0,
-                probes_done=1,
-                last_rt_ms=248,
-            ),
-            "trace": trace_lapse,
-            "probe_modal": {
-                "title": "Reakcja!",
-                "text": "Sprawdzenie po spadku czujności: naciśnij spację albo kliknij",
-                "result": "",
-            },
-        },
-        "probe_failed_stop": {
-            "scenario": "driver",
-            "history": make_history(
-                180,
-                post_burst_fast,
-                "stop",
-                68.0,
-                lapse=False,
-                lapse_count=1,
-                lapses_eyes_closed=1,
-                eye_state="open",
-                blinks_per_min=12.0,
-                probes_done=2,
-                probe_lapses=1,
-                last_rt_ms=None,
-                probe_failed_recently=True,
-            ),
-            "trace": trace_failed_probe,
-            "probe_modal": {"title": "Brak reakcji", "text": "Reakcja za wolna: to liczy się jako spadek czujności", "result": "lapse"},
-        },
-        "probe_failed_banner": {
-            "scenario": "driver",
-            "history": make_history(
-                180,
-                post_burst_fast,
-                "stop",
-                68.0,
-                lapse=False,
-                lapse_count=1,
-                lapses_eyes_closed=1,
-                eye_state="open",
-                blinks_per_min=12.0,
-                probes_done=2,
-                probe_lapses=1,
-                last_rt_ms=None,
-                probe_failed_recently=True,
-            ),
-            "trace": trace_failed_probe,
-            "probe_modal": None,
-        },
-        "nurse_stop": {
-            "scenario": "nurse",
-            "history": make_history(
-                180,
-                post_burst_fast,
-                "stop",
-                68.0,
-                lapse=False,
-                lapse_count=1,
-                lapses_eyes_closed=1,
-                eye_state="open",
-                blinks_per_min=12.0,
-                probes_done=2,
-                probe_lapses=1,
-                last_rt_ms=None,
-                probe_failed_recently=True,
-            ),
-            "trace": trace_failed_probe,
-            "probe_modal": None,
-        },
-        "nurse_break": {
-            "scenario": "nurse",
-            "history": make_history(
-                180,
-                post_burst_fast,
-                "break",
-                78.5,
-                on_break=True,
-                lapse=False,
-                lapse_count=1,
-                lapses_eyes_closed=1,
-                eye_state="open",
-                blinks_per_min=14.0,
-                probes_done=2,
-                probe_lapses=1,
-                last_rt_ms=None,
-            ),
-            "trace": trace_break,
-            "probe_modal": None,
-        },
-    }
-
-    # Copy web assets to tmp_dir and inject state renderer
-    render_dir = tmp_dir / "web_render"
-    shutil.copytree(WEB_DIR, render_dir, dirs_exist_ok=True)
-    app_js = (WEB_DIR / "app.js").read_text(encoding="utf-8")
-    # Compact chart height slightly so Worker card + Charts + Supervisor Panel all fit above the subtitle bar in 1080p
-    app_js_patched = (
-        app_js.replace("height: 230,", "height: 165,")
-        .replace("connect();\n}", "// connect disabled for deterministic render\n}")
-    )
-
-    snapshots: dict[str, Image.Image] = {}
-    for key, spec in states_spec.items():
-        hello_payload = {
-            "type": "hello",
-            "primary": "w0",
-            "config": {
-                "z_enter": 2.5,
-                "warn_below": 50.0,
-                "stop_below": 25.0,
-                "time_scale": 30.0,
-                "probe_lapse_ms": 355.0,
-                "probe_timeout_ms": 3000,
-                "probe_interval_s": 1200.0,
-            },
-            "workers": [
-                {
-                    "id": "w0",
-                    "name": "Wojtek (na żywo — BrainAccess MINI)",
-                    "live": True,
-                    "error": None,
-                    "history": spec["history"],
-                    "trace": spec["trace"],
-                },
-                {
-                    "id": "w1",
-                    "name": "Rudy",
-                    "live": False,
-                    "error": None,
-                    "history": [{"state": "ok", "reserve": 88.0, "t": 180.0}],
-                    "trace": [],
-                },
-                {
-                    "id": "w2",
-                    "name": "Adi",
-                    "live": False,
-                    "error": None,
-                    "history": [{"state": "warn", "reserve": 44.0, "t": 180.0}],
-                    "trace": [],
-                },
-            ],
-        }
-        driver_script = f"""
-{app_js_patched}
-document.body.style.zoom = "0.86";
-app.connected = true;
-setScenario({json.dumps(spec["scenario"])});
-onMessage({json.dumps(hello_payload)});
-render();
-"""
-        if spec["probe_modal"]:
-            pm = spec["probe_modal"]
-            driver_script += f"""
-$("probe").hidden = false;
-$("probe-title").textContent = {json.dumps(pm["title"])};
-$("probe-text").textContent = {json.dumps(pm["text"])};
-if ({json.dumps(pm["result"])}) {{
-  $("probe-target").dataset.result = {json.dumps(pm["result"])};
-}} else {{
-  delete $("probe-target").dataset.result;
-}}
-"""
-        (render_dir / "app.js").write_text(driver_script, encoding="utf-8")
-        out_png = tmp_dir / f"snap_{key}.png"
-        subprocess.run(
-            [
-                chrome,
-                "--headless",
-                "--no-sandbox",
-                "--disable-gpu",
-                "--hide-scrollbars",
-                "--window-size=1920,1080",
-                f"--screenshot={out_png}",
-                f"file://{render_dir / 'index.html'}",
-            ],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        snapshots[key] = Image.open(out_png).convert("RGB")
-
-    return snapshots
-
-
-def paste_pip(base: Image.Image, pip_img: Image.Image, label: str, alert: bool = False) -> Image.Image:
-    """Overlay a Picture-in-Picture webcam box in the bottom-right corner."""
-    frame = base.copy()
-    pip_w, pip_h = 360, 202
-    x0 = WIDTH - pip_w - 36
-    y0 = HEIGHT - pip_h - 104
-    resized = pip_img.resize((pip_w, pip_h), Image.Resampling.LANCZOS)
-
-    draw = ImageDraw.Draw(frame)
-    border_col = (208, 59, 59) if alert else (42, 120, 214)
-    draw.rounded_rectangle([x0 - 4, y0 - 4, x0 + pip_w + 4, y0 + pip_h + 4], radius=12, fill=border_col)
-    frame.paste(resized, (x0, y0))
-
-    # Top pill inside PiP
-    draw.rounded_rectangle([x0 + 10, y0 + 10, x0 + 10 + 305, y0 + 38], radius=6, fill=(11, 11, 11))
-    dot_col = (208, 59, 59) if alert else (12, 163, 12)
-    draw.ellipse([x0 + 20, y0 + 19, x0 + 30, y0 + 29], fill=dot_col)
-    draw.text((x0 + 38, y0 + 13), label, font=FONT_SMALL, fill=(255, 255, 255))
-    return frame
-
-
-def ken_burns(img: Image.Image, progress: float, zoom: float = 0.08) -> Image.Image:
-    """Subtle cinematic zoom-in over ``progress`` in [0, 1]."""
-    src = img.resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
-    scale = 1.0 - zoom * np.clip(progress, 0.0, 1.0)
-    cw, ch = int(WIDTH * scale), int(HEIGHT * scale)
-    left = (WIDTH - cw) // 2
-    top = (HEIGHT - ch) // 2
-    cropped = src.crop((left, top, left + cw, top + ch))
-    return cropped.resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
-
-
-def make_problem_slide(driver_img: Image.Image) -> Image.Image:
-    """Slide for 0:15-0:33: The problem with clock-based fatigue norms."""
-    slide = Image.new("RGB", (WIDTH, HEIGHT), (249, 249, 247))
-    draw = ImageDraw.Draw(slide)
-
-    # Header bar
-    draw.text((72, 52), "Wachta", font=FONT_TITLE, fill=(11, 11, 11))
-    draw.text(
-        (315, 70),
-        "— zmęczenie i czujność mierzone na człowieku, nie na zegarze",
-        font=FONT_SUBTITLE,
-        fill=(82, 81, 78),
-    )
-
-    # Left card: Problem & numbers with sources
-    draw.rounded_rectangle([72, 145, 1085, 935], radius=16, fill=(252, 252, 251), outline=(225, 224, 217), width=2)
-    draw.text((108, 182), "Problem: przepisy patrzą na zegar, nie na mózg", font=FONT_H2, fill=(11, 11, 11))
-
-    bullets = [
-        (
-            "20% wypadków w transporcie komercyjnym",
-            "wynika ze zmęczenia i senności za kierownicą\n(Komisja Europejska / ERSO 2023).",
-        ),
-        (
-            "17–19 godzin bez snu = 0,05% alkoholu we krwi",
-            "sprawność psychomotoryczna spada poniżej bezpiecznego progu\n(Dawson i Reid 1997, Nature).",
-        ),
-        (
-            "Sztywna norma czasu pracy traktuje wszystkich tak samo",
-            "po tych samych 8 godzinach jedna osoba ma pełną rezerwę,\na druga wchodzi w mikrosen.",
-        ),
-        (
-            "Kamera w kabinie widzi dopiero zamknięte powieki",
-            "nie sprawdza czasu reakcji po incydencie i nie wskazuje\nzmiennika w zespole.",
-        ),
-    ]
-    y = 265
-    for title, desc in bullets:
-        draw.ellipse([108, y + 8, 124, y + 24], fill=(208, 59, 59))
-        draw.text((142, y), title, font=FONT_BODY_BOLD, fill=(11, 11, 11))
-        draw.multiline_text((142, y + 36), desc, font=FONT_BODY, fill=(82, 81, 78), spacing=6)
-        y += 155
-
-    # Right card: visual + adaptive loop diagram
-    draw.rounded_rectangle([1120, 145, 1848, 935], radius=16, fill=(252, 252, 251), outline=(225, 224, 217), width=2)
-    thumb = driver_img.resize((664, 374), Image.Resampling.LANCZOS)
-    slide.paste(thumb, (1152, 178))
-    draw.text((1152, 578), "Pętla adaptacyjna Wachty (Adaptive Systems):", font=FONT_BODY_BOLD, fill=(11, 11, 11))
-    steps = [
-        "1. Kalibracja osobista (60 s czystego EEG na starcie zmiany)",
-        "2. Ciągły pomiar: wyrazistość alfy (O1/O2) + mrugnięcia (F3/F4)",
-        "3. Kontekst pory doby i czasu od przebudzenia",
-        "4. Próba reakcji po spadku czujności i z harmonogramu",
-        "5. Decyzja: „Przerwa teraz” + wskazanie zmiennika z rezerwą",
-    ]
-    sy = 628
-    for s in steps:
-        draw.text((1152, sy), s, font=FONT_SMALL, fill=(82, 81, 78))
-        sy += 48
-
+def closing_slide() -> Image.Image:
+    slide = Image.new("RGB", (W, H), BG)
+    d = ImageDraw.Draw(slide)
+    d.text((100, 80), "Wachta", font=font(76, True), fill=INK)
+    d.text((100, 180), "Zmęczenie i czujność mierzone na człowieku, nie na zegarze", font=font(34, True), fill=BLUE)
+    d.text((100, 240), "Heroes of the Brain 2026 — Kategoria: Adaptive Systems", font=font(24), fill=MUTED)
+    plate(d, [100, 310, 1820, 650])
+    d.text((140, 342), "Co zweryfikowaliśmy, a co sprawdzimy w pilotażu:", font=font(25, True), fill=INK)
+    y = 400
+    for p in ("✓ Działająca pętla (BrainAccess MINI, 8 suchych elektrod, 250 Hz, przetwarzanie lokalne na komputerze)",
+              "✓ 5 z 5 wykrytych bloków zamkniętych oczu, 1 fałszywy alarm w 48 min (0 w 15-minutowej sesji monotonii T1)",
+              "✓ Przewaga modelu osobistego na danych publicznych (AUC 0,90 vs 0,76) i adaptacyjny test czasu reakcji",
+              "→ Następny krok: pilotaż na zmianach nocnych sprawdzający, czy osobisty limit rezerwy wyprzedza spadki czujności lepiej niż zegar"):
+        draw_text_wrapped(d, (140, y), p, font(22), (215, 220, 228), 1640, 4)
+        y += 56
+    d.text((100, 690), "Zespół AI All In:  Adrian  •  Filip  •  Rudy  •  Wojtek", font=font(26, True), fill=INK)
+    d.text((100, 738), "Kod i notebooki (publiczne repo):  github.com/wskalecki/Heroes_of_the_brain_AI_All_IN", font=font(24), fill=BLUE)
+    cy = 800
+    for c in ("Źródła danych publicznych wykorzystanych w analizach (zgodnie z licencjami):",
+              "• Cao Z. i in. (2019), Multi-channel EEG recordings during a sustained-attention driving task, Scientific Data 6:19 — CC BY 4.0",
+              "• Cui J. i in. (2022), EEG driver drowsiness dataset (figshare 14273687) — CC BY 4.0",
+              "• Hinss M.F. i in. (2023), COG-BCI database (Zenodo 7413650, v4) — CC BY 4.0",
+              "• Zyma I. i in. (2019), EEG During Mental Arithmetic Tasks (PhysioNet EEGMAT) — ODC-By v1.0"):
+        d.text((100, cy), c, font=font(19), fill=(120, 134, 156))
+        cy += 31
     return slide
 
 
-def fit_contain(img: Image.Image, box_w: int, box_h: int, bg=(252, 252, 251)) -> Image.Image:
-    canvas = Image.new("RGB", (box_w, box_h), bg)
-    ratio = min(box_w / img.width, box_h / img.height)
-    nw, nh = max(1, int(img.width * ratio)), max(1, int(img.height * ratio))
-    resized = img.resize((nw, nh), Image.Resampling.LANCZOS)
-    canvas.paste(resized, ((box_w - nw) // 2, (box_h - nh) // 2))
-    return canvas
+# ---------------------------------------------------------------- dashboard view
 
+def dashboard_view(cap: Capture, ts: float, cam: tuple[float, float, float], show_cursor: bool = True) -> Image.Image:
+    frame = cap.frame(ts)
+    cx, cy, z = cam
+    vw, vh = W / z, H / z
+    cy += 46 / z                       # keep zoomed content clear of the subtitle bar
+    vx0 = min(max(cx - vw / 2, 0), W - vw)
+    vy0 = min(max(cy - vh / 2, 0), H - vh)
 
-def make_evidence_slide_1() -> Image.Image:
-    """Slide for 1:30-1:40: Validation on 5 team recordings + monotony T1."""
-    slide = Image.new("RGB", (WIDTH, HEIGHT), (249, 249, 247))
-    draw = ImageDraw.Draw(slide)
-    draw.text((64, 42), "Walidacja na sprzęcie BrainAccess MINI: 5 nagrań zespołu", font=FONT_H2, fill=(11, 11, 11))
-    draw.text(
-        (64, 92),
-        "Wykryto 5 z 5 bloków zamkniętych oczu (AUC 0,88–0,99) | 1 fałszywy alarm w 48 min | 0 alarmów w 15 min monotonii (T1)",
-        font=FONT_BODY,
-        fill=(82, 81, 78),
-    )
+    out = Image.new("RGB", (W, H), BG)
+    d = ImageDraw.Draw(out)
 
-    fig_left = Image.open(IMG_DIR / "trafnosc-na-nagraniach.png").convert("RGB")
-    fig_right = Image.open(IMG_DIR / "monotonia-minuta-po-minucie.png").convert("RGB")
+    def to_view(x: float, y: float) -> tuple[float, float]:
+        return (x - vx0) * z, (y - vy0) * z
 
-    draw.rounded_rectangle([64, 145, 1120, 940], radius=14, fill=(252, 252, 251), outline=(225, 224, 217), width=2)
-    slide.paste(fit_contain(fig_left, 1030, 775), (77, 155))
+    # Card: shadow, frame crop, rounded corners.
+    x0, y0 = to_view(CARD_X, CARD_Y)
+    x1, y1 = to_view(CARD_X + CARD_W, CARD_Y + CARD_H)
+    small = (W // 4, H // 4)
+    sh = Image.new("L", small, 0)
+    ImageDraw.Draw(sh).rounded_rectangle([x0 / 4, (y0 + 10 * z) / 4, x1 / 4, (y1 + 10 * z) / 4], radius=16 * z / 4, fill=150)
+    sh = sh.filter(ImageFilter.GaussianBlur(7 * z)).resize((W, H), Image.BILINEAR)
+    out.paste(Image.new("RGB", (W, H), (2, 4, 10)), (0, 0), sh)
 
-    draw.rounded_rectangle([1150, 145, 1856, 940], radius=14, fill=(252, 252, 251), outline=(225, 224, 217), width=2)
-    slide.paste(fit_contain(fig_right, 680, 520), (1163, 160))
+    ix0, iy0 = max(x0, 0), max(y0, 0)
+    ix1, iy1 = min(x1, W), min(y1, H)
+    if ix1 > ix0 and iy1 > iy0:
+        fx = frame.width / (x1 - x0)
+        fy = frame.height / (y1 - y0)
+        box = ((ix0 - x0) * fx, (iy0 - y0) * fy, (ix1 - x0) * fx, (iy1 - y0) * fy)
+        piece = frame.resize((round(ix1 - ix0), round(iy1 - iy0)), Image.LANCZOS, box=box)
+        mask = rounded_mask((W, H), (x0, y0, x1, y1), 16 * z)
+        layer = Image.new("RGB", (W, H), BG)
+        layer.paste(piece, (round(ix0), round(iy0)))
+        out.paste(layer, (0, 0), mask)
 
-    summary_lines = [
-        "Sesja monotonii T1 (15 min, KSS 5):",
-        "• 0,9% odrzuconych okien (słuchawki ANC)",
-        "• 0 fałszywych alarmów przez 15 minut",
-        "• Zamknięcie oczu wykryte po 9 s (1 zdarzenie)",
-        "• 0 zbędnych prób reakcji po PR #36",
-    ]
-    sy = 700
-    for idx, line in enumerate(summary_lines):
-        draw.text((1175, sy), line, font=FONT_BODY_BOLD if idx == 0 else FONT_SMALL, fill=(11, 11, 11))
-        sy += 40
-
-    return slide
-
-
-def make_evidence_slide_2() -> Image.Image:
-    """Slide for 1:40-1:48: Public datasets validation (Cui et al. 2022 & COG-BCI)."""
-    slide = Image.new("RGB", (WIDTH, HEIGHT), (249, 249, 247))
-    draw = ImageDraw.Draw(slide)
-    draw.text(
-        (64, 42),
-        "Walidacja na zbiorach publicznych: dlaczego kalibracja osobista i test reakcji",
-        font=FONT_H2,
-        fill=(11, 11, 11),
-    )
-    draw.text(
-        (64, 92),
-        "Cui i in. 2022 (11 osób, symulator jazdy) oraz COG-BCI (Hinss i in. 2023, 29 osób, zadanie PVT) — na naszych 8 kanałach",
-        font=FONT_BODY,
-        fill=(82, 81, 78),
-    )
-
-    fig_cui = Image.open(IMG_DIR / "drowsiness-public-auc-and-calibration.png").convert("RGB")
-    fig_pvt = Image.open(IMG_DIR / "pvt-alpha-early-warning-cogbci.png").convert("RGB")
-
-    draw.rounded_rectangle([64, 145, 940, 940], radius=14, fill=(252, 252, 251), outline=(225, 224, 217), width=2)
-    slide.paste(fit_contain(fig_cui, 850, 620), (77, 160))
-    draw.text(
-        (84, 800),
-        "1. Senność przy otwartych oczach (Cui i in. 2022):",
-        font=FONT_BODY_BOLD,
-        fill=(11, 11, 11),
-    )
-    draw.text(
-        (84, 840),
-        "Alfa O1/O2 rośnie u 11 z 11 osób (średnie AUC 0,75).\nModel osobisty podnosi AUC z 0,76 do 0,90.",
-        font=FONT_SMALL,
-        fill=(82, 81, 78),
-    )
-
-    draw.rounded_rectangle([980, 145, 1856, 940], radius=14, fill=(252, 252, 251), outline=(225, 224, 217), width=2)
-    slide.paste(fit_contain(fig_pvt, 850, 620), (993, 160))
-    draw.text(
-        (1000, 800),
-        "2. Uczciwa weryfikacja hipotez (COG-BCI, 29 osób):",
-        font=FONT_BODY_BOLD,
-        fill=(11, 11, 11),
-    )
-    draw.text(
-        (1000, 840),
-        "Podprogowa alfa nie wyprzedza lapsu o minutę (AUC 0,52).\nDlatego próby wyzwalane są po zdarzeniu i z harmonogramu.",
-        font=FONT_SMALL,
-        fill=(82, 81, 78),
-    )
-
-    return slide
-
-
-def make_closing_slide() -> Image.Image:
-    """Slide for 1:48-1:54: Team, next steps, repository & CC BY 4.0 credits."""
-    slide = Image.new("RGB", (WIDTH, HEIGHT), (13, 13, 13))
-    draw = ImageDraw.Draw(slide)
-
-    draw.text((100, 90), "Wachta", font=load_font(72, bold=True), fill=(240, 239, 236))
-    draw.text(
-        (100, 180),
-        "Zmęczenie i czujność mierzone na człowieku, nie na zegarze",
-        font=FONT_H2,
-        fill=(57, 135, 229),
-    )
-    draw.text(
-        (100, 240),
-        "Heroes of the Brain 2026 — Kategoria: Adaptive Systems",
-        font=FONT_BODY,
-        fill=(195, 194, 183),
-    )
-
-    draw.rounded_rectangle([100, 310, 1820, 650], radius=16, fill=(26, 26, 25), outline=(56, 56, 53), width=2)
-    draw.text((140, 345), "Co zweryfikowaliśmy, a co sprawdzimy w pilotażu:", font=FONT_BODY_BOLD, fill=(240, 239, 236))
-    points = [
-        "✓ Działająca pętla na żywo (BrainAccess MINI, 8 suchych elektrod, 250 Hz, lokalne przetwarzanie na komputerze)",
-        "✓ 5 z 5 wykrytych bloków zamkniętych oczu, 1 fałszywy alarm w 48 min (0 w 15-minutowej sesji monotonii T1)",
-        "✓ Przewaga modelu osobistego na danych publicznych (AUC 0,90 vs 0,76) i adaptacyjny test czasu reakcji",
-        "→ Następny krok: pilotaż na zmianach nocnych sprawdzający, czy osobisty limit rezerwy wyprzedza spadki czujności lepiej niż zegar",
-    ]
-    py = 405
-    for p in points:
-        draw.text((140, py), p, font=FONT_BODY, fill=(215, 214, 208))
-        py += 54
-
-    draw.text(
-        (100, 700),
-        "Zespół AI All In:  Adrian  •  Filip  •  Rudy  •  Wojtek",
-        font=FONT_BODY_BOLD,
-        fill=(240, 239, 236),
-    )
-    draw.text(
-        (100, 745),
-        "Kod i notebooki (publiczne repo):  github.com/wskalecki/Heroes_of_the_brain_AI_All_IN",
-        font=FONT_BODY,
-        fill=(57, 135, 229),
-    )
-
-    credits = [
-        "Źródła danych publicznych wykorzystanych w analizach (zgodnie z licencjami):",
-        "• Cao Z. i in. (2019), Multi-channel EEG recordings during a sustained-attention driving task, Scientific Data 6:19 — CC BY 4.0",
-        "• Cui J. i in. (2022), EEG driver drowsiness dataset (figshare 14273687) — CC BY 4.0",
-        "• Hinss M.F. i in. (2023), COG-BCI database (Zenodo 7413650, v4) — CC BY 4.0",
-        "• Zyma I. i in. (2019), EEG During Mental Arithmetic Tasks (PhysioNet EEGMAT) — ODC-By v1.0",
-    ]
-    cy = 815
-    for c in credits:
-        draw.text((100, cy), c, font=FONT_SMALL, fill=(145, 143, 137))
-        cy += 32
-
-    return slide
-
-
-def overlay_subtitles_and_hud(frame: Image.Image, t_sec: float, chapter: str, subtitle: str) -> Image.Image:
-    """Draw a clean top-right chapter pill, bottom subtitle bar, and progress line."""
-    out = frame.copy()
     draw = ImageDraw.Draw(out, "RGBA")
 
-    # Top-right chapter + timer pill
-    mm = int(t_sec) // 60
-    ss = int(t_sec) % 60
-    badge_text = f"{chapter}   {mm}:{ss:02d} / 1:54"
-    bbox = draw.textbbox((0, 0), badge_text, font=FONT_BADGE)
-    bw = bbox[2] - bbox[0] + 36
-    x_badge = WIDTH - bw - 32
-    y_badge = 14
-    draw.rounded_rectangle([x_badge, y_badge, x_badge + bw, y_badge + 38], radius=19, fill=(11, 11, 11, 210))
-    draw.text((x_badge + 18, y_badge + 7), badge_text, font=FONT_BADGE, fill=(255, 255, 255, 255))
+    # Ripple when the reaction turns green.
+    if "B_result" in cap.events and "#probe-target" in cap.rects:
+        r = cap.css_rect("#probe-target")
+        age = ts - cap.t("B_result")
+        if 0 <= age < 1.0:
+            px, py = to_view(*scene_pt(r[0] + r[2] / 2, r[1] + r[3] / 2))
+            for k in range(3):
+                u = age - 0.18 * k
+                if 0 < u < 0.8:
+                    rad = (r[2] / 2 * K) * z * (1.0 + 0.9 * smooth(u / 0.8))
+                    draw.ellipse([px - rad, py - rad, px + rad, py + rad], outline=(*GREEN, int(200 * (1 - u / 0.8))), width=max(2, round(5 * z)))
 
-    # Subtitle bar at bottom (centered and guaranteed to fit inside [48, WIDTH - 48])
-    if subtitle:
-        sb_box = draw.textbbox((0, 0), subtitle, font=FONT_CAPTION)
-        tw = sb_box[2] - sb_box[0]
-        pad_x = 28
-        box_w = min(WIDTH - 80, tw + 2 * pad_x)
-        x0 = (WIDTH - box_w) // 2
-        draw.rounded_rectangle([x0, HEIGHT - 78, x0 + box_w, HEIGHT - 14], radius=12, fill=(11, 11, 11, 228))
-        draw.text(((WIDTH - tw) // 2, HEIGHT - 60), subtitle, font=FONT_CAPTION, fill=(255, 255, 255, 255))
-
-    # Subtle bottom timeline progress bar
-    prog_w = int(WIDTH * (t_sec / TOTAL_SECONDS))
-    draw.rectangle([0, HEIGHT - 5, prog_w, HEIGHT], fill=(42, 120, 214, 255))
+    # Click ripples and the cursor, redrawn from the log (headless Chromium records no pointer).
+    for c in cap.clicks:
+        age = ts - c["t"]
+        if 0 <= age < 0.55:
+            px, py = to_view(*scene_pt(c["x"], c["y"]))
+            rad = (14 + 44 * smooth(age / 0.55)) * 1.0
+            draw.ellipse([px - rad, py - rad, px + rad, py + rad], outline=(255, 255, 255, int(220 * (1 - age / 0.55))), width=3)
+    pos = cap.cursor_at(ts) if show_cursor else None
+    if pos:
+        px, py = to_view(*scene_pt(*pos))
+        if -20 < px < W + 20 and -20 < py < H + 20:
+            arrow = [(0, 0), (0, 25), (6, 19), (10, 28), (14, 26), (10, 18), (18, 18)]
+            pts = [(px + a, py + b) for a, b in arrow]
+            draw.polygon([(a + 2, b + 3) for a, b in pts], fill=(0, 0, 0, 90))
+            draw.polygon(pts, fill=(255, 255, 255, 255), outline=(15, 23, 42, 255))
     return out
 
 
-def generate_audio_track(wav_path: Path) -> None:
-    """Synthesize a clean 114 s stereo audio track with ambient pad and 880 Hz reaction probe beeps."""
+# ---------------------------------------------------------------- PiP HUD
+
+PIP = (1572, 764, 320, 180)
+
+
+def pip_state(cap: Capture, ts: float) -> tuple[str, float, tuple, str]:
+    """(image to show, closed amount 0..1, glow colour, label)."""
+    def closed_at(t: float) -> bool:
+        u = cap.update_at(t)
+        return bool(u and u.get("lapse") and u.get("lapse_kind") != "eyes_open")
+
+    amount = sum(closed_at(ts - 0.05 * i) for i in range(6)) / 6.0
+    u = cap.update_at(ts) or {}
+    for a, b in cap.probe_windows():
+        if a <= ts <= b:
+            return "probe", amount, AMBER, "PRÓBA REAKCJI"
+    if closed_at(ts):
+        return "closed", amount, RED, "OCZY ZAMKNIĘTE"
+    state = u.get("state")
+    if state == "stop":
+        return "fail", amount, RED, "BRAK REAKCJI" if u.get("probe_failed_recently") else "PRZERWA TERAZ"
+    if state == "warn":
+        return "warn", amount, AMBER, "UWAGA"
+    if state == "break":
+        return "break", amount, BLUE, "PRZERWA"
+    return "ok", amount, GREEN, "OCZY OTWARTE"
+
+
+def draw_pip(frame: Image.Image, cap: Capture, ts: float, T: float, pip_open: Image.Image, pip_closed: Image.Image) -> None:
+    _, amount, color, label = pip_state(cap, ts)
+    x, y, w, h = PIP
+    pic = Image.blend(pip_open, pip_closed, amount).resize((w, h), Image.LANCZOS)
+    pad = 24
+    glow = Image.new("RGBA", (w + 2 * pad, h + 2 * pad), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).rounded_rectangle([pad, pad, pad + w, pad + h], radius=16, outline=(*color, 255), width=7)
+    glow = glow.filter(ImageFilter.GaussianBlur(9))
+    frame.paste(glow.convert("RGB"), (x - pad, y - pad), glow.getchannel("A"))
+    mask = rounded_mask((w, h), (0, 0, w, h), 14)
+    frame.paste(pic, (x, y), mask)
+    d = ImageDraw.Draw(frame, "RGBA")
+    d.rounded_rectangle([x, y, x + w, y + h], radius=14, outline=(*color, 255), width=3)
+    # Top strip with REC dot and state, bottom-left disclaimer.
+    d.rounded_rectangle([x + 10, y + 10, x + w - 10, y + 38], radius=10, fill=(8, 12, 24, 190))
+    if int(T * 1.6) % 2 == 0:
+        d.ellipse([x + 20, y + 18, x + 32, y + 30], fill=(*RED, 255))
+    d.text((x + 42, y + 15), "REC", font=font(14, True), fill=(255, 255, 255, 255))
+    lw = d.textlength(label, font=font(15, True))
+    d.text((x + w - 20 - lw, y + 15), label, font=font(15, True), fill=(*color, 255) if color != GREEN else (74, 222, 128, 255))
+    d.rounded_rectangle([x + 10, y + h - 30, x + 150, y + h - 10], radius=8, fill=(8, 12, 24, 170))
+    d.text((x + 18, y + h - 27), "wizualizacja (AI)", font=font(13), fill=(203, 213, 225, 255))
+
+
+# ---------------------------------------------------------------- subtitles, chapter, progress
+
+def overlay(frame: Image.Image, T: float, chapter: str, subtitle: str, label: str | None = None, source_chip: bool = False) -> Image.Image:
+    d = ImageDraw.Draw(frame, "RGBA")
+    badge = f"{chapter}   {int(T) // 60}:{int(T) % 60:02d} / 1:54"
+    fnt = font(19, True)
+    bw = d.textlength(badge, font=fnt) + 36
+    bx = W - bw - 28
+    d.rounded_rectangle([bx, 14, bx + bw, 50], radius=18, fill=(8, 12, 24, 215))
+    d.text((bx + 18, 22), badge, font=fnt, fill=(255, 255, 255, 255))
+    if source_chip:
+        chip = "ODTWORZENIE NAGRANIA EEG (BrainAccess MINI) · czas zmiany ×10"
+        cw = d.textlength(chip, font=font(17, True)) + 32
+        d.rounded_rectangle([(W - cw) / 2 - 120, 14, (W + cw) / 2 - 120, 50], radius=18, fill=(8, 12, 24, 215), outline=(*SLATE, 255), width=2)
+        d.text(((W - cw) / 2 - 104, 23), chip, font=font(17, True), fill=(203, 213, 225, 255))
+    if label:
+        lw = d.textlength(label, font=font(18, True)) + 30
+        d.rounded_rectangle([32, 14, 32 + lw, 50], radius=18, fill=(*AMBER, 235))
+        d.text((47, 22), label, font=font(18, True), fill=(255, 255, 255, 255))
+    if subtitle:
+        sf = font(26, True)
+        lines = textwrap.wrap(subtitle, width=96)
+        tw = max(d.textlength(ln, font=sf) for ln in lines)
+        bh = 22 + len(lines) * 36
+        box_w = min(W - 80, tw + 56)
+        x0 = (W - box_w) / 2
+        y0 = H - 16 - bh
+        d.rounded_rectangle([x0, y0, x0 + box_w, y0 + bh], radius=12, fill=(8, 12, 24, 232))
+        for i, ln in enumerate(lines):
+            d.text(((W - d.textlength(ln, font=sf)) / 2, y0 + 12 + i * 36), ln, font=sf, fill=(255, 255, 255, 255))
+    d.rectangle([0, H - 5, int(W * T / TOTAL), H], fill=(*BLUE, 255))
+    return frame
+
+
+# ---------------------------------------------------------------- subtitles text
+
+def subtitles(cap: Capture) -> list[tuple[float, float, str, str]]:
+    a = cap.events["A_start"]["latest"] or {}
+    cf = f"{a.get('context_factor', 2.4):.1f}".replace(".", ",")
+    rt = (cap.events["B_result"].get("probeResult") or {}).get("title", "")
+    rt_txt = rt if rt.endswith("ms") else "ok. 250 ms"
+    return [
+        (0.0, 6.0, "1/6  Problem na żywo", "2:30 w nocy, 19 godzin od przebudzenia. Przepisy mierzą zegar — Wachta mierzy człowieka."),
+        (6.0, 15.0, "1/6  Problem na żywo", "Kiedy mózg przestaje reagować, Wachta każe zjechać i od razu wskazuje zmiennika z największą rezerwą."),
+        (15.0, 24.0, "2/6  Dlaczego zegar nie wystarcza", "Normy czasu pracy traktują wszystkich tak samo, a senność powoduje ok. 20% wypadków w transporcie."),
+        (24.0, 33.0, "2/6  Dlaczego zegar nie wystarcza", "Po 18 h czuwania sprawność spada jak przy 0,05% alkoholu. Kamera widzi tylko powieki — my mierzymy EEG i reakcję."),
+        (33.0, 44.0, "3/6  Kalibracja i kontekst nocy", f"Po 60 s osobistej kalibracji system śledzi alfę z tyłu głowy i mrugnięcia. W nocy rezerwa spada {cf}× szybciej."),
+        (44.0, 54.0, "3/6  Próba reakcji w normie", f"Krótka próba sprawdza czas reakcji względem osobistej normy pracownika: {rt_txt} — reakcja w normie."),
+        (54.0, 64.0, "4/6  Zamknięte oczy i panel przełożonego", "Zamknięcie oczu podnosi alfę na O1/O2 powyżej progu 2,5 przez 3 s. Przełożony widzi tylko gotowość zespołu."),
+        (64.0, 76.0, "4/6  Potwierdzenie po spadku czujności", "Gdy oczy znów się otworzą, system sam sprawdza, czy mózg wrócił. Brak reakcji utrzymuje nakaz przerwy."),
+        (76.0, 90.0, "4/6  Dyżur w szpitalu i regeneracja", "Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę. Odpoczynek realnie odnawia rezerwę czujności."),
+        (90.0, 99.0, "5/6  Walidacja na 5 nagraniach zespołu", "Ten sam kod wykrył 5 z 5 bloków zamkniętych oczu i dał tylko 1 fałszywy alarm w 48 minutach (0 w monotonii T1)."),
+        (99.0, 108.0, "5/6  Walidacja na zbiorach publicznych", "W danych publicznych (Cui i in., CC BY 4.0) alfa rośnie u 11 z 11 osób, a model osobisty podnosi AUC z 0,76 do 0,90."),
+        (108.0, 114.0, "6/6  Podsumowanie i pilotaż", "Następny krok: pilotaż sprawdzający, czy osobisty limit rezerwy wyprzedza spadki czujności lepiej niż zegar."),
+    ]
+
+
+# ---------------------------------------------------------------- frame renderer (runs in worker processes)
+
+class Renderer:
+    def __init__(self, capture_dir: Path) -> None:
+        self.cap = Capture(capture_dir)
+        self.tl = Timeline(self.cap)
+        self.keys = camera_keys(self.cap, self.tl)
+        self.driver = Image.open(IMG / "driver-night-broll.jpg").convert("RGB")
+        self.nurse = Image.open(IMG / "nurse-shift-broll.jpg").convert("RGB")
+        self.pip_open = Image.open(IMG / "pip-eyes-open.jpg").convert("RGB")
+        self.pip_closed = Image.open(IMG / "pip-eyes-closed.jpg").convert("RGB")
+        self.problem = ProblemSlide(self.driver)
+        self.evidence = EvidenceSlides()
+        self.closing = closing_slide()
+        self.subs = subtitles(self.cap)
+
+    def text_for(self, T: float) -> tuple[str, str]:
+        for a, b, chapter, sub in self.subs:
+            if a <= T < b:
+                return chapter, sub
+        return self.subs[-1][2], self.subs[-1][3]
+
+    def frame(self, T: float) -> Image.Image:
+        chapter, sub = self.text_for(T)
+        label = None
+        chip = False
+        if T < 6.0:
+            img = cover(self.driver, lerp(1.0, 1.08, T / 6.0), (0.5, 0.5))
+            d = ImageDraw.Draw(img, "RGBA")
+            u = smooth((T - 0.3) / 0.6)
+            d.rounded_rectangle([72, 64, 1290, 214], radius=14, fill=(8, 12, 24, int(205 * u)))
+            d.text((104, 80), "Wachta — Adaptive Systems", font=font(54, True), fill=(255, 255, 255, int(255 * u)))
+            d.text((104, 152), "Zmęczenie i czujność mierzone na człowieku, nie na zegarze (BrainAccess MINI, 8 kanałów EEG)",
+                   font=font(23), fill=(215, 220, 228, int(255 * u)))
+        elif T < TEASER[0]:
+            img = cover(self.nurse, lerp(1.0, 1.08, (T - 6.0) / (TEASER[0] - 6.0)), (0.5, 0.45))
+            d = ImageDraw.Draw(img, "RGBA")
+            u = smooth((T - 6.2) / 0.5)
+            d.rounded_rectangle([72, 64, 900, 130], radius=14, fill=(8, 12, 24, int(205 * u)))
+            d.text((104, 80), "Ten sam problem na nocnym dyżurze", font=font(32, True), fill=(255, 255, 255, int(255 * u)))
+        elif T < TEASER[1] or (BEATS["A"][0] <= T < BEATS["E"][1]):
+            ts = self.tl.src(T)
+            cam = camera_at(self.keys, T)
+            img = dashboard_view(self.cap, ts, cam)
+            draw_pip(img, self.cap, ts, T, self.pip_open, self.pip_closed)
+            chip = True
+            if T < TEASER[1]:
+                label = "PODGLĄD: SCENA 4/6"
+            if LAPSE_OUT[0] <= T < LAPSE_OUT[1]:
+                d = ImageDraw.Draw(img, "RGBA")
+                txt = f"przyspieszono ×{LAPSE_SPEED:.0f}"
+                tw = d.textlength(txt, font=font(18, True)) + 32
+                d.rounded_rectangle([W - 28 - tw, 62, W - 28, 98], radius=18, fill=(*AMBER, 235))
+                d.text((W - 12 - tw, 69), txt, font=font(18, True), fill=(255, 255, 255, 255))
+        elif T < BEATS["A"][0]:
+            img = self.problem.at(T - TEASER[1])
+        elif T < 99.0:
+            img = self.evidence.slide1(T - 90.0)
+        elif T < 108.0:
+            img = self.evidence.slide2(T - 99.0)
+        else:
+            img = self.closing.copy()
+        return overlay(img, T, chapter, sub, label, chip)
+
+
+_R: Renderer | None = None
+
+
+def _init(capture_dir: str) -> None:
+    global _R
+    _R = Renderer(Path(capture_dir))
+
+
+def _render(i: int) -> bytes:
+    assert _R is not None
+    return _R.frame(i / FPS).tobytes()
+
+
+# ---------------------------------------------------------------- audio
+
+def audio_track(cap: Capture, tl: Timeline, path: Path) -> None:
     sr = 44100
-    n = TOTAL_SECONDS * sr
+    n = int(TOTAL * sr)
     t = np.arange(n, dtype=np.float32) / sr
-
-    # Warm, quiet ambient chord (A2 + E3 + C#4) so the video has a broadcast feel even before voiceover
-    pad = (
-        0.015 * np.sin(2 * np.pi * 110.0 * t)
-        + 0.010 * np.sin(2 * np.pi * 164.81 * t)
-        + 0.006 * np.sin(2 * np.pi * 220.0 * t)
-    )
-    # Soft fade-in and fade-out
-    fade_len = 2 * sr
-    pad[:fade_len] *= np.linspace(0.0, 1.0, fade_len, dtype=np.float32)
-    pad[-fade_len:] *= np.linspace(1.0, 0.0, fade_len, dtype=np.float32)
-
+    pad = 0.014 * np.sin(2 * np.pi * 110.0 * t) + 0.009 * np.sin(2 * np.pi * 164.81 * t) + 0.005 * np.sin(2 * np.pi * 220.0 * t)
+    fade = 2 * sr
+    pad[:fade] *= np.linspace(0, 1, fade, dtype=np.float32)
+    pad[-fade:] *= np.linspace(1, 0, fade, dtype=np.float32)
     audio = pad.copy()
 
-    # Exact 880 Hz reaction probe beeps matching app.js beep() at probe appearances:
-    # 1) t = 45.0 s (scheduled probe)
-    # 2) t = 63.5 s (post-event confirmation probe)
-    for beep_t in (45.0, 63.5):
-        start = int(beep_t * sr)
-        dur = int(0.28 * sr)
-        bt = np.arange(dur, dtype=np.float32) / sr
-        env = np.exp(-bt * 12.0)
-        beep = 0.25 * np.sin(2 * np.pi * 880.0 * bt) * env
-        audio[start : start + dur] += beep
+    def tone(at: float, freq: float, dur: float, gain: float, decay: float = 12.0) -> None:
+        s = int(at * sr)
+        m = int(dur * sr)
+        if s < 0 or s + m > n:
+            return
+        bt = np.arange(m, dtype=np.float32) / sr
+        audio[s:s + m] += gain * np.sin(2 * np.pi * freq * bt) * np.exp(-bt * decay)
 
-    # Subtle alert chime when microsleep STOP triggers at t = 6.0 s and t = 55.0 s
-    for alert_t in (6.0, 55.0):
-        for offset, freq in ((0.0, 587.33), (0.16, 440.0)):
-            start = int((alert_t + offset) * sr)
-            dur = int(0.22 * sr)
-            bt = np.arange(dur, dtype=np.float32) / sr
-            env = np.exp(-bt * 10.0)
-            audio[start : start + dur] += 0.18 * np.sin(2 * np.pi * freq * bt) * env
-
+    for p in cap.probes:                                  # the 880 Hz prompt beep, as in app.js
+        at = tl.out_of(p["t"])
+        if at is not None:
+            tone(at, 880.0, 0.28, 0.25)
+    for name in ("C_lapse",):                             # alarm chime when "Przerwa teraz" appears (also in the teaser)
+        ts = cap.t(name)
+        for out0, out1, src0, speed in tl.segments:
+            at = out0 + (ts - src0) / speed
+            if out0 <= at < out1:
+                tone(at, 587.33, 0.22, 0.18, 10.0)
+                tone(at + 0.16, 440.0, 0.22, 0.18, 10.0)
+    if "B_result" in cap.events:
+        at = tl.out_of(cap.t("B_result"))
+        if at is not None:
+            tone(at, 1318.5, 0.18, 0.14, 14.0)
+    if "D_fail" in cap.events:
+        at = tl.out_of(cap.t("D_fail"))
+        if at is not None:
+            tone(at, 196.0, 0.4, 0.2, 5.0)
     audio = np.clip(audio, -0.95, 0.95)
-    pcm = (audio * 32767.0).astype(np.int16)
-
-    with wave.open(str(wav_path), "wb") as wf:
+    with wave.open(str(path), "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(sr)
-        wf.writeframes(pcm.tobytes())
+        wf.writeframes((audio * 32767).astype(np.int16).tobytes())
+
+
+# ---------------------------------------------------------------- main
+
+def run(cmd: list[str]) -> None:
+    proc = subprocess.run(cmd, capture_output=True, text=True)
+    if proc.returncode:
+        raise RuntimeError(f"{' '.join(cmd[:3])} failed: {proc.stderr[-1500:]}")
 
 
 def main() -> None:
-    driver_path = find_artifact_image("driver_night_broll")
-    nurse_path = find_artifact_image("nurse_shift_broll")
-    pip_open_path = find_artifact_image("pip_eyes_open")
-    pip_closed_path = find_artifact_image("pip_eyes_closed")
-    assert driver_path and nurse_path and pip_open_path and pip_closed_path, "Missing generated AI images"
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("capture", type=Path, help="folder written by capture-dashboard.js")
+    ap.add_argument("--out", type=Path, default=SUB / "wachta-demo-2min.mp4", help="repository version (24 fps, < 5 MB)")
+    ap.add_argument("--out-hq", type=Path, default=None, help="high quality 30 fps version")
+    ap.add_argument("--preview", type=float, nargs="*", help="write PNG previews of these video times and exit")
+    ap.add_argument("--target-kbps", type=int, default=270, help="video bitrate of the repository version")
+    ap.add_argument("--jobs", type=int, default=4)
+    args = ap.parse_args()
 
-    driver_img = Image.open(driver_path).convert("RGB")
-    nurse_img = Image.open(nurse_path).convert("RGB")
-    pip_open = Image.open(pip_open_path).convert("RGB")
-    pip_closed = Image.open(pip_closed_path).convert("RGB")
+    if args.preview is not None:
+        r = Renderer(args.capture)
+        for T in args.preview:
+            out = args.capture / f"preview_{T:06.2f}.png"
+            r.frame(T).save(out)
+            print(out)
+        return
 
+    out_hq = args.out_hq or args.capture / "wachta-demo-hq.mp4"
+    cap = Capture(args.capture)
+    tl = Timeline(cap)
     with tempfile.TemporaryDirectory() as tmp:
-        tmp_dir = Path(tmp)
-        print("1/4 Rendering real Wachta dashboard states in headless Chromium...")
-        snaps = build_dashboard_snapshots(tmp_dir)
+        wav = Path(tmp) / "audio.wav"
+        audio_track(cap, tl, wav)
+        enc = subprocess.Popen(
+            ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+             "-i", str(wav), "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k",
+             "-t", f"{TOTAL}", "-movflags", "+faststart", str(out_hq)],
+            stdin=subprocess.PIPE)
+        total = int(TOTAL * FPS)
+        with Pool(args.jobs, initializer=_init, initargs=(str(args.capture),)) as pool:
+            for i, raw in enumerate(pool.imap(_render, range(total), chunksize=4)):
+                enc.stdin.write(raw)
+                if i % 150 == 0:
+                    print(f"frame {i}/{total}", file=sys.stderr, flush=True)
+        enc.stdin.close()
+        if enc.wait():
+            raise RuntimeError("ffmpeg failed on the high quality encode")
 
-        print("2/4 Building slide & B-roll composites...")
-        slide_problem = make_problem_slide(driver_img)
-        slide_ev1 = make_evidence_slide_1()
-        slide_ev2 = make_evidence_slide_2()
-        slide_close = make_closing_slide()
-
-        # Pre-build PiP dashboard variants
-        dash_ok_pip = paste_pip(snaps["ok_fresh"], pip_open, "EEG NA ŻYWO: OCZY OTWARTE", alert=False)
-        dash_probe_sched_pip = paste_pip(
-            snaps["probe_prompt_schedule"], pip_open, "PRÓBA REAKCJI (SPACJA)", alert=False
-        )
-        dash_probe_ok_pip = paste_pip(snaps["probe_ok"], pip_open, "REAKCJA: 248 MS (W NORMIE)", alert=False)
-        dash_after_probe_pip = paste_pip(snaps["ok_after_probe"], pip_open, "EEG NA ŻYWO: OCZY OTWARTE", alert=False)
-        dash_microsleep_pip = paste_pip(
-            snaps["microsleep_stop"], pip_closed, "MIKROSEN: OCZY ZAMKNIĘTE", alert=True
-        )
-        dash_probe_event_pip = paste_pip(
-            snaps["probe_prompt_event"], pip_open, "SPRAWDZENIE PO INCYDENCIE", alert=True
-        )
-        dash_probe_fail_modal_pip = paste_pip(
-            snaps["probe_failed_stop"], pip_open, "BRAK REAKCJI (> 3000 MS)", alert=True
-        )
-        dash_probe_fail_banner_pip = paste_pip(
-            snaps["probe_failed_banner"], pip_open, "POTWIERDZONY SPADEK CZUJNOŚCI", alert=True
-        )
-        dash_nurse_stop = paste_pip(snaps["nurse_stop"], pip_open, "SCENARIUSZ: DYŻUR SZPITALNY", alert=True)
-        dash_nurse_break = paste_pip(snaps["nurse_break"], pip_open, "PRZERWA: REGENERACJA REZERWY", alert=False)
-
-        wav_path = tmp_dir / "audio.wav"
-        generate_audio_track(wav_path)
-
-        out_mp4 = ARTIFACT_DIR / "wachta-demo-2min.mp4"
-        print("3/4 Encoding 1080p MP4 video via FFmpeg...")
-        ffmpeg_cmd = [
-            "ffmpeg",
-            "-y",
-            "-f",
-            "rawvideo",
-            "-vcodec",
-            "rawvideo",
-            "-s",
-            f"{WIDTH}x{HEIGHT}",
-            "-pix_fmt",
-            "rgb24",
-            "-r",
-            str(FPS),
-            "-i",
-            "-",
-            "-i",
-            str(wav_path),
-            "-c:v",
-            "libx264",
-            "-preset",
-            "fast",
-            "-crf",
-            "20",
-            "-pix_fmt",
-            "yuv420p",
-            "-c:a",
-            "aac",
-            "-b:a",
-            "128k",
-            "-shortest",
-            str(out_mp4),
-        ]
-        proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
-        assert proc.stdin is not None
-
-        total_frames = TOTAL_SECONDS * FPS
-        for f_idx in range(total_frames):
-            t_sec = f_idx / FPS
-
-            # Scene selection (0:00 to 1:54)
-            if t_sec < 4.5:
-                base = ken_burns(driver_img, t_sec / 4.5, zoom=0.07)
-                draw_b = ImageDraw.Draw(base, "RGBA")
-                draw_b.rounded_rectangle([72, 64, 1290, 210], radius=14, fill=(11, 11, 11, 205))
-                draw_b.text((104, 82), "Wachta — Adaptive Systems", font=FONT_TITLE, fill=(255, 255, 255, 255))
-                draw_b.text(
-                    (104, 152),
-                    "Zmęczenie i czujność mierzone na człowieku, nie na zegarze (BrainAccess MINI, 8 kanałów EEG)",
-                    font=FONT_BODY,
-                    fill=(215, 214, 208, 255),
-                )
-                chapter = "1/6  Problem na żywo"
-                sub = "2:30 w nocy, 19 godzin od przebudzenia. Przepisy mierzą zegar — Wachta mierzy człowieka."
-            elif t_sec < 15.0:
-                base = dash_ok_pip if t_sec < 6.0 else dash_microsleep_pip
-                chapter = "1/6  Wykrycie mikrosnu"
-                sub = "Kiedy mózg przestaje reagować, Wachta każe zjechać i od razu wskazuje zmiennika z największą rezerwą."
-            elif t_sec < 33.0:
-                base = slide_problem
-                chapter = "2/6  Dlaczego zegar nie wystarcza"
-                if t_sec < 24.0:
-                    sub = "Normy czasu pracy traktują wszystkich tak samo, a senność powoduje ok. 20% wypadków w transporcie."
-                else:
-                    sub = "Po 18 h czuwania sprawność spada jak przy 0,05% alkoholu. Kamera widzi tylko powieki — my mierzymy EEG i reakcję."
-            elif t_sec < 45.0:
-                base = dash_ok_pip
-                chapter = "3/6  Kalibracja i kontekst nocy"
-                sub = "Po 60 s osobistej kalibracji system śledzi alfę z tyłu głowy i mrugnięcia. W nocy rezerwa spada 2,6× szybciej."
-            elif t_sec < 54.0:
-                if t_sec < 48.0:
-                    base = dash_probe_sched_pip
-                elif t_sec < 50.5:
-                    base = dash_probe_ok_pip
-                else:
-                    base = dash_after_probe_pip
-                chapter = "3/6  Próba reakcji w normie"
-                sub = "Krótka próba sprawdza czas reakcji względem osobistej normy pracownika: 248 ms — reakcja w normie."
-            elif t_sec < 63.5:
-                base = dash_microsleep_pip
-                chapter = "4/6  Mikrosen i panel przełożonego"
-                sub = "Zamknięcie oczu podnosi alfę na O1/O2 powyżej progu 2,5 przez 3 s. Przełożony widzi tylko gotowość zespołu."
-            elif t_sec < 76.0:
-                if t_sec < 66.5:
-                    base = dash_probe_event_pip
-                elif t_sec < 70.0:
-                    base = dash_probe_fail_modal_pip
-                else:
-                    base = dash_probe_fail_banner_pip
-                chapter = "4/6  Potwierdzenie po spadku czujności"
-                sub = "Gdy oczy znów się otworzą, system sam sprawdza, czy mózg wrócił. Brak reakcji utrzymuje nakaz przerwy."
-            elif t_sec < 90.0:
-                if t_sec < 79.5:
-                    base = ken_burns(nurse_img, (t_sec - 76.0) / 3.5, zoom=0.06)
-                elif t_sec < 84.0:
-                    base = dash_nurse_stop
-                else:
-                    base = dash_nurse_break
-                chapter = "4/6  Dyżur w szpitalu i regeneracja"
-                sub = "Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę. Odpoczynek realnie odnawia rezerwę czujności."
-            elif t_sec < 100.0:
-                base = slide_ev1
-                chapter = "5/6  Walidacja na 5 nagraniach zespołu"
-                sub = "Ten sam kod wykrył 5 z 5 bloków zamkniętych oczu i dał tylko 1 fałszywy alarm w 48 minutach (0 w monotonii T1)."
-            elif t_sec < 108.0:
-                base = slide_ev2
-                chapter = "5/6  Walidacja na zbiorach publicznych"
-                sub = "W danych publicznych (Cui i in., CC BY 4.0) alfa rośnie u 11 z 11 osób, a model osobisty podnosi AUC z 0,76 do 0,90."
-            else:
-                base = slide_close
-                chapter = "6/6  Podsumowanie i pilotaż"
-                sub = "Następny krok: pilotaż sprawdzający, czy osobisty limit rezerwy wyprzedza spadki czujności lepiej niż zegar."
-
-            composed = overlay_subtitles_and_hud(base, t_sec, chapter, sub)
-            proc.stdin.write(composed.tobytes())
-
-        proc.stdin.close()
-        stderr_out = proc.stderr.read().decode("utf-8", errors="replace") if proc.stderr else ""
-        ret = proc.wait()
-        if ret != 0:
-            raise RuntimeError(f"FFmpeg failed ({ret}): {stderr_out}")
-
-        print(f"4/4 Done! Video saved to {out_mp4} ({out_mp4.stat().st_size / 1e6:.2f} MB)")
+        # Repository version: 24 fps, two-pass at a fixed bitrate so it stays below the 5 MB limit.
+        log = str(Path(tmp) / "pass")
+        common = ["-i", str(out_hq), "-vf", "fps=24", "-c:v", "libx264", "-preset", "slow", "-b:v", f"{args.target_kbps}k",
+                  "-maxrate", f"{int(args.target_kbps * 1.6)}k", "-bufsize", f"{args.target_kbps * 2}k", "-pix_fmt", "yuv420p", "-passlogfile", log]
+        run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "1", "-an", "-f", "mp4", "/dev/null"])
+        run(["ffmpeg", "-y", "-loglevel", "error", *common, "-pass", "2", "-c:a", "aac", "-b:a", "48k", "-ac", "1", "-movflags", "+faststart", str(args.out)])
+    print(f"repo version: {args.out} ({args.out.stat().st_size / 1e6:.2f} MB)\nhigh quality: {out_hq} ({out_hq.stat().st_size / 1e6:.1f} MB)")
 
 
 if __name__ == "__main__":
