@@ -46,7 +46,7 @@ Pod spodem nazwa zespołu i kategoria (Systemy adaptacyjne).
 Trzy elementy:
 1. **Sesja kalibracyjna** (kilka minut, np. na początku zmiany, po nocach, raz w miesiącu): EEG z czepka i 3-minutowy test reakcji PVT-B. To uczy wzorca tej osoby.
 2. **Model kontekstu na co dzień**: czas od przebudzenia, pora doby, czas pracy (uproszczony model dwuprocesowy). Bez czepka.
-3. **Tryb na żywo** w rolach, gdzie kask albo czepek już jest: EEG wykrywa spadki czujności i system od razu zmienia plan.
+3. **Tryb na żywo** w rolach, gdzie kask albo czepek już jest: EEG wykrywa zamknięcie oczu i fale alfy w ciągu kilku sekund, a system od razu zmienia plan.
 
 ### 5. Jak to działa: pętla adaptacyjna
 
@@ -70,16 +70,18 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 | Senność w danych publicznych: alfa rośnie u 11 z 11 osób, AUC 0,75 (0,52–0,91) | notebook 04, wykres `img/drowsiness-public-auc-and-calibration.png` |
 | Model osobisty: trafność 0,83 (AUC 0,90) wobec 0,66–0,72 dla jednego modelu dla wszystkich | notebook 04, tabela strategii |
 | Kontekst (czas jazdy, pora doby) podnosi AUC z 0,76 do 0,88 | Lu i in. 2022, `podstawy-naukowe.md` poz. 3 |
-| HRV i czas reakcji: r = −0,23, kierunek ujemny u 16 z 16 osób | notebook 05 |
+| HRV zmienia się z czasem zadania tak jak czujność, ale jej nie mierzy (RMSSD a 1/RT: r = 0,18, po uwzględnieniu czasu zadania 0,05; 29 osób) | notebook 10 |
+| 15 minut monotonii (T1, jedna osoba, KSS 5) bez ani jednego fałszywego alarmu, zamknięcie oczu wykryte po ok. 9 s | [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) |
 
 ### 8. Co zweryfikowane, a co założone (zadanie D4)
 
 | Zweryfikowane | Założone, do sprawdzenia w pilotażu |
 |---|---|
 | Wykrywanie zamkniętych oczu i alfy na suchych elektrodach | Że osobisty limit przewiduje spadki czujności lepiej niż norma czasu i sam model kontekstu |
-| Senność widać w EEG na naszych 8 kanałach (dane publiczne) | Senność przy otwartych oczach na naszych własnych nagraniach (zbieramy, zadanie C4) |
+| Senność widać w EEG na naszych 8 kanałach (dane publiczne) | Senność przy otwartych oczach na naszych własnych nagraniach (zbieramy, zadanie C4; w sesji T1 jej nie było, KSS 5) |
 | Personalizacja poprawia rozróżnianie stanów (dane publiczne) | Parametry rezerwy (tempo spadku, kary, wpływ nocy) |
 | Działająca pętla na żywo z czepkiem BrainAccess | Że zegarek może zastąpić sesje EEG (nasze dane: nie zastąpi, może uzupełnić) |
+| Zero fałszywych alarmów w 15 min monotonii (T1: jedna osoba, jedna sesja, KSS 5) | Że alfa przy otwartych oczach ostrzega przed spadkiem czujności: **sprawdziliśmy i nie ostrzega** (AUC 0,52 na 29 osobach, notebook 06), więc tego nie obiecujemy |
 
 ### 9. Rynek, model, prawo
 
@@ -106,4 +108,4 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 Z [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 i [`scenariusz-demo.md`](scenariusz-demo.md):
 „wykrywamy senność z trafnością X%”, „zegarek zastąpi EEG”, „mierzymy stres / skupienie / przeciążenie”,
-„rezerwa jest zmierzona”. Liczb rynkowych nie podajemy bez źródła i roku.
+„rezerwa jest zmierzona”, „EEG ostrzega przed spadkiem czujności”, „system przewiduje mikrosen” (notebook 06: alfa nie przewiduje lapsu). Liczb rynkowych nie podajemy bez źródła i roku.

@@ -84,7 +84,7 @@ przed siebie, aż baner zmieni się z „Kalibracja” na „Możesz pracować�
 | 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy w 5 z 5 nagrań, z jednym fałszywym alarmem w 48 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób, a model osobisty rozróżnia stany wyraźnie lepiej niż jeden dla wszystkich. Dlatego liczymy normy dla człowieka, nie dla zegara.” |
 
 **Kiedy system sam prosi o reakcję:** tylko po spadku czujności (12–20 s po otwarciu oczu) i z harmonogramu co 20 min.
-Rosnący wskaźnik sam w sobie już jej nie wywołuje (issue #14), więc w demo nie pojawi się przypadkowo.
+Rosnący wskaźnik sam w sobie już jej nie wywołuje (issue #14), więc w demo nie pojawi się przypadkowo. Gdy próba pojawi się sama, osoba w czepku reaguje normalnie, a narrator mówi „system sam sprawdza reakcję”. To dobry moment, nie błąd. Nie mówimy, że wskaźnik „zapowiada” spadek czujności: alfa przy otwartych oczach go nie zapowiada (notebook 06).
 
 **Jeśli alarm nie przyjdzie po 15 s zamkniętych oczu:** osoba w czepku trzyma oczy zamknięte jeszcze 10 s. U dwóch osób
 w naszych nagraniach alarm przychodził z przerwami. Jeśli dalej nic, przejdźcie na plan B.
@@ -142,8 +142,8 @@ Pełna lista: [`jury-i-kryteria.md`](jury-i-kryteria.md) §4. Dwa nowe po zmiana
 
 | Pytanie | Odpowiedź |
 |---|---|
-| Czym to się różni od kamery? | Kamera widzi zamknięte oczy. My dodatkowo widzimy senność przy otwartych oczach (alfa przy mrugających oczach) i sprawdzamy reakcję. Alarm zmienia plan pracy i obsadę, a nie tylko piszczy |
-| Jak często system przerywa próbą reakcji? | Na naszych nagraniach od 0 do 8 razy na 10 minut, najczęściej przy zaszumionym sygnale. Próbę wywołuje tylko rosnący wskaźnik, a próg będziemy stroić na większej liczbie nagrań |
+| Czym to się różni od kamery? | Kamera widzi zamknięte oczy. My dodatkowo odróżniamy zamknięcie oczu od wzrostu alfy przy mrugających oczach i sprawdzamy reakcję. Senności przy otwartych oczach na własnych danych jeszcze nie zmierzyliśmy (sesja T1: KSS 5, bez senności), więc tego nie twierdzimy. Alarm zmienia plan pracy i obsadę, a nie tylko piszczy |
+| Jak często system przerywa próbą reakcji? | Na naszych nagraniach od 0 do 8 razy na 10 minut, najczęściej przy zaszumionym sygnale. Dziś próbę wywołuje wskaźnik rosnący poniżej progu alarmu i to się zmienia: sprawdziliśmy, że taki wzrost nie zapowiada lapsu (notebook 06), a w 15 minutach monotonii dałby 11 prób bez żadnego spadku czujności. Docelowo próba po zdarzeniu albo z harmonogramu (issue #14) |
 
 ## Próby (zadanie C3)
 

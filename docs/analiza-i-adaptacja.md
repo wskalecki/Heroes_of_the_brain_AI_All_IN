@@ -30,7 +30,7 @@ Zadania wynikające z tej analizy są w issues na GitHubie (zbiorczy issue „Ad
 | N2 | Wskaźnik wolny (θ+α)/β jest zakłócany przez mięśnie (r ≈ −0,5 u dwóch osób) i nie ma spójnego trendu w zadaniu czujności | notebooki 03, 05 |
 | N3 | Theta czołowa nie działa przy referencji Fp1 (AUC 0,58, u 3 z 11 osób odwrotny kierunek) | notebook 04 |
 | N4 | Reguła „przeciążony” nie zadziałała ani razu, a w zadaniu MATB alfa ciemieniowa rośnie zamiast spadać | notebooki 02, 03 |
-| N5 | Serce i EEG nie idą w parze minuta po minucie (|r| ≤ 0,16). Zmienność rytmu serca wiąże się z czasem reakcji (r = −0,23, ujemna u 16 z 16 osób), ale niezależnie od EEG. Tętno rośnie w 10-minutowym zadaniu, czyli odwrotnie niż przy senności | notebook 05 |
+| N5 | Serce i EEG nie idą w parze minuta po minucie (|r| ≤ 0,16). Zmienność rytmu serca (RMSSD) i szybkość reakcji spadają razem (r = 0,18, ten kierunek u 22 z 29 osób), ale głównie dlatego, że obie zmieniają się z czasem zadania; po jego uwzględnieniu zostaje +0,05 (CI −0,03 do 0,17), więc wcześniejsze „r = −0,23, 16 z 16” nie przetrwało przeliczenia (notebook 10). Tętno rośnie w 10-minutowym zadaniu, czyli odwrotnie niż przy senności | notebooks 05, 10 |
 | N6 | Próg 300 µV łapie ruch głowy (74–100% okien), ale tylko 33–60% okien z napięciem mięśni | notebook 03 |
 
 ### Czego jeszcze nie wiemy
@@ -141,6 +141,8 @@ Kalibracja: ok. 30 s oczy otwarte i ok. 15 s oczy zamknięte. Z tego powstaje os
 oczach zamkniętych do otwartych) i test „marker działa u tej osoby: tak, słabo, nie”. Próg alarmu ustawiany jako ułamek skoku
 (**założenie**: senna alfa jest słabsza niż przy zamkniętych oczach). Gdy marker jest słaby, system opiera się na próbach i kontekście
 i mówi o tym wprost.
+
+**Po sprawdzeniu w B7 (notebook 07) ten punkt wymaga korekt:** (1) próg alarmu jako ułamek skoku podnosi fałszywe alarmy z 1 do 20 na nagraniach zespołu, więc zostaje stałe `z_enter` = 2,5; (2) 30 s oczu otwartych to za mało (zgodność werdyktu 78%), potrzeba 60 s oczu otwartych (bez rozmowy) i ok. 40 s zamkniętych, z pominięciem pierwszych 10 s; (3) werdykt jest cechą sesji, nie osoby (tydzień później ten sam werdykt u 44–56% osób), więc liczymy go przy każdym założeniu czepka, a „nie” znaczy „dziś, przy tym dopasowaniu”; (4) założenie o słabszej alfie senności nadal niesprawdzone. Progi robocze R_z: tak ≥ 2,5, słabo 1,5–2,5, nie < 1,5 (27 osób z elektrodami żelowymi, wstępne).
 
 ## 6. Plan walidacji (żeby adaptacja nie była tylko ilustracją)
 

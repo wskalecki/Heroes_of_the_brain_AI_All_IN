@@ -69,6 +69,11 @@ class NotebookChecks(unittest.TestCase):
             self.assertTrue(self.mod.LEAK.search(text), text)
         self.assertFalse(self.mod.LEAK.search("data/recordings and ../recordings"))
 
+    def test_placeholder_regex(self):
+        for text in ("(uzupełnić)", "TODO: wnioski", "tbd", "FIXME later", "PLACEHOLDER"):
+            self.assertTrue(self.mod.PLACEHOLDER.search(text), text)
+        self.assertFalse(self.mod.PLACEHOLDER.search("Wnioski: uzupełniono po wykonaniu notebooka"))
+
     def test_ipython_lines_are_neutralised(self):
         code = "%pip install -q mne\n!ls\nx = 1\n"
         compile(self.mod.strip_ipython(code), "cell", "exec")
