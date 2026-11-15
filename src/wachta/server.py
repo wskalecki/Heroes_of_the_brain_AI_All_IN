@@ -82,8 +82,8 @@ class Worker:
             self.pending_probe = None
 
     def probe_response(self, probe_id, rt_ms) -> bool:
-        """Accept the first answer to the pending probe; later or stale answers are ignored."""
-        if probe_id != self.pending_probe:
+        """Accept the first answer to the pending probe; later, stale or unsolicited answers are ignored."""
+        if self.pending_probe is None or probe_id != self.pending_probe:
             return False
         self.pending_probe = None
         try:

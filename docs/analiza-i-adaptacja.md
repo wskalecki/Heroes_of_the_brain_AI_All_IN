@@ -2,7 +2,7 @@
 
 Stan na 14.11.2026, wieczór. Dokument zbiera to, co ustaliliśmy w notebookach 01–06, w literaturze
 ([`podstawy-naukowe.md`](podstawy-naukowe.md)), w kodzie `src/wachta/` i w kryteriach oceny
-([`jury-i-kryteria.md`](jury-i-kryteria.md)), a potem proponuje, jak system ma adaptować się lepiej.
+([`pytania-i-odpowiedzi.md`](pytania-i-odpowiedzi.md)), a potem proponuje, jak system ma adaptować się lepiej.
 Zadania wynikające z tej analizy są w issues na GitHubie (zbiorczy issue „Adaptacja v2”).
 
 **Czego ten dokument nie jest.** To propozycja do uzgodnienia w zespole, a nie decyzja. Fragmenty oznaczone

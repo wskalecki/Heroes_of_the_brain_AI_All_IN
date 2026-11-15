@@ -270,7 +270,7 @@
         Wachta: normy zmęczenia liczone dla człowieka, nie dla zegara.
       </h1>
       <p style="font-size: 16.5pt; line-height: 1.48; color: #cbd5e1;">
-        Krótkie sesje EEG z testem reakcji uczą <strong>osobistego profilu pracownika</strong>, a w rolach podwyższonego ryzyka pętla na żywo wykrywa spadki czujności i od razu zmienia plan przerw oraz obsady.
+        Dziś: <strong>kalibracja EEG do osoby</strong>, próby reakcji względem jej normy i jawne reguły, które zmieniają widok, plan przerw i obsadę. Model zmęczenia uczony na osobie to cel pilotażu.
       </p>
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px;">
         <div class="card">
@@ -365,8 +365,8 @@
         <div class="source">Źródło: Van Dongen i in. (2004), Sleep 27(3):423–433 (docs/podstawy-naukowe.md, poz. 28).</div>
       </div>
       <div class="card" style="padding: 13px 18px;">
-        <h3>2. Kamera widzi oczy — Wachta dokłada profil i próbę reakcji</h3>
-        <p>Kamera DMS widzi zamknięte powieki; nasz detektor alfy wykrywa to samo zdarzenie, więc nie obiecujemy, że lepiej. Różnica: osobisty profil, próba reakcji i zmiana planu pracy (przerwa, zmiennik) zamiast samego alarmu.</p>
+        <h3>2. Kamera widzi oczy — Wachta dokłada kalibrację i próbę reakcji</h3>
+        <p>Kamera DMS widzi zamknięte powieki; nasz detektor alfy wykrywa to samo zdarzenie, więc nie obiecujemy, że lepiej. Różnica: kalibracja do osoby, próba reakcji i zmiana planu pracy (przerwa, zmiennik) zamiast samego alarmu.</p>
       </div>
       <div class="card" style="padding: 13px 18px;">
         <h3>3. Zegarek (HRV) nie zastąpi EEG — to osobny sygnał uzupełniający</h3>
@@ -388,7 +388,7 @@
       </div>
       <div class="card" style="background: #fefce8; border-color: #fde047; padding: 14px 18px;">
         <h3 style="color: #854d0e;">Wniosek projektowy Wachty</h3>
-        <p style="color: #713f12;">Nie obiecujemy, że „zegarek zastąpi EEG”: osobisty profil dają krótkie sesje EEG i test reakcji, a na co dzień działa model kontekstu doby.</p>
+        <p style="color: #713f12;">Nie obiecujemy, że „zegarek zastąpi EEG”: dziś działa kalibracja EEG do osoby i próby reakcji, a na co dzień model kontekstu doby.</p>
       </div>
     </div>
   </div>
@@ -404,12 +404,12 @@
     <span>Wachta · Rozwiązanie</span>
     <span class="pill">Slajd 4 / 10</span>
   </div>
-  <h1 class="headline">Osobisty profil zmęczenia z krótkich sesji EEG i testu reakcji, a z niego osobisty plan przerw.</h1>
+  <h1 class="headline">Dziś: kalibracja do osoby i jawne reguły. Cel: osobisty model zmęczenia z sesji EEG i testu reakcji.</h1>
   <div class="content" style="flex-direction: column; gap: 20px;">
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; flex: 1;">
       <div class="card" style="border-top: 6px solid #2563eb; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
-          <div class="pill" style="margin-bottom: 12px;">Element 1 · Kalibracja profilu</div>
+          <div class="pill" style="margin-bottom: 12px;">Element 1 · Kalibracja osobista</div>
           <h3 style="font-size: 18pt; margin-bottom: 12px;">Krótka sesja kalibracyjna EEG + PVT-B</h3>
           <ul class="clean">
             <li>Na początku zmiany lub okresowo (kilka minut).</li>
@@ -423,7 +423,7 @@
       <div class="card" style="border-top: 6px solid #0284c7; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <div class="pill" style="margin-bottom: 12px;">Element 2 · Praca na co dzień</div>
-          <h3 style="font-size: 18pt; margin-bottom: 12px;">Osobisty model kontekstu (bez czepka)</h3>
+          <h3 style="font-size: 18pt; margin-bottom: 12px;">Model kontekstu na co dzień (bez czepka)</h3>
           <ul class="clean">
             <li>Uproszczony <strong>model dwuprocesowy</strong> (czas czuwania S + rytm dobowy C) ze stałymi parametrami, jawnie oznaczonymi jako założenia.</li>
             <li>Uwzględnia: <strong>czas od przebudzenia</strong> (<code>--wake</code>), <strong>porę doby</strong> (<code>--clock</code>, dołek 02:00–06:00 przyspiesza spadek rezerwy 1,6×) i czas pracy.</li>
@@ -738,7 +738,7 @@
           https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN
         </p>
         <p style="font-size: 12pt; margin-top: 6px; color: #cbd5e1;">
-          114 testów w CI · 10 notebooków · pakiet <code>wachta</code> · zbiory: COG-BCI (Hinss i in. 2023, CC BY 4.0), Cui i in. 2022 (CC BY 4.0), PhysioNet EEGMAT (ODC-By).
+          115 testów w CI · 10 notebooków · pakiet <code>wachta</code> · zbiory: COG-BCI (Hinss i in. 2023, CC BY 4.0), Cui i in. 2022 (CC BY 4.0), PhysioNet EEGMAT (ODC-By).
         </p>
       </div>
     </div>

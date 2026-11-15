@@ -246,6 +246,18 @@ def test_garbage_probe_answers_are_ignored_without_breaking_the_worker():
     assert worker.pipeline.index.probes_done == 0
 
 
+def test_answer_without_a_pending_probe_is_rejected():
+    # Regression: probe_response(None, None) used to match pending_probe = None and cost the worker 8 points.
+    app, worker = _app(5)
+    index = worker.pipeline.index
+    reserve, done = index.reserve, index.probes_done
+    assert worker.pending_probe is None
+    assert not worker.probe_response(None, None)
+    assert not worker.probe_response(None, 250)
+    assert index.probes_done == done
+    assert index.reserve == reserve
+
+
 def test_new_shift_resets_the_whole_team():
     cfg = Config()
     workers = [Worker(f"w{i}", ReplaySource(_noise(80, seed=i), SFREQ, name=f"T{i}", speed=200.0), cfg) for i in range(2)]

@@ -7,7 +7,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "submission" / "wachta-repo-dla-ai-studio.txt"
 DOCS = [
-    "README.md", "docs/pitch.md", "docs/scenariusz-demo.md", "docs/jury-i-kryteria.md", "docs/decyzje.md",
+    "README.md", "docs/pitch.md", "docs/scenariusz-demo.md", "docs/pytania-i-odpowiedzi.md", "docs/decyzje.md",
     "docs/plan-projektu.md", "docs/trafnosc-na-nagraniach.md", "docs/sesja-monotonii-wojtek.md",
     "docs/analiza-i-adaptacja.md", "docs/podstawy-naukowe.md", "docs/rynek-eeg-wearables.md",
     "docs/rynek-wielkosc-i-kierunek.md", "docs/licencje.md", "docs/uruchomienie.md",
