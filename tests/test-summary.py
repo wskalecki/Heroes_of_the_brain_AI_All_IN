@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from wachta.pvt import PVT_FIELDS, append_result, build_row
+from wachta.pvt import append_result, build_row
 from wachta.session import append_checkpoint_row
 from wachta.summary import (
     MERGED_FIELDS,

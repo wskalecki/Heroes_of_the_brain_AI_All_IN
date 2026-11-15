@@ -522,6 +522,7 @@ function send(action) {
 
 function onMessage(message) {
   if (message.type === "hello") {
+    probe.cancel();
     app.config = message.config;
     app.primary = message.primary;
     app.workers = new Map(message.workers.map((w) => [w.id, { ...w }]));
@@ -551,6 +552,12 @@ function onMessage(message) {
 const probe = {
   active: null,
   timer: null,
+
+  cancel() {
+    clearTimeout(this.timer);
+    this.active = null;
+    $("probe").hidden = true;
+  },
 
   show(message) {
     if (this.active) return;

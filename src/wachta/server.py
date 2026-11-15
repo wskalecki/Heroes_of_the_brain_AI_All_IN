@@ -107,9 +107,11 @@ class Worker:
             self.pipeline.index.end_break()
         elif action == "recalibrate":
             self.pipeline.recalibrate()
+            self.pending_probe = None
         elif action == "reset":
             # New shift, same person: keep the calibration and blink threshold.
             self.pipeline.new_shift()
+            self.pending_probe = None
             self.history.clear()
             self.trace.clear()
 
