@@ -10,10 +10,10 @@ Licencje pakietów odczytane z metadanych zainstalowanych wersji; licencje zbior
 | numpy, scipy, mne, uvicorn, pandas, httpx, scikit-learn | BSD-3-Clause (scipy: licencja BSD) | pozwala na użycie komercyjne |
 | fastapi, pytest, neurokit2, remotezip, ruff | MIT | pozwala na użycie komercyjne |
 | matplotlib | licencja matplotlib (oparta na PSF) | permisywna |
-| `brainaccess-board` (opcja `live`) | **niesprawdzona** | pakiet niezainstalowany w tym środowisku; sprawdzić na PyPI i u producenta (BrainAccess) przed złożeniem projektu |
-| `fitdecode` (opcja `analysis`) | **niesprawdzona** | j.w.; używany tylko lokalnie do plików `.fit`, nie jest wymagany do uruchomienia |
+| `brainaccess-board` (opcja `live`) | **własnościowa** (PyPI: „Proprietary”, wersja 1.0.3) | SDK do sprzętu; nie jest dołączone do repo i nie podlega naszej licencji MIT. Do potwierdzenia u BrainAccess, że użycie w konkursie jest dozwolone |
+| `fitdecode` (opcja `analysis`) | MIT (PyPI, wersja 0.11.0) | używany tylko lokalnie do plików `.fit`, nie jest wymagany do uruchomienia |
 
-Samo repozytorium nie ma pliku `LICENSE`. Regulamin zostawia prawa do projektu uczestnikom, więc decyzję (np. MIT albo bez licencji) trzeba podjąć jako zespół i zapisać w `docs/decyzje.md`.
+Repozytorium jest na licencji **MIT** (plik `LICENSE`, decyzja w `docs/decyzje.md`). Licencja obejmuje kod i dokumentację, **nie** nagrania EEG w `data/recordings/`.
 
 ## Zbiory danych użyte w notebookach
 
@@ -27,6 +27,6 @@ Zbiory z licencją niekomercyjną (CL-Drive, CC BY-NC) lub niesprawdzoną (Fatig
 
 ## Do zrobienia przed złożeniem projektu
 
-1. Sprawdzić licencje `brainaccess-board` i `fitdecode`.
+1. Potwierdzić u BrainAccess, że użycie `brainaccess-board` w konkursie jest dozwolone.
 2. Dodać do ostatniego slajdu źródła zbiorów (PhysioNet EEGMAT, COG-BCI, Cui).
-3. Zdecydować o licencji repozytorium.
+3. Zdecydować, czy repo będzie publiczne po hackathonie (nagrania zespołu, patrz `decyzje.md`).

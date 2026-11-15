@@ -35,6 +35,10 @@ Instalacja, testy i uruchomienie: [`docs/uruchomienie.md`](docs/uruchomienie.md)
 3. **Nie commitujemy surowych nagrań EEG z prawdziwych osób** (wyjątek: nagrania zespołu w `data/recordings/` za zgodą nagranych osób, patrz `docs/decyzje.md`) **ani żadnych sekretów** (klucze API, tokeny).
 4. Nazwy plików i folderów: małe litery, bez polskich znaków i spacji (`pomysly-adi`, nie `Pomysły Adi`).
 
+## Licencja
+
+Kod i dokumentacja: MIT ([`LICENSE`](LICENSE)). Nagrania EEG w `data/recordings/` nie są objęte tą licencją (dane biometryczne, za zgodą nagranych osób). Zależności: [`docs/licencje.md`](docs/licencje.md).
+
 ## Zespół
 
 Dopiszcie się tutaj:
