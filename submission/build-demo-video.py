@@ -117,6 +117,7 @@ class Capture:
         self.cursor_t = [c["t"] for c in self.cursor]
         self.clicks = [c for c in data["clicks"] if c["x"] >= 0]
         self.rects = data["rects"]
+        self.rects_stop = data.get("rects_stop") or data["rects"]     # rectangles in the collapsed "stop" layout
         self._cache: tuple[str, Image.Image] | None = None
 
     def t(self, name: str) -> float:
@@ -157,8 +158,8 @@ class Capture:
             wins.append((p["t"], end))
         return wins
 
-    def css_rect(self, sel: str) -> tuple[float, float, float, float]:
-        r = self.rects[sel]
+    def css_rect(self, sel: str, stop: bool = False) -> tuple[float, float, float, float]:
+        r = (self.rects_stop if stop else self.rects)[sel]
         return r["x"], r["y"], r["w"], r["h"]
 
 
@@ -166,10 +167,10 @@ def scene_pt(x: float, y: float) -> tuple[float, float]:
     return CARD_X + x * K, CARD_Y + y * K
 
 
-def scene_center(cap: Capture, *sels: str) -> tuple[float, float]:
+def scene_center(cap: Capture, *sels: str, stop: bool = False) -> tuple[float, float]:
     xs, ys = [], []
     for sel in sels:
-        x, y, w, h = cap.css_rect(sel)
+        x, y, w, h = cap.css_rect(sel, stop)
         xs += [x, x + w]
         ys += [y, y + h]
     return scene_pt((min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2)
@@ -211,25 +212,31 @@ class Timeline:
 # ---------------------------------------------------------------- camera
 
 def camera_keys(cap: Capture, tl: Timeline) -> list[tuple[float, float, float, float]]:
-    """Keyframes (T, cx, cy, zoom) in scene coordinates; eased between consecutive keys."""
+    """Keyframes (T, cx, cy, zoom) in scene coordinates; eased between consecutive keys.
+
+    The dashboard has two layouts: the full view and, while the state is "stop", a collapsed view with one message
+    and the break button (``rects_stop``). The camera follows the layout that is on screen.
+    """
     full = (W / 2, H / 2)
     worker = scene_center(cap, ".worker")
-    state = scene_center(cap, "#state")
     charts = scene_center(cap, ".charts")
     fast = scene_center(cap, "#chart-fast")
-    team = scene_center(cap, ".team")
     probe = scene_center(cap, "#probe-target")
     btn_probe = scene_center(cap, "#btn-probe", "#state")
+    s_state = scene_center(cap, "#state", ".hero", stop=True)            # message and reserve in the stop layout
+    s_worker = scene_center(cap, ".worker", stop=True)
+    s_team = scene_center(cap, ".team", stop=True)
+    s_break = scene_center(cap, "#state", "#btn-break", stop=True)
     keys: list[tuple[float, float, float, float]] = []
 
     def key(T, pos, z):
         keys.append((T, pos[0], pos[1], z))
 
-    # Teaser: the alarm itself.
+    # Teaser: the alarm and the layout that collapses to one decision.
     a, b = TEASER
-    key(a, scene_center(cap, ".worker", "#chart-fast"), 1.15)
-    key(a + 2.2, state, 1.5)
-    key(b, state, 1.55)
+    key(a, full, 1.0)
+    key(a + 1.3, s_break, 1.3)
+    key(b, s_break, 1.35)
 
     # A: status card at 1.3x, then across both charts while the cursor hovers over them.
     a, b = BEATS["A"]
@@ -248,22 +255,21 @@ def camera_keys(cap: Capture, tl: Timeline) -> list[tuple[float, float, float, f
     key(t_probe - 0.35, btn_probe, 1.2)
     key(t_probe - 0.05, probe, 1.4)
     key(t_result + 1.0, probe, 1.4)
-    key(t_result + 2.0, state, 1.15)
-    key(b, state, 1.15)
+    key(t_result + 2.0, worker, 1.15)
+    key(b, worker, 1.15)
 
-    # C: along the alpha trace as it crosses the threshold, to the alarm card, down to the supervisor panel.
+    # C: the alpha trace crosses the threshold, then the view collapses to one decision, then the supervisor panel.
     a, b = BEATS["C"]
     t_lapse = tl.out_of(cap.t("C_lapse"), "C") or a + 4.5
-    team_left = scene_pt(*(lambda r: (r[0] + r[2] * 0.4, r[1] + r[3] * 0.5))(cap.css_rect(".team")))
     key(a, full, 1.0)
     key(a + 0.8, fast, 1.35)
-    key(t_lapse + 0.5, fast, 1.35)
-    key(t_lapse + 1.5, state, 1.35)
-    key(t_lapse + 2.2, state, 1.35)
-    key(t_lapse + 3.1, team_left, 1.3)
-    key(b, team_left, 1.3)
+    key(t_lapse - 0.1, fast, 1.35)
+    key(t_lapse + 0.9, s_break, 1.25)
+    key(t_lapse + 2.4, s_break, 1.25)
+    key(t_lapse + 3.4, s_team, 1.3)
+    key(b, s_team, 1.3)
 
-    # D: wide, snap to the unanswered prompt, then to the reaction tile and the banner.
+    # D: wide, snap to the unanswered prompt, then back to the collapsed view (the stop returns after the failed probe).
     a, b = BEATS["D"]
     t_probe = tl.out_of(cap.t("D_probe")) or a + 3.0
     t_fail = tl.out_of(cap.t("D_fail")) or t_probe + 3.2
@@ -271,15 +277,18 @@ def camera_keys(cap: Capture, tl: Timeline) -> list[tuple[float, float, float, f
     key(t_probe - 0.4, full, 1.0)
     key(t_probe - 0.05, probe, 1.4)
     key(t_fail + 1.4, probe, 1.4)
-    key(t_fail + 2.4, worker, 1.3)
-    key(b, worker, 1.3)
+    key(t_fail + 2.4, s_worker, 1.25)
+    key(b, s_worker, 1.25)
 
-    # E: scenario switch in the header, then the left card while the break restores the reserve.
+    # E: scenario switch in the header, the big break button, then the full view again while the reserve recovers.
     a, b = BEATS["E"]
     t_nurse = tl.out_of(cap.t("E_nurse")) or a + 3.6
+    t_break = tl.out_of(cap.t("E_break")) or t_nurse + 2.7
     key(a, full, 1.0)
     key(t_nurse, full, 1.0)
-    key(t_nurse + 1.0, worker, 1.3)
+    key(t_nurse + 1.0, s_worker, 1.2)
+    key(t_break - 0.2, s_worker, 1.2)
+    key(t_break + 1.0, worker, 1.3)
     key(b, worker, 1.3)
     return sorted(keys, key=lambda k: k[0])
 
@@ -474,7 +483,7 @@ class EvidenceSlides:
         d.text((850, 530), "Sesja monotonii T1 (15 min, KSS 5):", font=font(26, True), fill=INK)
         y = 578
         for line in ("0,9% odrzuconych okien (słuchawki ANC)", "0 fałszywych alarmów przez 15 minut",
-                     "Zamknięcie oczu wykryte po 9 s (1 zdarzenie)", "0 zbędnych prób reakcji po PR #36"):
+                     "Zamknięcie oczu wykryte po 9 s (1 zdarzenie)", "0 zbędnych prób reakcji (próba tylko po zdarzeniu)"):
             d.text((876, y), "•  " + line, font=font(23), fill=MUTED)
             y += 44
         self.b1 = (badge_tile("5 / 5 bloków zamkniętych oczu wykrytych (BrainAccess MINI)", GREEN, 676), (94, 880), 1.0)
@@ -716,7 +725,7 @@ def subtitles(cap: Capture) -> list[tuple[float, float, str, str]]:
         (24.0, 33.0, "2/6  Dlaczego zegar nie wystarcza", "Po ok. 17 h czuwania sprawność spada jak przy 0,05% alkoholu. Kamera widzi oczy. Wachta dokłada osobisty profil i próbę reakcji."),
         (33.0, 44.0, "3/6  Kalibracja i kontekst nocy", f"Po 60 s osobistej kalibracji system śledzi alfę z tyłu głowy i mrugnięcia. W nocy po długim czuwaniu zakładamy spadek rezerwy {cf}× szybszy (założenie modelu)."),
         (44.0, 54.0, "3/6  Próba reakcji w normie", f"Drugi sygnał to zachowanie: krótka próba sprawdza czas reakcji względem osobistej normy: {rt_txt}, w normie."),
-        (54.0, 64.0, "4/6  Zamknięte oczy i panel przełożonego", "Zamknięcie oczu podnosi alfę na O1/O2 powyżej progu 2,5 przez 3 s. Przełożony widzi tylko gotowość zespołu."),
+        (54.0, 64.0, "4/6  Zamknięte oczy: interfejs się upraszcza", "Alfa na O1/O2 powyżej progu 2,5 przez 3 s: widok zmienia się w jedną decyzję i przycisk przerwy, a przełożony widzi tylko gotowość zespołu."),
         (64.0, 76.0, "4/6  Potwierdzenie po spadku czujności", "Gdy oczy znów się otworzą, system sam sprawdza, czy człowiek reaguje. Brak reakcji utrzymuje nakaz przerwy."),
         (76.0, 90.0, "4/6  Dyżur w szpitalu i regeneracja", "Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę. W modelu rezerwy odpoczynek ją odnawia."),
         (90.0, 99.0, "5/6  Walidacja na 5 nagraniach zespołu", "Ten sam kod wykrył 5 z 5 bloków zamkniętych oczu i dał tylko 1 fałszywy alarm w 48 minutach (0 w monotonii T1)."),

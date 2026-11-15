@@ -36,7 +36,7 @@ let frameCount = 0;
 async function main() {
   fs.mkdirSync(path.join(OUT, "frames"), { recursive: true });
   const server = spawn(PY, ["-m", "wachta.server", "--file", RECORDING, "--start", START_S, "--port", String(PORT),
-    "--time-scale", "10", "--wake", "07:00", "--clock", "02:30", "--team", "rudy:380", "adi:370"], {
+    "--time-scale", "10", "--wake", "07:00", "--clock", "02:30", "--team", "rudy:380-520", "adi:370-500"], {
     cwd: REPO, env: { ...process.env, PYTHONPATH: path.join(REPO, "src"), PYTHONDONTWRITEBYTECODE: "1" },
   });
   server.stderr.on("data", (d) => process.stderr.write(`[server] ${d}`));
@@ -193,17 +193,21 @@ async function run(browser) {
   await beat("B_end");
   await moveTo(rects["#state"].x + rects["#state"].w * 0.9, rects["#state"].y + rects["#state"].h * 1.4, 1200);
 
-  // ---------- beat C: eyes closed -> red alarm, then supervisor panel ----------
+  // ---------- beat C: eyes closed -> red alarm, the layout collapses to one decision, then supervisor panel ----------
+  // The cursor rests on the live trace while alpha climbs towards the threshold.
+  await moveTo(fast.x + fast.w - 70, fast.y + fast.h * 0.4, 1500);
   await waitFor(() => latest && latest.lapse, 240000, "lapse");
-  const lapse = await beat("C_lapse");
-  await sleep(400);
-  const chartEnd = { x: fast.x + fast.w - 70, y: fast.y + fast.h * 0.4 };
-  await moveTo(chartEnd.x, chartEnd.y, 1500);
+  await beat("C_lapse");
+  await sleep(1100);                     // the stop layout replaces the full view (CSS transition included)
+  const rectsStop = {};
+  for (const sel of [".worker", "#state", ".hero", "#btn-break", ".actions", ".team", "#team-list", "#team-advice"]) rectsStop[sel] = await rectOf(sel);
+  const st = rectsStop["#state"];
+  await moveTo(st.x + st.w * 0.55, st.y + st.h * 0.6, 1300);
   await sleep(900);
-  const team = rects["#team-list"];
+  const team = rectsStop["#team-list"];
   await moveTo(team.x + team.w * 0.25, team.y + team.h * 0.35, 1700);
-  await sleep(3500);
-  await beat("C_end");
+  await sleep(2500);
+  await beat("C_end", { stopLayout: await page.evaluate(() => document.body.className) });
 
   // ---------- beat D: automatic probe after the event, nobody answers ----------
   await moveTo(team.x + team.w * 0.55, team.y + team.h * 0.8, 1200);
@@ -245,7 +249,7 @@ async function run(browser) {
   fs.writeFileSync(path.join(OUT, "frames.json"), JSON.stringify(frames));
   fs.writeFileSync(path.join(OUT, "events.json"), JSON.stringify({
     view: VIEW, dpr: DPR, frame_size: first, captureStart, recording: RECORDING, start_s: START_S,
-    events, updates, probes, cursor, clicks, rects,
+    events, updates, probes, cursor, clicks, rects, rects_stop: rectsStop,
   }));
 }
 
