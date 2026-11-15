@@ -43,3 +43,20 @@ razem z adnotacjami protokołu. W `.gitignore` jest wyjątek dla plików `.fif` 
 
 **Dlaczego.** Bez własnych nagrań nie da się sprawdzić pipeline'u na naszym sprzęcie, a dane publiczne
 pochodzą z elektrod żelowych i innych montaży.
+
+## 2026-11-15 — Licencja repozytorium: MIT
+
+**Status:** przyjęte, potwierdzone przez zespół w dyskusji (15.11).
+
+**Decyzja.** Kod i dokumentacja repozytorium są na licencji MIT (plik `LICENSE`, właściciel praw: „AI All In”).
+Licencja **nie obejmuje** nagrań EEG w `data/recordings/`: to dane biometryczne członków zespołu, udostępnione w repo
+wyłącznie na potrzeby projektu, za zgodą nagranych osób (patrz wyżej). Nie wolno ich dalej rozpowszechniać na podstawie MIT.
+
+**Dlaczego.** MIT jest permisywna, zgodna z licencjami naszych zależności (BSD, MIT, PSF) i z regulaminem hackathonu
+(prawa do projektu zostają przy uczestnikach), a nie blokuje komercjalizacji.
+
+**Punkty otwarte.**
+1. Czy repo ma być publiczne po hackathonie. Jeśli tak, trzeba ponownie potwierdzić zgodę nagranych osób albo usunąć nagrania z historii.
+2. `brainaccess-board` (opcja `live`) jest własnościowy (PyPI: Proprietary). Nie dołączamy go do repo; trzeba potwierdzić u BrainAccess,
+   że użycie w konkursie jest dozwolone (to SDK do sprzętu od organizatora).
+
