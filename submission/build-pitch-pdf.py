@@ -395,8 +395,8 @@ def main() -> None:
         <div class="source">Źródło: Van Dongen i in. (2004), Sleep 27(3):423–433 (docs/podstawy-naukowe.md, poz. 28).</div>
       </div>
       <div class="card" style="padding: 13px 18px;">
-        <h3>2. Kamera w kabinie widzi powiekę — Wachta sprawdza korę mózgową i reakcję</h3>
-        <p>Kamera DMS alarmuje dopiero, gdy powieki są już zamknięte. Nie widzi wzrostu mocy alfy (8–12 Hz) na O1/O2, nie odróżnia odpoczynku od pracy i nie weryfikuje czasu reakcji po incydencie.</p>
+        <h3>2. Kamera widzi oczy — Wachta dokłada osobisty profil i sprawdzenie reakcji</h3>
+        <p>Kamera DMS wykrywa zamknięte powieki i zachowanie kierowcy. Nasz detektor alfy wykrywa to samo zdarzenie (zamknięcie oczu), więc nie obiecujemy, że zrobi to wcześniej ani trafniej. Różnica jest gdzie indziej: Wachta kalibruje się do osoby, krótką próbą sprawdza, czy człowiek naprawdę reaguje, i zmienia plan pracy (przerwa, zmiennik), zamiast tylko alarmować.</p>
       </div>
       <div class="card" style="padding: 13px 18px;">
         <h3>3. Zegarek (HRV) nie zastąpi EEG — to osobny sygnał uzupełniający</h3>
@@ -423,7 +423,7 @@ def main() -> None:
     </div>
   </div>
   <div class="footer">
-    <span>Kamera = geometria powieki po fakcie · Zegarek = tło autonomiczne · Wachta = EEG + reakcja + kontekst</span>
+    <span>Kamera = oczy i głowa · Zegarek = tło autonomiczne · Wachta = EEG + próba reakcji + kontekst</span>
     <span>Slajd 3 / 10</span>
   </div>
 </section>
@@ -724,7 +724,7 @@ def main() -> None:
       <div class="card">
         <div class="stat-num">345 mln USD (2025) → 877 mln USD (2032)</div>
         <h3>3. Rynek oprogramowania do zarządzania ryzykiem zmęczenia</h3>
-        <p>Szacunek globalnego rynku systemów FRMS (CAGR ~14%). Model biznesowy Wachty (założenie do walidacji): miesięczna subskrypcja B2B za stanowisko + okresowe sesje kalibracyjne; sprzęt EEG od partnera (<strong>BrainAccess</strong>).</p>
+        <p>Szacunek firmy badawczej LP Information (raport z marca 2026): globalny rynek oprogramowania do zarządzania ryzykiem zmęczenia (FRMS) ma wzrosnąć z ok. 345 mln USD w 2025 r. do ok. 877 mln USD w 2032 r. (CAGR 14,5% w latach 2026–2032); inne firmy podają 8,5–14% zależnie od definicji rynku. Model biznesowy Wachty (założenie do walidacji): miesięczna subskrypcja B2B za stanowisko + okresowe sesje kalibracyjne; sprzęt EEG od partnera (<strong>BrainAccess</strong>).</p>
         <div class="source">Źródło: raport LP Information, omówiony w docs/rynek-wielkosc-i-kierunek.md §2c.</div>
       </div>
       <div class="card" style="background: #f0fdf4; border-color: #bbf7d0; flex: 1;">
