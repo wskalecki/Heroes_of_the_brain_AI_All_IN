@@ -4,52 +4,108 @@
 ---
 ## FILE: `README.md`
 ```
-# Heroes of the Brain — AI All In
+# Wachta — zmęczenie i czujność mierzone na człowieku, nie na zegarze
 
-Repozytorium drużyny na hackathon **Heroes of the Brain 2026** (kategoria: Adaptive Systems).
+Projekt drużyny **AI All In** na hackathon **Heroes of the Brain 2026**, kategoria **Systemy adaptacyjne**.
 
-> **Status projektu: budujemy.** Kierunek: zmęczenie i czujność pracowników zmianowych mierzone na człowieku,
-> a nie na zegarze (EEG kalibruje, zegarek pilnuje). Plan: [`docs/plan-projektu.md`](docs/plan-projektu.md),
-> zadania: [`docs/zadania.md`](docs/zadania.md), decyzje: [`docs/decyzje.md`](docs/decyzje.md).
+Przepisy dają wszystkim ten sam limit czasu pracy, a zmęczenie każdego dopada inaczej. Wachta to oprogramowanie,
+które na podstawie EEG z suchych elektrod (BrainAccess MINI) i krótkich prób reakcji **zmienia swoje zachowanie i plan pracy**:
+upraszcza widok, prosi o reakcję, proponuje przerwę i wskazuje zmiennika z największą rezerwą czujności.
+**Wszystko działa lokalnie:** surowe EEG nie opuszcza komputera pracownika, przełożony widzi tylko gotowość i rezerwę.
 
-## Sprzęt
+## Zgłoszenie
 
-- BrainAccess MINI, 8 suchych elektrod
-- Montaż ze starter packa: **F3, F4, C3, C4, P3, P4, O1, O2**
-- Próbkowanie 250 Hz, dane w formacie MNE
+| Co | Gdzie |
+|---|---|
+| Prezentacja (10 slajdów, PDF) | [`submission/wachta-prezentacja-10-slajdow.pdf`](submission/wachta-prezentacja-10-slajdow.pdf) |
+| Film demo (ok. 2 min) | [`submission/wachta-demo-2min.mp4`](submission/wachta-demo-2min.mp4) |
+| Treść slajdów ze źródłami | [`docs/pitch.md`](docs/pitch.md) |
+| Co zweryfikowane, a co założone | [`docs/pitch.md`](docs/pitch.md), slajd 8 |
+
+## Jak to działa
+
+1. **Kalibracja osobista (60 s):** baza alfy dla tej osoby.
+2. **Sygnały w pętli:** wyrazistość alfy z tyłu głowy (O1, O2), mrugnięcia i stan oczu (F3, F4), reakcja na krótką próbę dźwiękową
+   względem osobistej normy, kontekst (czas od przebudzenia, pora doby).
+3. **Stan:** „Możesz pracować”, „Zaplanuj przerwę”, „Przerwa teraz”, „Brak wiarygodnego sygnału”, plus rezerwa czujności (model z jawnymi założeniami).
+4. **Zmiana zachowania:** widok upraszcza się w stanie „Przerwa teraz”, system sam prosi o reakcję po zamknięciu oczu i co 20 min,
+   panel przełożonego wskazuje zmiennika.
+
+## Co pokazaliśmy (szczegóły i ograniczenia w `docs/`)
+
+- Zamknięte oczy wykryte w **5 z 5** nagrań zespołu (4 osoby), mediana opóźnienia 9 s, **1 fałszywy alarm w 48 min**
+  ([`docs/trafnosc-na-nagraniach.md`](docs/trafnosc-na-nagraniach.md)); **0 fałszywych alarmów** w 15 min monotonii.
+- Dane publiczne: alfa rośnie ze zmęczeniem u **11 z 11** osób (średnie AUC 0,75), model uczony na danych danej osoby: AUC 0,76 → 0,90.
+- Wyniki negatywne, które zmieniły projekt: alfa przy otwartych oczach **nie zapowiada** spadku reakcji (AUC 0,52), a zmienność rytmu serca
+  nie mierzy czujności ponad czas zadania. Dlatego czujność sprawdzamy próbą reakcji, a nie zgadujemy z sygnału.
+- Notebooki z analizami: [`data/analysis/`](data/analysis/).
+
+## Przykładowe zastosowania
+
+Wszędzie tam, gdzie praca w nocy i zmęczenie spotykają się z decyzjami o wysokiej stawce:
+
+- **kopalnie, budowa, operatorzy ciężkich maszyn** (kask już jest, wkładka EEG nie zmienia stroju pracy);
+- **lotnictwo, kontrola ruchu, energetyka i dyspozytornie** (branże z obowiązkiem zarządzania zmęczeniem);
+- **szpitale:** lekarze i pielęgniarki na dyżurach nocnych;
+- **IT:** nocne dyżury DevOps i SRE (on-call przy awariach);
+- **finanse:** nocne operacje (monitoring transakcji, rozliczenia);
+- **transport drogowy** (tu konkurujemy z obowiązkową kamerą, więc wchodzimy z okresową kalibracją i modelem kontekstu).
+
+Zastosowania poza kopalniami, lotnictwem i transportem to kierunki do sprawdzenia w pilotażu, bez własnych danych.
+
+## Dalszy rozwój
+
+- **Wearables:** opaska, wkładka do kasku, słuchawki z elektrodami w uchu; suche elektrody grafenowe (dziś etap badań).
+- **Drugi sygnał w pętli:** tętno i ruch z zegarka jako miara pewności oceny ([issue #17](https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN/issues/17)).
+- **Integracje:** systemy grafików i dyżurów (rotacja on-call w IT, grafik oddziału), żeby propozycja zmiennika trafiała tam, gdzie planuje się obsadę.
+- **Pilotaż:** jedna zmiana, porównanie sztywnej normy, samego modelu kontekstu i osobistego profilu.
+- **Zasada bez zmian:** przetwarzanie lokalne, na zewnątrz wychodzi tylko gotowość.
+
+## Uruchomienie
+
+Python 3.10+. Szczegóły: [`docs/uruchomienie.md`](docs/uruchomienie.md).
+
+```bash
+pip install -e ".[dev,analysis]"
+```
+
+```bash
+pytest
+```
+
+Demo bez sprzętu (odtworzenie nagrania z `data/recordings/`, dashboard pod adresem z komunikatu serwera):
+
+```bash
+python -m wachta.server --file filip --start 480 --port 8002 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380-520 adi:370-500
+```
+
+Na żywo z BrainAccess MINI: `pip install -e ".[live]"` i komendy z [`docs/scenariusz-demo.md`](docs/scenariusz-demo.md).
 
 ## Struktura repozytorium
 
 | Ścieżka | Co tu jest |
 |---|---|
-| `pomysly-adi/` | Pomysły i notatki Adiego (inspiracja, nic potwierdzonego) |
-| `docs/` | Dokumentacja: decyzje, plan projektu, pomysły, zbiory danych, research rynku i konkurencji |
-| `data/recordings/` | Nagrania testowe z BrainAccess MINI (za zgodą uczestników) |
-| `data/analysis/` | Notebooki z analizą nagrań i porównaniem z danymi publicznymi |
-| `src/wachta/` | Kod: pipeline sygnału, kalibracja na osobę, wskaźnik czujności i rezerwa |
+| `src/wachta/` | Kod: przetwarzanie sygnału, kalibracja na osobę, stany i rezerwa, próby reakcji, serwer i dashboard |
 | `tests/` | Testy (`pytest`) |
-| `experiments/` | Skrypty analityczne, m.in. trafność pipeline'u na nagraniach |
-| `AGENTS.md` | Zasady pracy w repo — obowiązują ludzi i agentów AI |
-| `CONTRIBUTING.md` | Jak dokładać zmiany: gałęzie, commity, PR-y |
+| `experiments/` | Skrypty: trafność na nagraniach, analiza nocnych punktów pomiarowych |
+| `data/recordings/` | Nagrania testowe zespołu z BrainAccess MINI (za zgodą nagranych osób) |
+| `data/analysis/` | Notebooki z analizami nagrań i danych publicznych |
+| `docs/` | Dokumentacja: decyzje, plan, pitch, wyniki, literatura, rynek, licencje ([indeks](docs/README.md)) |
+| `submission/` | Pliki zgłoszenia: prezentacja, film, skrypty do ich odtworzenia |
+| `AGENTS.md`, `CONTRIBUTING.md` | Zasady pracy w repo dla ludzi i agentów AI |
 
-Instalacja, testy i uruchomienie: [`docs/uruchomienie.md`](docs/uruchomienie.md).
+## Licencja
 
-## Zasady w skrócie
-
-1. Przeczytaj [`AGENTS.md`](AGENTS.md) zanim zaczniesz pracę.
-2. Nie commitujemy na `main` — pracujemy na gałęziach i robimy PR-y (szczegóły w [`CONTRIBUTING.md`](CONTRIBUTING.md)).
-3. **Nie commitujemy surowych nagrań EEG z prawdziwych osób** (wyjątek: nagrania zespołu w `data/recordings/` za zgodą nagranych osób, patrz `docs/decyzje.md`) **ani żadnych sekretów** (klucze API, tokeny).
-4. Nazwy plików i folderów: małe litery, bez polskich znaków i spacji (`pomysly-adi`, nie `Pomysły Adi`).
+Kod i dokumentacja: MIT ([`LICENSE`](LICENSE)). Nagrania EEG w `data/recordings/` nie są objęte tą licencją
+(dane biometryczne, udostępnione za zgodą nagranych osób). Zależności i zbiory danych: [`docs/licencje.md`](docs/licencje.md).
 
 ## Zespół
 
-Dopiszcie się tutaj:
-
-- Adrian (Adi)
-- …
-
+- **Wojtek:** sygnał i aplikacja
+- **Adrian (Adi):** dane i dowody
+- **Filip:** pomiary i protokoły
+- **Rudy:** pitch, rynek i demo
 ```
-
 
 ---
 ## FILE: `docs/pitch.md`
@@ -85,6 +141,7 @@ Pod spodem nazwa zespołu i kategoria (Systemy adaptacyjne).
 **„Przepisy dają wszystkim ten sam limit, a zmęczenie każdego dopada inaczej.”**
 
 - Kierowca zawodowy w UE: maks. 9 h jazdy dziennie, przerwa 45 min po 4,5 h. Te same liczby dla każdego, niezależnie od snu i pory doby. Źródło: [Komisja Europejska, czas jazdy i odpoczynku](https://transport.ec.europa.eu/transport-modes/road/social-provisions/driving-time-and-rest-periods_en) (rozporządzenie 561/2006).
+- Po ok. 17 godzinach czuwania sprawność psychomotoryczna spada do poziomu jak przy 0,05% alkoholu we krwi. Źródło: Dawson D., Reid K., *Fatigue, alcohol and performance impairment*, Nature 388:235 (1997).
 - Zmęczenie przyczynia się do 10–20% wypadków drogowych. Źródło: [Europejskie Obserwatorium Bezpieczeństwa Ruchu Drogowego (ERSO), zmęczenie](https://road-safety.transport.ec.europa.eu/statistics-and-analysis/statistics-and-analysis-archive/fatigue/fatigue_en). Na slajdzie podać przedział, bo szacunki zależą od definicji (od 6% do 24% w różnych badaniach).
 
 ### 3. Luka
@@ -92,8 +149,8 @@ Pod spodem nazwa zespołu i kategoria (Systemy adaptacyjne).
 **„Ludzie różnią się podatnością na zmęczenie w stały sposób, a ani normy, ani kamery tego nie mierzą.”**
 
 - Różnice między osobami w spadku sprawności po braku snu są systematyczne i powtarzalne u tej samej osoby (Van Dongen i in. 2004, *Sleep* 27(3):423-33). Źródło: `podstawy-naukowe.md`, poz. 28.
-- Kamera w aucie sprawdza, czy oczy są zamknięte. Nie widzi, czy mózg przy otwartych oczach jeszcze reaguje.
-- Lotnictwo już dopuszcza normy oparte na danych (systemy zarządzania ryzykiem zmęczenia, FRMS) jako alternatywę dla sztywnych limitów. Źródło: [IATA FRMS 2025](https://www.iata.org/contentassets/5f976bb3ca2446f3a40e88b18dd61fbb/frms_white-paper_2025.pdf). Jeden z dokumentów roboczych ICAO (zgromadzenie A42) krytykuje, że FRMS nadal opierają się głównie na limitach i samoocenie; przed slajdem znaleźć i podać numer dokumentu.
+- Kamera w aucie widzi oczy i głowę. Nasz detektor alfy wykrywa to samo zdarzenie (zamknięcie oczu), więc nie obiecujemy, że zrobimy to lepiej. Różnica: osobisty profil, krótka próba reakcji i zmiana planu pracy zamiast samego alarmu.
+- Lotnictwo już dopuszcza normy oparte na danych (systemy zarządzania ryzykiem zmęczenia, FRMS) jako alternatywę dla sztywnych limitów. Źródło: [IATA FRMS 2025](https://www.iata.org/contentassets/5f976bb3ca2446f3a40e88b18dd61fbb/frms_white-paper_2025.pdf).
 
 ### 4. Rozwiązanie
 
@@ -110,6 +167,8 @@ Trzy elementy:
 
 Diagram: sygnał (EEG: alfa z tyłu głowy, mrugnięcia; kontekst; reakcja) → stan (rezerwa czujności, rodzaj spadku) → zmiana zachowania
 („zaplanuj przerwę”, „przerwa teraz”, próba reakcji, zmiennik w panelu przełożonego). To jest odpowiedź na kryterium „zgodność z tematem”.
+
+**Sygnały biologiczne w pętli, wprost:** (1) EEG: wyrazistość alfy z tyłu głowy (O1, O2); (2) mrugnięcia i stan oczu (z elektrod czołowych F3, F4 tego samego czepka); (3) reakcja behawioralna: krótka próba dźwiękowa, czas reakcji względem osobistej normy. Kontekst (czas od przebudzenia, pora doby) ustawia tempo spadku rezerwy. Tętno z paska piersiowego zbadaliśmy osobno (sesja T1: 93 bpm w spoczynku, 97 bpm w monotonii; notebooki 05 i 10), ale nie jest częścią pętli na żywo: to następny krok (issue #17).
 
 ### 6. Demo
 
@@ -133,11 +192,11 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 | Zweryfikowane | Założone, do sprawdzenia w pilotażu |
 |---|---|
-| Wykrywanie zamkniętych oczu i alfy na suchych elektrodach | Że osobisty limit przewiduje spadki czujności lepiej niż norma czasu i sam model kontekstu |
+| Wykrywanie zamkniętych oczu i alfy na suchych elektrodach | Że osobisty limit chroni przed spadkami czujności lepiej niż norma czasu i sam model kontekstu |
 | Senność widać w EEG na naszych 8 kanałach (dane publiczne) | Senność przy otwartych oczach na naszych własnych nagraniach (zbieramy, zadanie C4; w sesji T1 jej nie było, KSS 5) |
 | Personalizacja poprawia rozróżnianie stanów (dane publiczne) | Parametry rezerwy (tempo spadku, kary, wpływ nocy) |
 | Działająca pętla na żywo z czepkiem BrainAccess | Że zegarek może zastąpić sesje EEG (nasze dane: nie zastąpi, może uzupełnić) |
-| Zero fałszywych alarmów w 15 min monotonii (T1: jedna osoba, jedna sesja, KSS 5) | Że alfa przy otwartych oczach ostrzega przed spadkiem czujności: **sprawdziliśmy i nie ostrzega** (AUC 0,52 na 29 osobach, notebook 06), więc tego nie obiecujemy |
+| Zero fałszywych alarmów w 15 min monotonii (T1: jedna osoba, jedna sesja, KSS 5) | Że alfa przy otwartych oczach ostrzega przed spadkiem czujności: **sprawdziliśmy i nie ostrzega** (AUC 0,52 na 20 osobach z co najmniej 3 lapsami, z 29 w zbiorze; notebook 06), więc tego nie obiecujemy |
 
 ### 9. Rynek, model, prawo
 
@@ -146,6 +205,9 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 - **Segment wejścia (propozycja, decyzja w zadaniu D2):** kopalnie, budowa, operatorzy maszyn (kask jest, EEG w kasku akceptowalne);
   potem branże z obowiązkiem zarządzania zmęczeniem (lotnictwo i kontrola ruchu, energetyka). Transport drogowy jako trzeci krok,
   bo tam wygrywa tania, obowiązkowa kamera.
+- **Ten sam rdzeń, inne dyżury (kierunki do sprawdzenia, bez własnych danych):** nocne dyżury w IT (DevOps, SRE, on-call przy awariach),
+  lekarze i pielęgniarki na dyżurach, dyspozytornie energetyki i sieci, nocne operacje w finansach (monitoring transakcji, rozliczenia).
+  Wspólne: praca w nocy, decyzje o wysokiej stawce i grafik, który nie wie, kto jest wypoczęty.
 - **Różnica względem SmartCap:** oni alarmują, my zmieniamy plan pracy i ustalamy osobisty limit. Źródło: [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md).
 - **Rynek:** oprogramowanie do zarządzania ryzykiem zmęczenia 345 mln USD (2025) → 877 mln USD (2032). Źródło: LP Information, w [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) §2c. Podać jako szacunek z jednego raportu.
 - **Model:** licencja za stanowisko miesięcznie plus sesje kalibracyjne; sprzęt od partnera (BrainAccess). Kwoty jako założenia, nie dane.
@@ -154,20 +216,23 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 ### 10. Co dalej
 
-**„Pilotaż na jednej zmianie: czy osobisty limit przewiduje spadki czujności lepiej niż norma.”**
+**„Pilotaż na jednej zmianie: czy osobisty limit chroni przed spadkami czujności lepiej niż norma.”**
 
 - Miary: lapsy w teście PVT-B, zdarzenia na zmianie, ocena senności (KSS). Porównanie trzech wariantów: norma czasu, model kontekstu, model osobisty.
 - Własne nocne pomiary z testem reakcji już zbieramy (zadanie C4).
+- **Dalszy rozwój (kierunki, nie wyniki):** wygodniejszy sprzęt do noszenia (opaska, wkładka do kasku, słuchawki z elektrodami w uchu);
+  suche elektrody grafenowe (cieńsze i lżejsze, dziś na etapie badań); tętno i ruch z zegarka w pętli jako drugi sygnał (#17);
+  integracja z systemami grafików i dyżurów (np. rotacja on-call w IT, grafik oddziału), żeby propozycja zmiennika trafiała tam, gdzie planuje się obsadę.
+  Zasada bez zmian: **przetwarzanie lokalne**, surowe EEG nie opuszcza urządzenia pracownika, na zewnątrz wychodzi tylko gotowość.
 - Zespół: imiona i role.
+- Na ostatnim slajdzie źródła zbiorów (CC BY wymaga podania autorów): COG-BCI (Hinss i in. 2023), zbiór Cui i in. 2022, EEG During Mental Arithmetic Tasks (PhysioNet), pełna lista w [`licencje.md`](licencje.md).
 
 ## Zdania, których nie używamy
 
 Z [`podstawy-naukowe.md`](podstawy-naukowe.md) §6 i [`scenariusz-demo.md`](scenariusz-demo.md):
 „wykrywamy senność z trafnością X%”, „zegarek zastąpi EEG”, „mierzymy stres / skupienie / przeciążenie”,
 „rezerwa jest zmierzona”, „EEG ostrzega przed spadkiem czujności”, „system przewiduje mikrosen” (notebook 06: alfa nie przewiduje lapsu). Liczb rynkowych nie podajemy bez źródła i roku.
-
 ```
-
 
 ---
 ## FILE: `docs/scenariusz-demo.md`
@@ -215,7 +280,7 @@ pokazujemy rekomendację, próbę reakcji, zmianę obsady w panelu przełożoneg
 **A. Na żywo** (noc, kierowca wstał o 7:00, jest 2:30; 1 minuta na ekranie to 30 minut zmiany):
 
 ```bash
-python -m wachta.server --source board --name Wojtek --port 8001 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380 adi:370
+python -m wachta.server --source board --name Wojtek --port 8001 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380-520 adi:370-500
 ```
 
 Strona: http://127.0.0.1:8001
@@ -223,13 +288,14 @@ Strona: http://127.0.0.1:8001
 **B. Plan awaryjny bez sprzętu** (odtworzenie nagrania Filipa, te same ustawienia):
 
 ```bash
-python -m wachta.server --file filip --start 480 --port 8002 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380 adi:370
+python -m wachta.server --file filip --start 480 --port 8002 --time-scale 30 --wake 07:00 --clock 02:30 --team rudy:380-520 adi:370-500
 ```
 
 Strona: http://127.0.0.1:8002
 
-`--team` dodaje do panelu przełożonego nagrania Rudego i Adiego. Ich bloki zamkniętych oczu wypadają dopiero ok. 7,5 min
-po starcie serwera, więc przez całe demo mają stan „Może pracować”. Nie uruchamiajcie serwera wcześniej niż 5 min przed wejściem.
+`--team` dodaje do panelu przełożonego nagrania Rudego i Adiego. Zapis `rudy:380-520` zapętla je na spokojnym odcinku
+(spokojne czytanie i liczenie, bez bloku zamkniętych oczu), więc przez pierwsze ok. 3 min po „Nowej zmianie” mają stan „Może pracować”,
+a rezerwa spada im tak samo jak innym. Nie uruchamiajcie serwera wcześniej niż 5 min przed wejściem.
 
 Ile zostaje rezerwy w tych ustawieniach (bez spadków czujności; każdy spadek i każda nieudana próba zabiera 8 pkt):
 
@@ -246,13 +312,13 @@ przed siebie, aż baner zmieni się z „Kalibracja” na „Możesz pracować�
 |---|---|---|---|
 | 0:00 | narrator | dashboard na ekranie | „Przepisy mierzą czas pracy, a nie człowieka. Dwie osoby po tej samej zmianie mają różną rezerwę czujności.” |
 | 0:10 | operator | klika **Nowa zmiana**. Rezerwa 100%, kafelek: 19,5 h od przebudzenia, godz. 02:30 | „Jest 2:30 w nocy. Kierowca nie śpi od 19 godzin. System zna jego wzorzec z minutowej kalibracji EEG i liczy, ile rezerwy mu zostało.” |
-| 0:25 | narrator | wskazuje kafelki „Tempo zużycia” i „Oczy” | „W nocy i po długim czuwaniu rezerwa spada ponad dwa i pół raza szybciej niż w dzień. Na żywo patrzymy na dwie rzeczy: alfę z tyłu głowy i mrugnięcia.” |
-| 0:45 | operator | klika **Sprawdź reakcję**. Osoba w czepku od razu naciska spację | „Kamera w aucie sprawdza, czy oczy są otwarte. My sprawdzamy, czy mózg jeszcze reaguje. Tu: reakcja w normie.” |
-| 1:00 | osoba w czepku | na znak narratora **zamyka oczy na 15 s** | „Teraz mikrosen.” |
-| 1:07–1:13 | — | baner: **„Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund (mikrosen). Zjedź na najbliższy parking.”** Czerwony pas na wykresie, kafelek „Oczy: zamknięte” | „Po kilku sekundach system nie tylko alarmuje, ale zmienia plan: kierowca ma zjechać.” |
+| 0:25 | narrator | wskazuje kafelki „Tempo zużycia” i „Oczy” | „W nocy i po długim czuwaniu rezerwa spada ponad dwa razy szybciej niż w dzień (założenie modelu). Na żywo patrzymy na dwie rzeczy: alfę z tyłu głowy i mrugnięcia.” |
+| 0:45 | operator | klika **Sprawdź reakcję**. Osoba w czepku od razu naciska spację | „Kamera w aucie sprawdza, czy oczy są otwarte. My sprawdzamy, czy człowiek jeszcze reaguje. Tu: reakcja w normie.” |
+| 1:00 | osoba w czepku | na znak narratora **zamyka oczy na 15 s** | „Teraz zamykam oczy.” |
+| 1:07–1:13 | — | baner: **„Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund. Zjedź na najbliższy parking.”** Widok sam się upraszcza: wykresy i kafelki znikają, zostaje duży komunikat i czerwony przycisk „Rozpocznij przerwę” (adaptacja interfejsu, #13). Nie pokazujemy wtedy wykresu, bo go nie ma | „Po kilku sekundach system nie tylko alarmuje, ale zmienia plan: kierowca ma zjechać.” |
 | 1:20 | narrator | wskazuje panel przełożonego: „Najwięcej rezerwy ma Rudy” | „Przełożony nie widzi fal mózgowych, tylko gotowość. I od razu wie, kto może przejąć kurs.” |
-| 1:30 | — | ok. 12–20 s po otwarciu oczu **system sam prosi o reakcję** („Sprawdzenie po spadku czujności”). Osoba w czepku **celowo nie reaguje** | „Po każdym spadku czujności system sprawdza, czy mózg wrócił. Oczy są już otwarte, a reakcji brak. Tu ją symulujemy.” |
-| 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz: reakcja za wolna albo jej brak” | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy. Stan zostaje, dopóki kolejna próba nie wypadnie w normie.” |
+| 1:30 | — | ok. 12–20 s po otwarciu oczu **system sam prosi o reakcję** („Sprawdzenie po spadku czujności”). Osoba w czepku **celowo nie reaguje** | „Po każdym spadku czujności system sprawdza, czy człowiek znów reaguje. Oczy są już otwarte, a reakcji brak. Tu ją symulujemy.” |
+| 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz: reakcja za wolna albo jej brak” | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy. Stan zostaje, dopóki kolejna próba nie wypadnie w normie, najwyżej 2 minuty.” |
 | 1:55 | operator | przełącza na **Pielęgniarka** | „Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę.” |
 | 2:05 | operator | klika **Rozpocznij przerwę**. Stan „Przerwa trwa”, rezerwa rośnie | „Przerwa naprawdę odnawia rezerwę, a limit jest liczony dla tej osoby, nie dla zegara.” |
 | 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy w 5 z 5 nagrań, z jednym fałszywym alarmem w 48 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób, a model osobisty rozróżnia stany wyraźnie lepiej niż jeden dla wszystkich. Dlatego liczymy normy dla człowieka, nie dla zegara.” |
@@ -268,18 +334,19 @@ w naszych nagraniach alarm przychodził z przerwami. Jeśli dalej nic, przejdźc
 **Kiedy przełączyć na B:** Board nie widzi czepka, baner przez ponad 20 s pokazuje „Brak wiarygodnego sygnału”
 mimo poprawienia czepka, albo alarm nie przychodzi po 25 s zamkniętych oczu.
 
-**Przebieg B** (komenda B, zmierzony 14.11 w nocy po zmianach z issues #11 i #14):
+**Przebieg B** (komenda B, zmierzony 15.11 rano po zmianach z issues #11, #14 i po wyłączeniu wskaźnika wolnego z rezerwy; czasy od kliknięcia „Nowa zmiana”, kalibracja trwa ok. 62 s od startu serwera):
 
-| Od startu serwera | Co się dzieje | Co robi operator |
+| Od „Nowej zmiany” | Co się dzieje | Co robi operator |
 |---|---|---|
-| 0–61 s | kalibracja na nagraniu Filipa | narrator: „To nagranie Filipa z dzisiejszego dnia, przetwarzane tym samym kodem co na żywo.” |
-| ok. 61 s | „Możesz pracować” | klika **Nowa zmiana** |
-| ok. 130 s | „Przerwa teraz. Oczy zamknięte (mikrosen)”, panel: „Najwięcej rezerwy ma Rudy” | narrator jak w scenariuszu na żywo od 1:20 |
-| ok. 180 s | Filip otwiera oczy, „stop” znika, stan „Zaplanuj przerwę” | — |
-| ok. 193 s | próba reakcji „Sprawdzenie po spadku czujności” | **nie reaguje**; po 3 s „Przerwa teraz: reakcja za wolna albo jej brak” |
+| przed kliknięciem (0–62 s od startu serwera) | kalibracja na nagraniu Filipa | narrator: „To nagranie Filipa z dzisiejszego dnia, przetwarzane tym samym kodem co na żywo.” |
+| 0 s | „Możesz pracować”, rezerwa 100%, rezerwa spada ok. 29 pkt/h czasu zmiany | klika **Nowa zmiana** |
+| ok. 70 s | „Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund”, rezerwa ok. 74%, panel: „Najwięcej rezerwy ma Rudy” | narrator jak w scenariuszu na żywo od 1:20 |
+| ok. 124 s | Filip otwiera oczy, „stop” znika, stan „Zaplanuj przerwę” | — |
+| ok. 136 s | próba reakcji „Sprawdzenie po spadku czujności” | **nie reaguje**; po 3 s (ok. 140 s) „Przerwa teraz: reakcja za wolna albo jej brak”, rezerwa ok. 48% |
+| ok. 190 s | Rudy i Adi dochodzą do „Zaplanuj przerwę” (ok. 50%) | koniec planu B |
 
 Kalibrację planu B najlepiej zrobić w tle zawczasu: uruchomić komendę B razem z A i przełączyć kartę przeglądarki.
-Wtedy „Nowa zmiana” na B daje zamknięcie oczu Filipa ok. 60 s później.
+Wtedy „Nowa zmiana” na B daje zamknięcie oczu Filipa ok. 70 s później.
 
 **Plan C:** nagrany film demo odtworzony z laptopa.
 
@@ -290,12 +357,12 @@ Nagrajcie jedno ujęcie na żywo i jedno na planie B, potem wybierzcie lepsze. N
 
 | Czas | Obraz | Narracja / napis |
 |---|---|---|
-| 0:00–0:15 | osoba w czepku zamyka oczy, baner zmienia się na „Przerwa teraz”, panel przełożonego wskazuje zmiennika | „Wachta zmienia plan pracy na podstawie EEG: kiedy mózg przestaje reagować, system każe zjechać i wskazuje zmiennika.” |
+| 0:00–0:15 | osoba w czepku zamyka oczy, baner zmienia się na „Przerwa teraz”, panel przełożonego wskazuje zmiennika | „Wachta zmienia plan pracy na podstawie EEG: gdy oczy zamykają się na dłużej niż kilka sekund, system każe zjechać i wskazuje zmiennika.” |
 | 0:15–0:35 | slajd: problem | „Normy mierzą czas pracy, a nie człowieka.” Jedna liczba ze źródłem (z `rynek-*.md`) |
 | 0:35–1:05 | „Nowa zmiana” w nocy, kafelki kontekstu, próba reakcji z szybką odpowiedzią | „Minuta kalibracji EEG, potem system śledzi alfę, mrugnięcia i reakcję. W nocy rezerwa spada szybciej.” |
-| 1:05–1:30 | brak reakcji przy otwartych oczach, rezerwa spada, przełączenie na „Pielęgniarka”, przerwa | „Kamera widzi, czy oczy są otwarte. My sprawdzamy, czy mózg jeszcze reaguje.” |
+| 1:05–1:30 | brak reakcji przy otwartych oczach, rezerwa spada, przełączenie na „Pielęgniarka”, przerwa | „Kamera widzi, czy oczy są otwarte. My sprawdzamy, czy człowiek jeszcze reaguje.” |
 | 1:30–1:50 | wykres `trafnosc-na-nagraniach.png`, wykres z danych publicznych | „5 z 5 nagrań, jeden fałszywy alarm w 48 minutach. W danych publicznych alfa rośnie z sennością u 11 z 11 osób.” |
-| 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż, który sprawdzi, czy osobisty limit przewiduje spadki czujności lepiej niż norma czasu.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
+| 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż, który sprawdzi, czy osobisty limit chroni przed spadkami czujności lepiej niż norma czasu.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
 
 ## Co mówimy, a czego nie
 
@@ -317,7 +384,7 @@ Pełna lista: [`jury-i-kryteria.md`](jury-i-kryteria.md) §4. Dwa nowe po zmiana
 | Pytanie | Odpowiedź |
 |---|---|
 | Czym to się różni od kamery? | Kamera widzi zamknięte oczy. My dodatkowo odróżniamy zamknięcie oczu od wzrostu alfy przy mrugających oczach i sprawdzamy reakcję. Senności przy otwartych oczach na własnych danych jeszcze nie zmierzyliśmy (sesja T1: KSS 5, bez senności), więc tego nie twierdzimy. Alarm zmienia plan pracy i obsadę, a nie tylko piszczy |
-| Jak często system przerywa próbą reakcji? | Na naszych nagraniach od 0 do 8 razy na 10 minut, najczęściej przy zaszumionym sygnale. Dziś próbę wywołuje wskaźnik rosnący poniżej progu alarmu i to się zmienia: sprawdziliśmy, że taki wzrost nie zapowiada lapsu (notebook 06), a w 15 minutach monotonii dałby 11 prób bez żadnego spadku czujności. Docelowo próba po zdarzeniu albo z harmonogramu (issue #14) |
+| Jak często system przerywa próbą reakcji? | Tylko po spadku czujności (12–20 s po otwarciu oczu) i z harmonogramu co 20 min, nigdy z samego wzrostu alfy poniżej progu: sprawdziliśmy, że taki wzrost nie zapowiada lapsu (notebook 06, AUC 0,52), a w 15 minutach monotonii dałby 11 prób bez żadnego spadku czujności (issue #14). Odstęp 20 min to założenie |
 
 ## Próby (zadanie C3)
 
@@ -325,9 +392,7 @@ Pełna lista: [`jury-i-kryteria.md`](jury-i-kryteria.md) §4. Dwa nowe po zmiana
 |---|---|---|---|---|
 | | na żywo | | | |
 | | plan B | | | |
-
 ```
-
 
 ---
 ## FILE: `docs/jury-i-kryteria.md`
@@ -391,10 +456,10 @@ operatorskie), a nie konkuruje z nim.
 
 | Kryterium | Co pokazać | Czym to mamy poparte |
 |---|---|---|
-| **Zgodność z tematem (20)** | Pierwszy slajd i pierwsze 15 s filmu: *„System zmienia plan pracy i przerw na podstawie EEG i tętna”*. Pętla: sygnał → stan → **zmiana zachowania** (rekomendacja przerwy, zmiana obsady). Dwa sygnały: EEG i serce | A1–A3 (pipeline, dashboard), notebook 05 (EEG a serce), PVT-B i znaczniki w `session.py` |
-| **Innowacyjność (10)** | „EEG kalibruje, zegarek pilnuje” i **limit zmęczenia liczony dla osoby, nie dla zegara**. Wyraźna różnica względem SmartCap (EEG w czapce przez cały dzień, tylko alarm) | `docs/rynek-eeg-wearables.md`, wynik B2: model osobisty 81% kontra wspólny 66–72% |
+| **Zgodność z tematem (20)** | Pierwszy slajd i pierwsze 15 s filmu: *„System zmienia plan pracy i przerw na podstawie EEG i reakcji pracownika”*. Pętla: sygnał → stan → **zmiana zachowania** (rekomendacja przerwy, zmiana obsady). Sygnały w pętli: EEG (alfa z tyłu głowy, mrugnięcia z tych samych elektrod), reakcja behawioralna (próba reakcji) i kontekst doby; tętno z paska to osobne badanie (T1, notebooki 05 i 10), nie część pętli na żywo | A1–A3 (pipeline, dashboard), notebook 05 (EEG a serce), PVT-B i znaczniki w `session.py` |
+| **Innowacyjność (10)** | „EEG i test reakcji ustalają osobisty profil, na co dzień działa model kontekstu” i **limit zmęczenia liczony dla osoby, nie dla zegara**. Wyraźna różnica względem SmartCap (EEG w czapce przez cały dzień, tylko alarm) | `docs/rynek-eeg-wearables.md`, wynik B2: model osobisty 0,81 (po ok. 1 min danych na klasę) do 0,83 kontra wspólny 0,66–0,72 |
 | **Użyteczność (10)** | Jeden konkretny odbiorca i koszt problemu w pieniądzach, ze źródłem | `docs/rynek-wielkosc-i-kierunek.md` |
-| **Jakość implementacji (10)** | Działające demo, tryb odtwarzania jako plan B, 45 testów, powtarzalne notebooki, uczciwe liczby | `docs/trafnosc-na-nagraniach.md`, notebooki 01–05 |
+| **Jakość implementacji (10)** | Działające demo, tryb odtwarzania jako plan B, 114 testów, powtarzalne notebooki, uczciwe liczby | `docs/trafnosc-na-nagraniach.md`, notebooki 01–10 |
 | **Pytania (10)** | Przećwiczone odpowiedzi, patrz niżej | wyniki B1–B3 |
 
 Zasady narracji (**wniosek**):
@@ -414,10 +479,10 @@ Zasady narracji (**wniosek**):
 | Cztery osoby to za mało | Zgoda. To sprawdzenie mechanizmu. Wnioski statystyczne dają dane publiczne (11 i 16 osób) i trzy punkty pomiarowe zespołu |
 | Czemu nie kamera? | Kamera widzi skutki (oczy, głowa), EEG i tętno widzą stan organizmu. Nie twierdzimy, że wygramy z kamerą w trafności. Nasza różnica to **osobisty limit** i adaptacja planu pracy |
 | Czemu serce, skoro korelacja z EEG jest słaba? | Dlatego, że to **inny sygnał**. To inny sygnał, ale uczciwie: w 10-minutowym teście czujności RMSSD i szybkość reakcji spadają razem (r = 0,18, 22 z 29 osób), głównie dlatego, że obie zmieniają się z czasem zadania; ponad czas zadania RMSSD nie dodaje informacji (notebook 10). Serce traktujemy jako dodatkowy kontekst i miarę pewności, nie jako dowód czujności. EKG w laboratorium to nie zegarek |
-| Co z suchymi elektrodami i ruchem? | Odrzucamy 16–21% okien (artefakty). System ma stan „brak wiarygodnego sygnału” i nie zgaduje. Theta czołowa nie nadaje się przy referencji Fp1, więc jej nie używamy |
+| Co z suchymi elektrodami i ruchem? | Odrzucamy od 0,7% do 15% okien zależnie od osoby i warunków (artefakty; 0,7% w cichej sesji T1). System ma stan „brak wiarygodnego sygnału” i nie zgaduje. Theta czołowa nie nadaje się przy referencji Fp1, więc jej nie używamy |
 | Skąd 60 s kalibracji i czy to wystarczy? | Do zamkniętych oczu tak. Do rozróżniania senności sama kalibracja prawie nie pomaga (B2), dopiero model uczony na danych tej osoby (ok. 1 min na klasę daje 81% w laboratorium). Dlatego planujemy sesje osobiste |
 | Prywatność i prawo? | Przetwarzanie lokalne, na zewnątrz tylko wskaźnik gotowości, stan fizyczny, nie emocja. Konsultacja prawna (RODO art. 9) po hackathonie |
-| Dlaczego próba reakcji, a nie sama alfa? | Sprawdziliśmy: alfa przy otwartych oczach nie przewiduje lapsów w kolejnej minucie (AUC 0,52, 29 osób COG-BCI, notebook 06). Poprzednia reakcja przewiduje lepiej, a próba jest bezpośrednią miarą czujności. EEG mówi nam, co dzieje się teraz (oczy zamknięte, fala alfy), próba sprawdza, czy człowiek reaguje |
+| Dlaczego próba reakcji, a nie sama alfa? | Sprawdziliśmy: alfa przy otwartych oczach nie przewiduje lapsów w kolejnej minucie (AUC 0,52 na 20 osobach z co najmniej 3 lapsami, z 29 w COG-BCI; notebook 06). Poprzednia reakcja przewiduje lepiej, a próba jest bezpośrednią miarą czujności. EEG mówi nam, co dzieje się teraz (oczy zamknięte, fala alfy), próba sprawdza, czy człowiek reaguje |
 | Czemu rezerwa spada, skoro nic nie mierzycie? | Rezerwa łączy założenie kontekstowe (czas zadania, pora doby; parametry oznaczone jako założone) z częścią mierzoną (zdarzenia ostre, wyniki prób). Dziś w demo przeważa założenie, i mówimy to wprost; rozbicie na dashboardzie to zadanie w toku (issue #12). Rezerwy nie przedstawiamy jako pomiaru |
 | Czy to działa u każdego? | Nie, i dlatego jest test „marker działa u tej osoby”: skok wyrazistości alfy po zamknięciu oczu (R_z), progi wstępne tak ≥ 2,5, słabo 1,5–2,5, nie < 1,5. W danych publicznych 37% osób „tak”, 26% „słabo”, 37% „nie” (27 osób, elektrody żelowe). Werdykt dotyczy sesji: tydzień później ten sam wynik ma 44–56% osób, więc liczymy go przy każdym założeniu czepka (notebook 07) |
 | Co zrobi system, gdy marker u mnie nie działa? | Powie to wprost i oprze się na próbach reakcji i kontekście, zamiast udawać wykrywanie. Dolny próg („nie”) nie wystąpił u nikogo z zespołu, więc na suchych elektrodach jest nieprzetestowany |
@@ -432,8 +497,8 @@ Dwa warianty ze wspólnym rdzeniem technicznym (decyzja zespołu: [`decyzje.md`]
 - *Problem:* limity czasu pracy kierowców są stałe dla wszystkich, a zmęczenie nie. W UE obowiązują limity czasu jazdy
   i przerw (rozporządzenie 561/2006), w USA limity godzin służby (FMCSA). **Liczby do sprawdzenia przed slajdem**, tu podaję
   tylko kierunek.
-- *Produkt:* „rezerwa czujności” dla konkretnej osoby oraz plan przerw i obsady liczony dla niej. EEG kalibruje wzorzec
-  na krótkiej sesji, zegarek pilnuje na co dzień.
+- *Produkt:* „rezerwa czujności” dla konkretnej osoby oraz plan przerw i obsady liczony dla niej. EEG i test reakcji ustalają
+  osobisty profil na krótkiej sesji, na co dzień działa model kontekstu (zegarek to dodatkowy, osobny sygnał).
 - *Dlaczego pasuje do jury:* Wekwejt zna branżę transportową i łańcuch dostaw. **Wniosek:** można mówić o *przydziale ładunków i zmian
   z uwzględnieniem gotowości kierowcy* jako warstwie nad dispatchem. Nie obiecujemy integracji, tylko kierunek.
 - *Konkurencja:* SmartCap (czapka, kopalnie, transport), kamery w kabinie. Różnica: osobisty limit, EEG tylko do kalibracji.
@@ -446,7 +511,7 @@ który zna reszta jury.
 
 1. *Hak:* „Normy mierzą czas pracy, nie człowieka. Dwie osoby po tej samej zmianie mają inną rezerwę czujności.”
 2. *Dowód problemu:* jedna liczba ze źródłem (koszt zmęczenia albo przestoju).
-3. *Rozwiązanie w jednym zdaniu:* „EEG kalibruje, zegarek pilnuje, system zmienia plan przerw.”
+3. *Rozwiązanie w jednym zdaniu:* „EEG i test reakcji ustalają osobisty profil, system na tej podstawie zmienia plan przerw.”
 4. *Demo:* osoba zamyka oczy, wskaźnik reaguje, dashboard zmienia rekomendację i panel przełożonego.
 5. *Dowody i granice:* wykresy z `docs/img/` oraz slajd „zweryfikowane kontra założone”.
 6. *Model i pilotaż:* licencja za stanowisko, pilotaż na jednej zmianie z pomiarem przed i po. **Wszystkie liczby rynkowe jako
@@ -460,9 +525,7 @@ który zna reszta jury.
 - Koło Neuron, zarządy i projekty: [knneuron.pwr.edu.pl](https://knneuron.pwr.edu.pl/)
 - Patryk Wekwejt i LinkLane: [LinkLane w katalogu Y Combinator](https://www.ycombinator.com/companies/linklane). Informacje o badaniach pochodzą z wyników wyszukiwania
   (Google Scholar, ResearchGate), których nie otwierałem bezpośrednio, więc potraktujcie je jako niezweryfikowane.
-
 ```
-
 
 ---
 ## FILE: `docs/decyzje.md`
@@ -513,8 +576,22 @@ razem z adnotacjami protokołu. W `.gitignore` jest wyjątek dla plików `.fif` 
 **Dlaczego.** Bez własnych nagrań nie da się sprawdzić pipeline'u na naszym sprzęcie, a dane publiczne
 pochodzą z elektrod żelowych i innych montaży.
 
-```
+## 2026-11-15 — Licencja repozytorium: MIT
 
+**Status:** przyjęte, potwierdzone przez zespół w dyskusji (15.11).
+
+**Decyzja.** Kod i dokumentacja repozytorium są na licencji MIT (plik `LICENSE`, właściciel praw: „AI All In”).
+Licencja **nie obejmuje** nagrań EEG w `data/recordings/`: to dane biometryczne członków zespołu, udostępnione w repo
+wyłącznie na potrzeby projektu, za zgodą nagranych osób (patrz wyżej). Nie wolno ich dalej rozpowszechniać na podstawie MIT.
+
+**Dlaczego.** MIT jest permisywna, zgodna z licencjami naszych zależności (BSD, MIT, PSF) i z regulaminem hackathonu
+(prawa do projektu zostają przy uczestnikach), a nie blokuje komercjalizacji.
+
+**Punkty otwarte.**
+1. Czy repo ma być publiczne po hackathonie. **Rozstrzygnięte (Adrian, 15.11):** repo jest publiczne (link w zgłoszeniu), nagrania zespołu zostają w `data/recordings/`; MIT ich nie obejmuje.
+2. `brainaccess-board` (opcja `live`) jest własnościowy (PyPI: Proprietary). Nie dołączamy go do repo; trzeba potwierdzić u BrainAccess,
+   że użycie w konkursie jest dozwolone (to SDK do sprzętu od organizatora).
+```
 
 ---
 ## FILE: `docs/plan-projektu.md`
@@ -528,7 +605,7 @@ Decyzja o kierunku jest zapisana w [`decyzje.md`](decyzje.md). Ten plik mówi, c
 
 ## Produkt w jednym zdaniu
 
-Przepisy mierzą czas pracy, a nie człowieka. Wachta mierzy człowieka: **EEG kalibruje, zegarek pilnuje.**
+Przepisy mierzą czas pracy, a nie człowieka. Wachta mierzy człowieka: **EEG i test reakcji ustalają osobisty profil, model kontekstu pilnuje na co dzień, zegarek jest dodatkowym sygnałem.**
 
 1. Krótka sesja z EEG uczy osobistego wzorca zmęczenia danej osoby.
 2. Na co dzień wystarcza tani czujnik (zegarek) i kontekst: czas pracy, pora doby, sen.
@@ -549,7 +626,7 @@ publicznych i literatury oraz studium jednej osoby z zegarkiem Garmin Venu 2.
 | Epizody alfy z notebooka 01 pokrywają się z blokami `eyes_closed` z protokołu | `data/recordings/README.md` | Mamy prawdziwe etykiety, można policzyć trafność |
 | Reguła „przeciążenie” nie zadziałała ani razu; w zadaniu MATB alfa ciemieniowa rośnie zamiast spadać | notebooki 02 i 03 | Przeciążenia nie obiecujemy |
 | Odrzucanie artefaktów i kalibracja na osobę są konieczne; flaga kontaktu elektrod nic nie mówi | notebooki 01–03 | Jakość sygnału oceniamy sami |
-| Alfa przy otwartych oczach **nie przewiduje** lapsu w następnej minucie (AUC 0,52, 29 osób); 15 min monotonii (T1, KSS 5) dało zero fałszywych alarmów, a próba z podprogowej alfy wyskoczyłaby 11 razy | notebook 06, [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) | Próba reakcji z harmonogramu albo po zdarzeniu, nie z podprogowej alfy (issue #14); „EEG ostrzega przed spadkiem” nie wchodzi do pitchu |
+| Alfa przy otwartych oczach **nie przewiduje** lapsu w następnej minucie (AUC 0,52, 20 osób z co najmniej 3 lapsami z 29); 15 min monotonii (T1, KSS 5) dało zero fałszywych alarmów, a próba z podprogowej alfy wyskoczyłaby 11 razy | notebook 06, [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) | Próba reakcji z harmonogramu albo po zdarzeniu, nie z podprogowej alfy (issue #14); „EEG ostrzega przed spadkiem” nie wchodzi do pitchu |
 | Zmęczenie i senność to stan fizyczny, dozwolony w celach bezpieczeństwa; obciążenie poznawcze to szara strefa, a stres i wypalenie są zakazane | [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) §3, AI Act motyw 18 | Mówimy „zmęczenie i czujność”, nie „przeciążenie kognitywne” |
 | W zarządzaniu zmęczeniem działa już SmartCap (EEG w czapce); research rynku rekomendował wejście przez IT ops | [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md), [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) | Na slajdzie musi być różnica względem SmartCap; segment wejścia jest punktem otwartym |
 | Logowanie bibliotek do Garmin Connect jest zepsute od marca 2026; HRV z nadgarstka bywa niewiarygodne | źródła na końcu | Odczyty z Venu 2 wpisujemy ręcznie; API tylko jako próba na 20 min |
@@ -644,7 +721,7 @@ Role Filipa i Rudego to propozycja, do zamiany między nimi. Kod zamrażamy 2 h 
 
 1. Osoba z zespołu skalibrowana przed wejściem. Dashboard: rezerwa wysoka, „możesz pracować”.
 2. Zamyka oczy na 5–10 s (symulowany mikrosen): „przerwa teraz, zjedź na parking”, a panel przełożonego proponuje zmianę obsady.
-3. Slajdy: trafność na naszych nagraniach, wykres z danych publicznych, studium Venu 2 (jedna osoba, ilustracja), mapa „EEG kalibruje, zegarek pilnuje”.
+3. Slajdy: trafność na naszych nagraniach, wykres z danych publicznych, studium Venu 2 (jedna osoba, ilustracja), mapa „profil z EEG i testu reakcji, kontekst na co dzień”.
 4. Plan awaryjny: ten sam dashboard w trybie odtwarzania nagrania i nagrane wideo.
 
 **Co zweryfikowane, a co założone** (osobny slajd):
@@ -695,9 +772,7 @@ ryzykiem zmęczenia (FRMS), ale opierają się głównie na limitach czasu i sam
 - Sprzęt: [brainaccess-board](https://pypi.org/project/brainaccess-board/) · [garminconnect 0.3.2](https://pypi.org/project/garminconnect/0.3.2/) ·
   [Health Snapshot](https://www.wareable.com/garmin/what-is-garmin-health-snapshot-how-to-use) ·
   [dokładność HRV z zegarków](https://discovery.ucl.ac.uk/10186376/1/CinC2023-237.pdf)
-
 ```
-
 
 ---
 ## FILE: `docs/trafnosc-na-nagraniach.md`
@@ -799,9 +874,7 @@ pip install -e ".[analysis]"
 ```bash
 python experiments/validate-on-recordings.py --figure docs/img/trafnosc-na-nagraniach.png
 ```
-
 ```
-
 
 ---
 ## FILE: `docs/sesja-monotonii-wojtek.md`
@@ -866,9 +939,7 @@ Przesunięcie sprawdziliśmy na sygnale: alfa rośnie ok. 65 s od początku plik
 
 - „W 15-minutowej monotonii przy KSS 5 system nie zgłosił ani jednego fałszywego alarmu, a zamknięcie oczu nadal wykrywał w ok. 9 s.”
 - Nie wolno: że sesja pokazała wykrywanie senności. Senności w niej nie było.
-
 ```
-
 
 ---
 ## FILE: `docs/analiza-i-adaptacja.md`
@@ -1046,9 +1117,7 @@ i mówi o tym wprost.
 
 Zadania są w issues repozytorium (zbiorczy issue „Adaptacja v2”). Kolejność ważności: scalanie zdarzeń i rozdzielenie „teraz” od
 „niedawno”, tryby interfejsu, przebudowa próby reakcji, rozbicie rezerwy na dowody, nocne pomiary, film demo.
-
 ```
-
 
 ---
 ## FILE: `docs/podstawy-naukowe.md`
@@ -1197,9 +1266,7 @@ Opracowanie dla projektu Wachta. Stan na 2026-11-14. Każde źródło ma status 
 | — | Larue i in. | 2015 | (cytowane w #5) | — | EEG jako etykieta dla ET, ok. 91% | NOT VERIFIED (tylko przez przegląd #5) |
 
 **Na slajd (5):** Van Dongen 2004 (#28), Lu 2022 (#3), Persson 2019 (#2), Chua 2012 (#7), Rivas-Vidal 2025 (#5). Alternatywnie Kundinger 2020 (#9), jeśli slajd dotyczy rzetelności walidacji.
-
 ```
-
 
 ---
 ## FILE: `docs/rynek-eeg-wearables.md`
@@ -1324,9 +1391,7 @@ Sprzęt EEG do noszenia jest już produktem konsumenckim (opaski, słuchawki, pc
 ## Czego tu nie ma
 - Liczb o wielkości rynku: wymagają osobnego researchu z raportów.
 - Systemów kamerowych do wykrywania zmęczenia kierowców (bez EEG). Jury może o nie zapytać jako o tańszą alternatywę.
-
 ```
-
 
 ---
 ## FILE: `docs/rynek-wielkosc-i-kierunek.md`
@@ -1371,7 +1436,7 @@ Research pod pitch na Heroes of the Brain (listopad 2026). Uzupełnia plik `ryne
 - **83%** analityków czuje się przytłoczonych liczbą alarmów ([IT Brief](https://itbrief.co.uk/story/soc-analysts-face-alert-overload-duplicate-effort-survey-finds)).
 
 ### 2c. Zarządzanie zmęczeniem w przemyśle i transporcie (zajęte przez SmartCap)
-- Oprogramowanie do zarządzania ryzykiem zmęczenia: **345 mln USD (2025) → 877 mln USD (2032)**, CAGR 14,5% ([LP Information](https://www.marketresearch.com/LP-Information-Inc-v4134/Global-Fatigue-Risk-Management-Software-44138237)).
+- Oprogramowanie do zarządzania ryzykiem zmęczenia: **345 mln USD (2025) → 877 mln USD (2032)**, CAGR 14,5% w latach 2026–2032 (raport z marca 2026; streszczenie publicznie: [Market Publishers](https://pdf.marketpublishers.com/lpinfo/global-fatigue-risk-management-software-market-lp.pdf); liczone dla 2025→2032 wychodzi ok. 14,3%; Bosson Research podaje 14,0% przy 293 mln USD w 2025, Market Intelo 8,5% dla szerszego rynku z usługami i sprzętem) ([LP Information](https://www.marketresearch.com/LP-Information-Inc-v4134/Global-Fatigue-Risk-Management-Software-44138237)).
 - Systemy wykrywania zmęczenia kierowców: 1,85 mld USD (2025) → 5,55 mld USD (2034) ([Intel Market Research](https://www.intelmarketresearch.com/fatigue-driving-monitoring-system-market-market-22052)). Głównie kamery, nie EEG.
 
 ### 2d. Kontrola ruchu lotniczego i dyspozytornie
@@ -1464,9 +1529,44 @@ Na slajdzie podpiszcie to jako założenia, nie dane.
 ## Czego tu nie ma
 - Liczby dyżurnych inżynierów i analityków SOC w Europie (brak wiarygodnego źródła).
 - Oficjalnego tekstu Digital Omnibus: trzeba sprawdzić przed finałem.
-
 ```
 
+---
+## FILE: `docs/licencje.md`
+```
+# Licencje: zależności i zbiory danych
+
+Przegląd na potrzeby regulaminu (§10: biblioteki open source dozwolone, o ile ich licencje na to pozwalają) i podania źródeł w prezentacji.
+Licencje pakietów odczytane z metadanych zainstalowanych wersji; licencje zbiorów z `datasety-eeg-zrodla.md`.
+
+## Zależności kodu (`pyproject.toml`)
+
+| Pakiet | Licencja | Uwagi |
+|---|---|---|
+| numpy, scipy, mne, uvicorn, pandas, httpx, scikit-learn | BSD-3-Clause (scipy: licencja BSD) | pozwala na użycie komercyjne |
+| fastapi, pytest, neurokit2, remotezip, ruff | MIT | pozwala na użycie komercyjne |
+| matplotlib | licencja matplotlib (oparta na PSF) | permisywna |
+| `brainaccess-board` (opcja `live`) | **własnościowa** (PyPI: „Proprietary”, wersja 1.0.3) | SDK do sprzętu; nie jest dołączone do repo i nie podlega naszej licencji MIT. Do potwierdzenia u BrainAccess, że użycie w konkursie jest dozwolone |
+| `fitdecode` (opcja `analysis`) | MIT (PyPI, wersja 0.11.0) | używany tylko lokalnie do plików `.fit`, nie jest wymagany do uruchomienia |
+
+Repozytorium jest na licencji **MIT** (plik `LICENSE`, decyzja w `docs/decyzje.md`). Licencja obejmuje kod i dokumentację, **nie** nagrania EEG w `data/recordings/`.
+
+## Zbiory danych użyte w notebookach
+
+| Zbiór | Licencja | Co trzeba zrobić |
+|---|---|---|
+| EEG During Mental Arithmetic Tasks, PhysioNet (liczenie w pamięci, notebook 02) | Open Data Commons Attribution 1.0 | podać źródło |
+| COG-BCI (Zenodo 7413650, notebooki 02, 05–10) | CC BY 4.0 | podać źródło: Hinss i in., Scientific Data 10 (2023) |
+| Zbiór Cui, figshare (senność, notebook 04) | CC BY 4.0 | podać źródło |
+
+Zbiory z licencją niekomercyjną (CL-Drive, CC BY-NC) lub niesprawdzoną (FatigueSet, Nokia Bell Labs) opisane w `datasety-eeg-zrodla.md` nie występują w notebookach 02–10.
+
+## Do zrobienia przed złożeniem projektu
+
+1. Potwierdzić u BrainAccess, że użycie `brainaccess-board` w konkursie jest dozwolone.
+2. Dodać do ostatniego slajdu źródła zbiorów (PhysioNet EEGMAT, COG-BCI, Cui).
+3. Zdecydować, czy repo będzie publiczne po hackathonie (nagrania zespołu, patrz `decyzje.md`).
+```
 
 ---
 ## FILE: `docs/uruchomienie.md`
@@ -1556,7 +1656,7 @@ kalibrację, więc można skalibrować osobę przed demo. Przebieg demo: [`scena
 Co widać na stronie poza stanem i rezerwą:
 
 - **Oczy:** otwarte albo zamknięte, z liczbą mrugnięć na minutę (z F3/F4). Spadek czujności jest opisany jako
-  „oczy zamknięte (mikrosen)” albo „senność przy otwartych oczach”.
+  „oczy zamknięte” albo „senność przy otwartych oczach”.
 - **Próba reakcji:** po wykrytym spadku czujności (gdy oczy znów się otworzą) oraz kontrolnie co 20 minut pojawia się
   żółte kółko z dźwiękiem. Trzeba nacisnąć spację albo kliknąć. Reakcja wolniejsza niż osobista norma (na starcie 355 ms)
   albo jej brak w ciągu 3 s liczy się jako spadek czujności. Przycisk „Sprawdź reakcję” wywołuje próbę ręcznie (do demo).
@@ -1567,7 +1667,7 @@ Przydatne opcje:
 - `--wake 07:00 --clock 02:30`: godzina przebudzenia i godzina na starcie zmiany (domyślnie teraz). Włącza kontekst:
   rezerwa spada szybciej w nocy (najmocniej ok. 4:30) i po długim czuwaniu. Parametry to założenia, opisane w `config.py`.
 - `--file` przyjmuje nazwę nagrania zespołu (`adi`, `filip`, `rudy`, `wojtek`) albo ścieżkę do pliku `.fif`.
-- `--team NAZWA:START` dodaje odtwarzane nagrania do panelu przełożonego.
+- `--team NAZWA:START` dodaje odtwarzane nagrania do panelu przełożonego. `NAZWA:START-KONIEC` (np. `rudy:380-520`) zapętla nagranie na wybranym odcinku, żeby osoba z panelu nie trafiła na blok zamkniętych oczu ani na zaszumiony początek pliku.
 - `GET /api/state` zwraca ostatni wynik każdego pracownika (do szybkiego sprawdzenia bez przeglądarki).
 
 Tryb na żywo czyta nowe próbki z bazy danych sesji Board (`brainaccess-board`, metoda `get_data_since`) co 0,25 s.
@@ -1598,9 +1698,7 @@ for result in pipeline.push(chunk):   # chunk: tablica (8, n) w woltach, kanały
 
 Każdy wynik odpowiada jednemu oknu (co sekundę). Najważniejsze pola: `state`, `reserve`, `fast`, `slow`, `quality`.
 Parametry i ich uzasadnienie są w `src/wachta/config.py`.
-
 ```
-
 
 ---
 ## FILE: `src/wachta/__init__.py`
@@ -1608,9 +1706,7 @@ Parametry i ich uzasadnienie są w `src/wachta/config.py`.
 """Wachta: fatigue and vigilance monitoring from EEG."""
 
 __version__ = "0.1.0"
-
 ```
-
 
 ---
 ## FILE: `src/wachta/baseline.py`
@@ -1662,9 +1758,7 @@ class Baseline:
         values = np.array([features[k] for k in self.keys])
         scores = (values - self._centre) / self._spread
         return dict(zip(self.keys, scores.tolist()))
-
 ```
-
 
 ---
 ## FILE: `src/wachta/blinks.py`
@@ -1701,6 +1795,11 @@ class BlinkDetector:
     @property
     def ready(self) -> bool:
         return self.threshold is not None
+
+    def reset_filter(self) -> None:
+        """Forget the filter state and any blink in progress (after a gap or corrupt samples)."""
+        self._zi = None
+        self._run_start = None
 
     def push(self, filtered_uv: np.ndarray, first_sample: int) -> list[float]:
         """Feed band-passed EEG (8, n) in µV whose first column is sample ``first_sample``."""
@@ -1751,9 +1850,7 @@ class BlinkDetector:
             return None
         span = min(window_s, max(t - self.cfg.settle_s - self.cfg.blink_cal_s, 1.0))
         return sum(1 for b in self.blinks if t - window_s <= b <= t) * 60.0 / span
-
 ```
-
 
 ---
 ## FILE: `src/wachta/config.py`
@@ -1790,6 +1887,7 @@ class Config:
     line_hz: float = 50.0
     settle_s: float = 3.0          # windows ending before this are ignored (filter warm-up)
     reject_uv: float = 300.0       # peak-to-peak above this on any channel marks the window as bad
+    flat_uv: float = 0.5           # peak-to-peak below this on all channels: no signal (headset off, frozen stream)
 
     # Calibration
     cal_windows: int = 60          # first clean windows used as the personal baseline
@@ -1831,6 +1929,7 @@ class Config:
     probe_norm_factor: float = 1.5     # personal norm: lapse above 1.5 x own median RT (as in Cui et al.)
     probe_norm_min: int = 3            # passed responses needed before the personal norm is used
     probe_timeout_ms: float = 3000.0
+    probe_min_rt_ms: float = 100.0     # faster than this is a false start (anticipation), not a measured reaction (PVT convention)
     probe_stop_s: float = 120.0        # a failed probe keeps "stop" until a passed probe or this long
 
     # Slow index: fatigue trend
@@ -1843,7 +1942,9 @@ class Config:
     # Reserve (assumptions, see module docstring)
     time_scale: float = 1.0        # shift seconds per real second (demo time compression)
     drain_per_hour: float = 12.0   # baseline: 100 -> 46 after 4.5 h of work
-    slow_gain: float = 0.5         # extra drain per sigma of the slow index
+    # The slow index (theta + alpha) / beta is not validated on our hardware (notebooks 03 and 04: it fails with the
+    # Fp1 reference), so it does not change the reserve by default (issue #19). Kept as a knob for experiments.
+    slow_gain: float = 0.0         # extra drain per sigma of the slow index
     slow_cap: float = 3.0
     lapse_penalty: float = 8.0     # reserve points lost per lapse
     recharge_per_hour: float = 60.0  # a 45 min break restores 45 points
@@ -1869,9 +1970,7 @@ class Config:
     @property
     def step_samples(self) -> int:
         return int(round(self.step_s * self.sfreq))
-
 ```
-
 
 ---
 ## FILE: `src/wachta/features.py`
@@ -1929,9 +2028,7 @@ def window_features(window_uv: np.ndarray, sfreq: float) -> dict[str, float]:
         "tab_ratio": float(np.log10((slow_waves + _EPS) / (power["beta"].mean() + _EPS))),
         "ptp_uv": float(np.ptp(window_uv, axis=-1).max()),
     }
-
 ```
-
 
 ---
 ## FILE: `src/wachta/index.py`
@@ -2008,7 +2105,13 @@ class VigilanceIndex:
         self._event_probe_pending = False
 
     def start_break(self) -> None:
+        """Rest is not work: eyes closed during a break is neither an event nor a penalty."""
         self.on_break = True
+        self.lapse = False
+        self.lapse_kind = None
+        self._above = self._below = 0
+        self._event_probe_pending = False
+        self._probe_requested = False
 
     def end_break(self) -> None:
         self.on_break = False
@@ -2028,8 +2131,14 @@ class VigilanceIndex:
         return cfg.probe_norm_factor * median
 
     def record_probe(self, t: float, rt_ms: float | None) -> bool:
-        """Store a probe result; returns True when the probe failed."""
+        """Store a probe result; returns True when the probe failed.
+
+        A reaction that is not a number, negative or faster than ``probe_min_rt_ms`` is a false start or bad
+        input: it is not counted at all, neither as a pass nor as a lapse.
+        """
         cfg = self.cfg
+        if rt_ms is not None and not (math.isfinite(rt_ms) and rt_ms >= cfg.probe_min_rt_ms):
+            return False
         threshold = self.probe_threshold_ms()
         self.probes_done += 1
         self.last_rt_ms = rt_ms
@@ -2151,7 +2260,9 @@ class VigilanceIndex:
         fast = self._fast()
         slow = self._slow(t)
 
-        new_lapse = self._update_lapse(t, fast) if calibrated else False
+        if self.on_break:
+            self._above = self._below = 0          # no events while resting
+        new_lapse = self._update_lapse(t, fast) if calibrated and not self.on_break else False
         if self.lapse:
             self.lapse_kind = self._classify_lapse(t, last_blink, blinks_ready)
             # Count each event once, by the kind it settles on after the confirmation period.
@@ -2254,9 +2365,7 @@ class VigilanceIndex:
             "work_min": round(self.work_s / 60.0, 2),
             "on_break": self.on_break,
         }
-
 ```
-
 
 ---
 ## FILE: `src/wachta/night.py`
@@ -2616,9 +2725,7 @@ def save_minutes_figure(rows: Sequence[dict[str, Any]], path: Path | str) -> Pat
     fig.savefig(out, dpi=130, facecolor=surface)
     plt.close(fig)
     return out
-
 ```
-
 
 ---
 ## FILE: `src/wachta/pipeline.py`
@@ -2674,6 +2781,13 @@ class Pipeline:
         self._pushed = 0
         self.blinks = BlinkDetector(self.cfg)
         self.baseline = Baseline(Z_FEATURES, self.cfg.cal_windows)
+        self._bad_before = 0       # windows starting before this sample are not trusted (stream glitch, filter restart)
+
+    def reset_stream(self) -> None:
+        """Restart the filters after a gap or corrupt samples; windows touching the restart are marked bad."""
+        self._filter = StreamFilter(self.cfg)
+        self.blinks.reset_filter()
+        self._bad_before = self._pushed + int(round(self.cfg.settle_s * self.cfg.sfreq))
 
     def new_shift(self) -> None:
         """Start a new shift for the same, already calibrated person: full reserve, clock back to start."""
@@ -2689,24 +2803,32 @@ class Pipeline:
         chunk = np.asarray(eeg_volts, dtype=float) * 1e6
         if chunk.ndim != 2 or chunk.shape[0] != len(CHANNELS):
             raise ValueError(f"Expected shape ({len(CHANNELS)}, n), got {chunk.shape}")
+        corrupt = not np.isfinite(chunk).all()
+        if corrupt:
+            # NaN or Inf would poison the filter state for good, so zero them and restart the filters afterwards.
+            chunk = np.nan_to_num(chunk, nan=0.0, posinf=0.0, neginf=0.0)
         filtered = self._filter(chunk)
         self.blinks.push(filtered, self._pushed)
         self._pushed += filtered.shape[1]
         self._buffer = np.concatenate([self._buffer, filtered], axis=1)
+        if corrupt:
+            self.reset_stream()
 
         cfg = self.cfg
         results = []
         while self._buffer.shape[1] >= cfg.win_samples:
             t_end = (self._consumed + cfg.win_samples) / cfg.sfreq
             if t_end >= cfg.settle_s:
-                results.append(self._process(self._buffer[:, : cfg.win_samples], t_end))
+                results.append(self._process(self._buffer[:, : cfg.win_samples], t_end, untrusted=self._consumed < self._bad_before))
             self._buffer = self._buffer[:, cfg.step_samples :]
             self._consumed += cfg.step_samples
         return results
 
-    def _process(self, window: np.ndarray, t_end: float) -> dict:
+    def _process(self, window: np.ndarray, t_end: float, untrusted: bool = False) -> dict:
         features = window_features(window, self.cfg.sfreq)
-        bad = features["ptp_uv"] > self.cfg.reject_uv
+        ptp = features["ptp_uv"]
+        # Too large (movement), too flat (headset off, frozen stream), not a number, or right after a stream glitch.
+        bad = untrusted or not np.isfinite(ptp) or ptp > self.cfg.reject_uv or ptp < self.cfg.flat_uv
         if not bad:
             self.baseline.add(features)
         calibrated = self.baseline.ready
@@ -2736,9 +2858,7 @@ def run_offline(eeg_volts: np.ndarray, cfg: Config | None = None) -> list[dict]:
     for start in range(0, eeg_volts.shape[1], step):
         results.extend(pipeline.push(eeg_volts[:, start : start + step]))
     return results
-
 ```
-
 
 ---
 ## FILE: `src/wachta/pvt.html`
@@ -3017,9 +3137,7 @@ def run_offline(eeg_volts: np.ndarray, cfg: Config | None = None) -> list[dict]:
 </script>
 </body>
 </html>
-
 ```
-
 
 ---
 ## FILE: `src/wachta/pvt.py`
@@ -3400,9 +3518,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 ```
-
 
 ---
 ## FILE: `src/wachta/recordings.py`
@@ -3466,9 +3582,7 @@ def load_annotations(fif_path: Path | str) -> list[Block]:
             for row in csv.DictReader(handle)
             if row.get("duration")
         ]
-
 ```
-
 
 ---
 ## FILE: `src/wachta/server.py`
@@ -3477,6 +3591,7 @@ def load_annotations(fif_path: Path | str) -> list[Block]:
 
 Examples:
     python -m wachta.server --file filip --start 540 --team rudy:230 adi:240
+    python -m wachta.server --file filip --team rudy:380-520 adi:370-500   # team members loop over a calm segment
     python -m wachta.server --source board --team rudy:230 adi:240
 
 The first source is the worker shown in the main view. ``--team`` adds replayed
@@ -3560,7 +3675,10 @@ class Worker:
         if probe_id != self.pending_probe:
             return False
         self.pending_probe = None
-        value = None if rt_ms is None else float(rt_ms)
+        try:
+            value = None if rt_ms is None else float(rt_ms)
+        except (TypeError, ValueError):
+            return False                      # garbage from the page: forget the probe, count nothing
         self.pipeline.index.record_probe(self.last_t, value)
         return True
 
@@ -3637,6 +3755,7 @@ async def _run_worker(worker: Worker, hub: Hub) -> None:
             raise
         except Exception as error:
             worker.error = str(error)
+            worker.pipeline.reset_stream()      # the stream has a gap now; do not trust windows across it
             log.warning("%s: %s", worker.source.name, error)
             await hub.broadcast({"type": "status", "worker": worker.id, "error": worker.error})
             if not worker.source.live:
@@ -3716,12 +3835,14 @@ def create_app(workers: list[Worker], cfg: Config) -> FastAPI:
 
 
 def _replay_worker(worker_id: str, spec: str, cfg: Config, speed: float, start_s: float) -> Worker:
-    """Build a replayed worker from ``name`` or ``name:start_seconds``."""
+    """Build a replayed worker from ``name``, ``name:start`` or ``name:start-end`` (seconds, end loops back to start)."""
     name, _, offset = spec.partition(":")
+    offset, _, end = offset.partition("-")
     path = resolve_recording(name)
     label = path.name.split("task-")[1].split("_")[0] if "task-" in path.name else path.stem
     source = ReplaySource.from_file(
-        path, name=f"{label.capitalize()} (nagranie)", speed=speed, start_s=float(offset) if offset else start_s
+        path, name=f"{label.capitalize()} (nagranie)", speed=speed, start_s=float(offset) if offset else start_s,
+        end_s=float(end) if end else None,
     )
     return Worker(worker_id, source, cfg)
 
@@ -3769,7 +3890,7 @@ def main() -> None:
     parser.add_argument("--start", type=float, default=0.0, help="replay start offset in seconds")
     parser.add_argument("--speed", type=float, default=1.0, help="replay speed, 1 is real time")
     parser.add_argument("--name", help="display name of the main worker")
-    parser.add_argument("--team", nargs="*", default=[], metavar="NAME[:START]",
+    parser.add_argument("--team", nargs="*", default=[], metavar="NAME[:START[-END]]",
                         help="extra replayed recordings for the supervisor panel")
     parser.add_argument("--time-scale", type=float, default=60.0,
                         help="shift seconds per real second; 60 means one minute of demo is one hour of work")
@@ -3782,17 +3903,18 @@ def main() -> None:
     import uvicorn
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    cfg = dataclasses.replace(Config(), time_scale=args.time_scale, **context_settings(args.wake, args.clock))
-    workers = build_workers(args, cfg)
+    try:
+        cfg = dataclasses.replace(Config(), time_scale=args.time_scale, **context_settings(args.wake, args.clock))
+        workers = build_workers(args, cfg)
+    except (ValueError, FileNotFoundError) as error:
+        parser.error(str(error))               # a readable message instead of a traceback
     log.info("Wachta: http://%s:%s  (%s)", args.host, args.port, ", ".join(w.source.name for w in workers))
     uvicorn.run(create_app(workers, cfg), host=args.host, port=args.port, log_level="warning")
 
 
 if __name__ == "__main__":
     main()
-
 ```
-
 
 ---
 ## FILE: `src/wachta/session.py`
@@ -4464,9 +4586,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 ```
-
 
 ---
 ## FILE: `src/wachta/sources.py`
@@ -4492,7 +4612,11 @@ _UNIT_TO_VOLTS = {"microvolts": 1e-6, "uV": 1e-6, "millivolts": 1e-3, "mV": 1e-3
 
 
 class ReplaySource:
-    """Plays an array of samples at ``speed`` times real time, optionally in a loop."""
+    """Plays an array of samples at ``speed`` times real time, optionally in a loop.
+
+    With ``end_s`` the replay is the segment ``start_s``..``end_s`` and loops inside it, so a team member can be
+    kept on a calm stretch of a recording. Without it the whole recording loops from the beginning.
+    """
 
     live = False
 
@@ -4505,15 +4629,19 @@ class ReplaySource:
         start_s: float = 0.0,
         loop: bool = True,
         chunk_s: float = 0.25,
+        end_s: float | None = None,
     ) -> None:
         if speed <= 0:
             raise ValueError("speed must be positive")
+        if end_s is not None and end_s <= start_s:
+            raise ValueError("end_s must be later than start_s")
         self.eeg = eeg_volts
         self.sfreq = sfreq
         self.name = name
         self.speed = speed
         self.start_s = start_s
         self.loop = loop
+        self.end_s = end_s
         self.chunk = max(1, int(round(chunk_s * sfreq)))
 
     @classmethod
@@ -4522,15 +4650,18 @@ class ReplaySource:
         return cls(eeg, sfreq, **kwargs)
 
     async def chunks(self) -> AsyncIterator[np.ndarray]:
-        position = min(int(self.start_s * self.sfreq), max(self.eeg.shape[1] - self.chunk, 0))
+        first = min(int(self.start_s * self.sfreq), max(self.eeg.shape[1] - self.chunk, 0))
+        stop = self.eeg.shape[1] if self.end_s is None else min(self.eeg.shape[1], int(self.end_s * self.sfreq))
+        restart = 0 if self.end_s is None else first
+        position = first
         interval = self.chunk / self.sfreq / self.speed
         due = time.monotonic()
         while True:
-            if position >= self.eeg.shape[1]:
+            if position >= stop:
                 if not self.loop:
                     return
-                position = 0
-            yield self.eeg[:, position : position + self.chunk]
+                position = restart
+            yield self.eeg[:, position : min(position + self.chunk, stop)]
             position += self.chunk
             due += interval
             await asyncio.sleep(max(0.0, due - time.monotonic()))
@@ -4545,10 +4676,11 @@ class BoardSource:
 
     live = True
 
-    def __init__(self, name: str = "na żywo", poll_s: float = 0.25, sfreq: float = 250.0) -> None:
+    def __init__(self, name: str = "na żywo", poll_s: float = 0.25, sfreq: float = 250.0, stale_s: float = 3.0) -> None:
         self.name = name
         self.poll_s = poll_s
         self.sfreq = sfreq
+        self.stale_s = stale_s       # no new samples for this long: report an error and reconnect
 
     @staticmethod
     def _connect():
@@ -4591,11 +4723,16 @@ class BoardSource:
         # Skip whatever was recorded before we connected.
         backlog = await asyncio.to_thread(database.get_data_since, device, 0.0)
         last = backlog["last_timestamp"] if backlog else 0.0
+        last_data = time.monotonic()
         while True:
             fresh = await asyncio.to_thread(database.get_data_since, device, last)
             if fresh:
                 last = fresh["last_timestamp"]
+                last_data = time.monotonic()
                 yield np.asarray(fresh["data"], dtype=float)[rows] * scale
+            elif time.monotonic() - last_data > self.stale_s:
+                # A stopped stream must not look like a calm worker: surface it and let the worker reconnect.
+                raise RuntimeError(f"Brak nowych próbek z Board od {self.stale_s:.0f} s. Sprawdź czepek i Board.")
             await asyncio.sleep(self.poll_s)
 
 
@@ -4608,9 +4745,7 @@ def resolve_recording(spec: str) -> Path:
     if spec in recordings:
         return recordings[spec]
     raise FileNotFoundError(f"Nie znam nagrania '{spec}'. Dostępne: {', '.join(recordings) or 'brak'}")
-
 ```
-
 
 ---
 ## FILE: `src/wachta/summary.py`
@@ -5045,9 +5180,7 @@ def main(argv: Sequence[str] | None = None, *, out: TextIO = sys.stdout) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 ```
-
 
 ---
 ## FILE: `src/wachta/web/app.js`
@@ -5078,6 +5211,7 @@ const STATES = {
 const FAST_WINDOW_S = 180;
 const MAX_HISTORY = 900;
 const MAX_TRACE = 4000;
+const STALE_MS = 5000;
 
 const app = {
   config: null,
@@ -5143,7 +5277,7 @@ function advice(entry) {
       if (entry.lapse && entry.lapse_kind === "eyes_open") {
         return `Senność przy otwartych oczach: oczy są otwarte, ale mózg przestaje reagować. ${act}`;
       }
-      if (entry.lapse && entry.lapse_kind === "eyes_closed") return `Oczy zamknięte dłużej niż kilka sekund (mikrosen). ${act}`;
+      if (entry.lapse && entry.lapse_kind === "eyes_closed") return `Oczy zamknięte dłużej niż kilka sekund. ${act}`;
       if (entry.lapse) return `Wykryto spadek czujności. ${act}`;
       if (entry.probe_failed_recently) return `Reakcja za wolna albo jej brak przy sprawdzeniu. ${act}`;
       return `Rezerwa wyczerpana. ${act}`;
@@ -5420,6 +5554,14 @@ function setIcon(node, tone) {
   node.innerHTML = ICONS[tone];
 }
 
+// Layout mode on <body>: "stop" collapses the view to the message and the break button,
+// "warn" dims secondary panels, "ok" is the full view. Other states keep the full view.
+const LAYOUT_MODES = ["ok", "warn", "stop"];
+function setLayoutMode(state) {
+  const mode = state === "stop" || state === "warn" ? state : "ok";
+  for (const name of LAYOUT_MODES) document.body.classList.toggle(`mode-${name}`, name === mode);
+}
+
 function renderWorker() {
   const worker = app.workers.get(app.primary);
   if (!worker) return;
@@ -5430,16 +5572,20 @@ function renderWorker() {
   badge.dataset.kind = app.connected ? (worker.live ? "live" : "replay") : "off";
   badge.textContent = app.connected ? (worker.live ? "na żywo" : "odtworzenie nagrania") : "rozłączono";
 
+  // No update for a while although the page is connected: the server or the stream has stopped.
+  const silent = app.connected && entry && Date.now() - (worker.lastSeen || 0) > STALE_MS;
   const banner = $("state");
-  if (worker.error || !entry) {
+  if (worker.error || !entry || silent) {
+    setLayoutMode(null);
     banner.dataset.tone = "neutral";
     setIcon($("state-icon"), "neutral");
-    $("state-label").textContent = worker.error ? "Brak połączenia ze źródłem" : "Czekam na sygnał";
-    $("state-advice").textContent = worker.error || "";
+    $("state-label").textContent = worker.error ? "Brak połączenia ze źródłem" : silent ? "Brak danych" : "Czekam na sygnał";
+    $("state-advice").textContent = worker.error || (silent ? "Od kilku sekund nie ma nowych wyników. Sprawdź czepek i serwer." : "");
     return;
   }
 
   const view = STATES[entry.state];
+  setLayoutMode(entry.state);
   banner.dataset.tone = view.tone;
   setIcon($("state-icon"), view.tone);
   $("state-label").textContent = view.label;
@@ -5579,12 +5725,13 @@ function onMessage(message) {
     probe.cancel();
     app.config = message.config;
     app.primary = message.primary;
-    app.workers = new Map(message.workers.map((w) => [w.id, { ...w }]));
+    app.workers = new Map(message.workers.map((w) => [w.id, { ...w, lastSeen: Date.now() }]));
     placeMeterMarks();
   } else if (message.type === "update") {
     const worker = app.workers.get(message.worker);
     if (!worker) return;
     worker.error = null;
+    worker.lastSeen = Date.now();
     worker.history.push(message.data);
     if (worker.history.length > MAX_HISTORY) worker.history.shift();
     if (message.data.state !== "calibrating") {
@@ -5720,13 +5867,12 @@ function init() {
     }
   });
   $("btn-reset").addEventListener("click", () => send("reset"));
+  setInterval(schedule, 1000);          // lets the "no data" banner appear even when nothing arrives
   connect();
 }
 
 init();
-
 ```
-
 
 ---
 ## FILE: `src/wachta/web/index.html`
@@ -5739,7 +5885,7 @@ init();
   <title>Wachta</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="mode-ok">
   <header class="top">
     <div class="brand">
       <span class="brand-name">Wachta</span>
@@ -5812,7 +5958,7 @@ init();
         <figcaption>
           <div>
             <h2 class="card-title">Rezerwa czujności w czasie zmiany</h2>
-            <p class="card-sub" id="reserve-sub">Ubywa z czasem pracy, szybciej przy narastającym zmęczeniu i po każdym spadku czujności.</p>
+            <p class="card-sub" id="reserve-sub">Ubywa z czasem pracy, w nocy i po długim czuwaniu szybciej, i po każdym spadku czujności.</p>
           </div>
           <button type="button" class="link" data-table-toggle aria-pressed="false">Tabela</button>
         </figcaption>
@@ -5844,9 +5990,7 @@ init();
   <script src="app.js"></script>
 </body>
 </html>
-
 ```
-
 
 ---
 ## FILE: `src/wachta/web/style.css`
@@ -6129,4 +6273,43 @@ body {
 
 .foot { display: flex; flex-wrap: wrap; gap: 4px 24px; padding: 4px 24px 24px; color: var(--muted); font-size: 13px; }
 
+/* Layout modes (set on <body> by app.js from the worker state).
+   mode-ok: full view. mode-warn: secondary panels dimmed, message emphasised.
+   mode-stop: one large message and the break button; charts and tiles collapse.
+   The reaction probe is a fixed overlay outside .layout, so it stays usable in every mode. */
+.charts, .tiles, .worker .hero { transition: opacity 0.3s ease; }
+
+.mode-warn .charts, .mode-warn .tiles { opacity: 0.45; }
+.mode-warn .state { padding: 18px 20px; border-width: 2px; }
+.mode-warn .state-label { font-size: 28px; }
+.mode-warn .state-advice { color: var(--ink); font-size: 16px; }
+
+.mode-stop .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "worker" "team"; }
+.mode-stop .worker { justify-self: center; width: min(880px, 100%); padding: 28px; }
+.mode-stop .charts, .mode-stop .tiles, .mode-stop .meter-legend { display: none; }
+.mode-stop .state { margin-top: 20px; padding: 28px; gap: 22px; border-width: 2px; }
+.mode-stop .state-icon { width: 72px; height: 72px; }
+.mode-stop .state-label { font-size: 44px; }
+.mode-stop .state-advice { margin-top: 8px; color: var(--ink); font-size: 22px; }
+.mode-stop .hero { margin-top: 18px; opacity: 0.6; }
+.mode-stop .hero-value { font-size: 44px; }
+.mode-stop .hero-unit { font-size: 22px; }
+.mode-stop .actions { margin-top: 22px; align-items: center; }
+.mode-stop #btn-break {
+  flex: 1 1 100%;
+  padding: 20px 24px;
+  font-size: 22px;
+  border-color: var(--critical);
+  background: var(--critical);
+  color: var(--on-critical);
+}
+.mode-stop .actions .button-quiet { opacity: 0.6; }
+
+@media (max-width: 640px) {
+  .mode-stop .worker { padding: 20px; }
+  .mode-stop .state { padding: 18px; gap: 14px; }
+  .mode-stop .state-icon { width: 48px; height: 48px; }
+  .mode-stop .state-label { font-size: 32px; }
+  .mode-stop .state-advice { font-size: 18px; }
+}
 ```

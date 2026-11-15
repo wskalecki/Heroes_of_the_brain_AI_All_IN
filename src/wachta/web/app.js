@@ -367,6 +367,14 @@ function setIcon(node, tone) {
   node.innerHTML = ICONS[tone];
 }
 
+// Layout mode on <body>: "stop" collapses the view to the message and the break button,
+// "warn" dims secondary panels, "ok" is the full view. Other states keep the full view.
+const LAYOUT_MODES = ["ok", "warn", "stop"];
+function setLayoutMode(state) {
+  const mode = state === "stop" || state === "warn" ? state : "ok";
+  for (const name of LAYOUT_MODES) document.body.classList.toggle(`mode-${name}`, name === mode);
+}
+
 function renderWorker() {
   const worker = app.workers.get(app.primary);
   if (!worker) return;
@@ -381,6 +389,7 @@ function renderWorker() {
   const silent = app.connected && entry && Date.now() - (worker.lastSeen || 0) > STALE_MS;
   const banner = $("state");
   if (worker.error || !entry || silent) {
+    setLayoutMode(null);
     banner.dataset.tone = "neutral";
     setIcon($("state-icon"), "neutral");
     $("state-label").textContent = worker.error ? "Brak połączenia ze źródłem" : silent ? "Brak danych" : "Czekam na sygnał";
@@ -389,6 +398,7 @@ function renderWorker() {
   }
 
   const view = STATES[entry.state];
+  setLayoutMode(entry.state);
   banner.dataset.tone = view.tone;
   setIcon($("state-icon"), view.tone);
   $("state-label").textContent = view.label;

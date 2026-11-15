@@ -29,6 +29,7 @@ Pod spodem nazwa zespołu i kategoria (Systemy adaptacyjne).
 **„Przepisy dają wszystkim ten sam limit, a zmęczenie każdego dopada inaczej.”**
 
 - Kierowca zawodowy w UE: maks. 9 h jazdy dziennie, przerwa 45 min po 4,5 h. Te same liczby dla każdego, niezależnie od snu i pory doby. Źródło: [Komisja Europejska, czas jazdy i odpoczynku](https://transport.ec.europa.eu/transport-modes/road/social-provisions/driving-time-and-rest-periods_en) (rozporządzenie 561/2006).
+- Po ok. 17 godzinach czuwania sprawność psychomotoryczna spada do poziomu jak przy 0,05% alkoholu we krwi. Źródło: Dawson D., Reid K., *Fatigue, alcohol and performance impairment*, Nature 388:235 (1997).
 - Zmęczenie przyczynia się do 10–20% wypadków drogowych. Źródło: [Europejskie Obserwatorium Bezpieczeństwa Ruchu Drogowego (ERSO), zmęczenie](https://road-safety.transport.ec.europa.eu/statistics-and-analysis/statistics-and-analysis-archive/fatigue/fatigue_en). Na slajdzie podać przedział, bo szacunki zależą od definicji (od 6% do 24% w różnych badaniach).
 
 ### 3. Luka
@@ -79,7 +80,7 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 | Zweryfikowane | Założone, do sprawdzenia w pilotażu |
 |---|---|
-| Wykrywanie zamkniętych oczu i alfy na suchych elektrodach | Że osobisty limit przewiduje spadki czujności lepiej niż norma czasu i sam model kontekstu |
+| Wykrywanie zamkniętych oczu i alfy na suchych elektrodach | Że osobisty limit chroni przed spadkami czujności lepiej niż norma czasu i sam model kontekstu |
 | Senność widać w EEG na naszych 8 kanałach (dane publiczne) | Senność przy otwartych oczach na naszych własnych nagraniach (zbieramy, zadanie C4; w sesji T1 jej nie było, KSS 5) |
 | Personalizacja poprawia rozróżnianie stanów (dane publiczne) | Parametry rezerwy (tempo spadku, kary, wpływ nocy) |
 | Działająca pętla na żywo z czepkiem BrainAccess | Że zegarek może zastąpić sesje EEG (nasze dane: nie zastąpi, może uzupełnić) |
@@ -92,6 +93,9 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 - **Segment wejścia (propozycja, decyzja w zadaniu D2):** kopalnie, budowa, operatorzy maszyn (kask jest, EEG w kasku akceptowalne);
   potem branże z obowiązkiem zarządzania zmęczeniem (lotnictwo i kontrola ruchu, energetyka). Transport drogowy jako trzeci krok,
   bo tam wygrywa tania, obowiązkowa kamera.
+- **Ten sam rdzeń, inne dyżury (kierunki do sprawdzenia, bez własnych danych):** nocne dyżury w IT (DevOps, SRE, on-call przy awariach),
+  lekarze i pielęgniarki na dyżurach, dyspozytornie energetyki i sieci, nocne operacje w finansach (monitoring transakcji, rozliczenia).
+  Wspólne: praca w nocy, decyzje o wysokiej stawce i grafik, który nie wie, kto jest wypoczęty.
 - **Różnica względem SmartCap:** oni alarmują, my zmieniamy plan pracy i ustalamy osobisty limit. Źródło: [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md).
 - **Rynek:** oprogramowanie do zarządzania ryzykiem zmęczenia 345 mln USD (2025) → 877 mln USD (2032). Źródło: LP Information, w [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) §2c. Podać jako szacunek z jednego raportu.
 - **Model:** licencja za stanowisko miesięcznie plus sesje kalibracyjne; sprzęt od partnera (BrainAccess). Kwoty jako założenia, nie dane.
@@ -100,10 +104,14 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 ### 10. Co dalej
 
-**„Pilotaż na jednej zmianie: czy osobisty limit przewiduje spadki czujności lepiej niż norma.”**
+**„Pilotaż na jednej zmianie: czy osobisty limit chroni przed spadkami czujności lepiej niż norma.”**
 
 - Miary: lapsy w teście PVT-B, zdarzenia na zmianie, ocena senności (KSS). Porównanie trzech wariantów: norma czasu, model kontekstu, model osobisty.
 - Własne nocne pomiary z testem reakcji już zbieramy (zadanie C4).
+- **Dalszy rozwój (kierunki, nie wyniki):** wygodniejszy sprzęt do noszenia (opaska, wkładka do kasku, słuchawki z elektrodami w uchu);
+  suche elektrody grafenowe (cieńsze i lżejsze, dziś na etapie badań); tętno i ruch z zegarka w pętli jako drugi sygnał (#17);
+  integracja z systemami grafików i dyżurów (np. rotacja on-call w IT, grafik oddziału), żeby propozycja zmiennika trafiała tam, gdzie planuje się obsadę.
+  Zasada bez zmian: **przetwarzanie lokalne**, surowe EEG nie opuszcza urządzenia pracownika, na zewnątrz wychodzi tylko gotowość.
 - Zespół: imiona i role.
 - Na ostatnim slajdzie źródła zbiorów (CC BY wymaga podania autorów): COG-BCI (Hinss i in. 2023), zbiór Cui i in. 2022, EEG During Mental Arithmetic Tasks (PhysioNet), pełna lista w [`licencje.md`](licencje.md).
 

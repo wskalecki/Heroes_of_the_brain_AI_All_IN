@@ -305,7 +305,7 @@ def main() -> None:
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px;">
         <div class="card">
           <h3>Kalibracja osobista</h3>
-          <p>60 s EEG + test reakcji PVT-B wyznaczają osobisty próg zamiast jednej normy dla wszystkich.</p>
+          <p>60 s kalibracji EEG wyznacza osobistą bazę, a próby reakcji osobistą normę zamiast jednej dla wszystkich.</p>
         </div>
         <div class="card">
           <h3>Pętla adaptacyjna</h3>
@@ -344,19 +344,19 @@ def main() -> None:
       <div class="card">
         <div class="stat-num">4,5 h jazdy → 45 min przerwy</div>
         <h3>Sztywny zegar w przepisach (maks. 9 h dziennie)</h3>
-        <p>Identyczny limit czasu pracy dla każdego kierowcy i operatora — niezależnie od długu snu, pory doby (02:30 w nocy vs południe) i indywidualnej odporności.</p>
+        <p>Ten sam limit dla każdego, niezależnie od snu, pory doby i odporności.</p>
         <div class="source">Źródło: Komisja Europejska, rozporządzenie (WE) nr 561/2006 (czas jazdy i odpoczynku).</div>
       </div>
       <div class="card">
         <div class="stat-num danger">10–20% wypadków drogowych</div>
         <h3>Skutek zmęczenia za kierownicą (zakres 6–24% w badaniach)</h3>
-        <p>Szacunki różnią się w zależności od definicji i kraju, ale senność pozostaje jedną z głównych przyczyn najcięższych wypadków na drogach szybkiego ruchu.</p>
+        <p>Szacunki zależą od kraju i definicji; senność to jedna z głównych przyczyn ciężkich wypadków.</p>
         <div class="source">Źródło: Europejskie Obserwatorium Bezpieczeństwa Ruchu Drogowego (ERSO, raport Fatigue).</div>
       </div>
       <div class="card">
-        <div class="stat-num warn">17–19 h bez snu ≈ 0,05% alkoholu</div>
+        <div class="stat-num warn">ok. 17 h bez snu ≈ 0,05% alkoholu</div>
         <h3>Spadek sprawności psychomotorycznej</h3>
-        <p>Po 17–19 godzinach od przebudzenia czas reakcji i liczba pominięć bodźców spadają do poziomu odpowiadającego 0,5 promila alkoholu we krwi.</p>
+        <p>Po ok. 17 h czuwania sprawność spada jak przy 0,5 promila alkoholu.</p>
         <div class="source">Źródło: Dawson i Reid (1997), Nature 388:235.</div>
       </div>
     </div>
@@ -375,7 +375,7 @@ def main() -> None:
     </div>
   </div>
   <div class="footer">
-    <span>Wszystkie liczby posiadają udokumentowane źródła w docs/podstawy-naukowe.md</span>
+    <span>Źródła: Komisja Europejska (561/2006), ERSO, Dawson i Reid 1997 (docs/pitch.md, slajd 2)</span>
     <span>Slajd 2 / 10</span>
   </div>
 </section>
@@ -395,12 +395,12 @@ def main() -> None:
         <div class="source">Źródło: Van Dongen i in. (2004), Sleep 27(3):423–433 (docs/podstawy-naukowe.md, poz. 28).</div>
       </div>
       <div class="card" style="padding: 13px 18px;">
-        <h3>2. Kamera widzi oczy — Wachta dokłada osobisty profil i sprawdzenie reakcji</h3>
+        <h3>2. Kamera widzi oczy — Wachta dokłada profil i próbę reakcji</h3>
         <p>Kamera DMS widzi zamknięte powieki; nasz detektor alfy wykrywa to samo zdarzenie, więc nie obiecujemy, że lepiej. Różnica: osobisty profil, próba reakcji i zmiana planu pracy (przerwa, zmiennik) zamiast samego alarmu.</p>
       </div>
       <div class="card" style="padding: 13px 18px;">
         <h3>3. Zegarek (HRV) nie zastąpi EEG — to osobny sygnał uzupełniający</h3>
-        <p>Sprawdziliśmy na zbiorze <strong>COG-BCI (29 osób, zadanie PVT)</strong>: RMSSD z EKG zmienia się z czasem trwania zadania podobnie jak czujność (<em>r</em> = 0,18), ale po odjęciu czasu zadania korelacja z szybkością reakcji spada do <strong><em>r</em> = 0,05</strong> (<em>p</em> = 0,11).</p>
+        <p>Sprawdziliśmy na zbiorze <strong>COG-BCI (29 osób, zadanie PVT)</strong>: RMSSD zmienia się z czasem zadania jak czujność (<em>r</em> = 0,18), ale po odjęciu czasu zadania korelacja spada do <strong><em>r</em> = 0,05</strong> (<em>p</em> = 0,21).</p>
         <div class="source">Źródło: nasza analiza w data/analysis/10-heart-vs-eeg-lapses-and-response-speed.ipynb.</div>
       </div>
       <div class="card" style="padding: 13px 18px;">
@@ -411,14 +411,14 @@ def main() -> None:
     </div>
     <div class="col" style="flex: 0.85; gap: 10px;">
       <div class="img-box" style="flex: 1; padding: 8px;">
-        <img src="{img_heart}" style="max-height: 250px;">
+        <img src="{img_heart}" style="max-height: 200px;">
         <div class="source" style="text-align: center; margin-top: 6px;">
           Notebook 10 (COG-BCI, 29 osób): HRV (RMSSD) odzwierciedla czas na zadaniu, ale po jego uwzględnieniu nie mierzy spadków czujności (<em>r</em> = 0,05).
         </div>
       </div>
       <div class="card" style="background: #fefce8; border-color: #fde047; padding: 14px 18px;">
         <h3 style="color: #854d0e;">Wniosek projektowy Wachty</h3>
-        <p style="color: #713f12;">Zamiast obiecywać, że „zegarek zastąpi EEG”, używamy krótkich sesji EEG + testu reakcji do wyznaczenia osobistego profilu, a na co dzień łączymy go z modelem kontekstu doby.</p>
+        <p style="color: #713f12;">Nie obiecujemy, że „zegarek zastąpi EEG”: osobisty profil dają krótkie sesje EEG i test reakcji, a na co dzień działa model kontekstu doby.</p>
       </div>
     </div>
   </div>
@@ -442,9 +442,9 @@ def main() -> None:
           <div class="pill" style="margin-bottom: 12px;">Element 1 · Kalibracja profilu</div>
           <h3 style="font-size: 18pt; margin-bottom: 12px;">Krótka sesja kalibracyjna EEG + PVT-B</h3>
           <ul class="clean">
-            <li>Wykonywana na początku zmiany, po zmianach nocnych lub okresowo (kilka minut).</li>
-            <li><strong>60 s oczy otwarte + 40 s zamknięte:</strong> wyznacza osobistą bazę alfy i sprawdza reaktywność markera (<em>R<sub>z</sub></em> ≥ 2,5, notebook 07).</li>
-            <li><strong>3-minutowy test reakcji PVT-B</strong> w przeglądarce (<code>wachta.pvt</code>): wyznacza osobistą medianę czasu reakcji i podatność po braku snu.</li>
+            <li>Na początku zmiany lub okresowo (kilka minut).</li>
+            <li><strong>60 s oczy otwarte + 40 s zamknięte:</strong> osobista baza alfy; test reaktywności (<em>R<sub>z</sub></em>, notebook 07) to następny krok.</li>
+            <li><strong>3-minutowy test reakcji PVT-B</strong> w przeglądarce (<code>wachta.pvt</code>): osobista mediana czasu reakcji.</li>
           </ul>
         </div>
         <div class="source">Nie wymaga noszenia czepka przez 8 godzin u każdego pracownika.</div>
@@ -455,9 +455,9 @@ def main() -> None:
           <div class="pill" style="margin-bottom: 12px;">Element 2 · Praca na co dzień</div>
           <h3 style="font-size: 18pt; margin-bottom: 12px;">Osobisty model kontekstu (bez czepka)</h3>
           <ul class="clean">
-            <li>Łączy wyuczony profil pracownika z <strong>uproszczonym modelem dwuprocesowym</strong> (proces homeostatyczny S + rytm dobowy C).</li>
+            <li>Uproszczony <strong>model dwuprocesowy</strong> (czas czuwania S + rytm dobowy C) ze stałymi parametrami, jawnie oznaczonymi jako założenia.</li>
             <li>Uwzględnia: <strong>czas od przebudzenia</strong> (<code>--wake</code>), <strong>porę doby</strong> (<code>--clock</code>, dołek 02:00–06:00 przyspiesza spadek rezerwy 1,6×) i czas pracy.</li>
-            <li>Krótkie próby reakcji z harmonogramu korygują prognozę czasu do przerwy (<code>minutes_to_warn</code>, <code>minutes_to_stop</code>).</li>
+            <li>Próby reakcji z harmonogramu korygują prognozę czasu do przerwy.</li>
           </ul>
         </div>
         <div class="source">Lekkie wdrożenie tam, gdzie kask nie jest używany na co dzień.</div>
@@ -468,8 +468,8 @@ def main() -> None:
           <div class="pill" style="margin-bottom: 12px;">Element 3 · Role wysokiego ryzyka</div>
           <h3 style="font-size: 18pt; margin-bottom: 12px;">Tryb na żywo z opaską / wkładką w kasku</h3>
           <ul class="clean">
-            <li>Dla stanowisk, gdzie kask lub opaska są już naturalne (górnictwo, operatorzy ciężkich maszyn, dyżury nocne).</li>
-            <li>8 suchych elektrod <strong>BrainAccess MINI</strong> (250 Hz): wykrywa zamknięcie oczu i wzrost alfy (O1/O2) w ciągu kilku sekund.</li>
+            <li>Tam, gdzie kask lub opaska są naturalne (górnictwo, ciężkie maszyny).</li>
+            <li>8 suchych elektrod <strong>BrainAccess MINI</strong> (250 Hz): wykrywa zamknięcie oczu i wzrost alfy (O1/O2) po ok. 7–13 s.</li>
             <li>System od razu przełącza rekomendację na <strong>„Przerwa teraz”</strong> i wskazuje zmiennika w panelu przełożonego.</li>
           </ul>
         </div>
@@ -479,7 +479,7 @@ def main() -> None:
 
     <div class="card" style="background: #0f172a; color: #f8fafc; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
       <div style="font-size: 14pt;">
-        <strong style="color: #38bdf8;">Co zmieniliśmy po analizie danych (strumień B):</strong> zamiast zakładać, że sama alfa przy otwartych oczach wyprzedza każdy błąd o minutę (notebook 06: AUC = 0,52), połączyliśmy detekcję zdarzeń ostrych EEG z aktywnymi próbami czasu reakcji i kalibracją osobistą (notebook 04: wzrost AUC z 0,76 do 0,90).
+        <strong style="color: #38bdf8;">Co zmieniliśmy po analizie danych (strumień B):</strong> zamiast zakładać, że sama alfa przy otwartych oczach wyprzedza każdy błąd o minutę (notebook 06: AUC = 0,52), połączyliśmy detekcję zdarzeń ostrych EEG z aktywnymi próbami czasu reakcji; model uczony na danych danej osoby podnosi AUC z 0,76 do 0,90 (notebook 04).
       </div>
     </div>
   </div>
@@ -495,7 +495,7 @@ def main() -> None:
     <span>Wachta · Jak to działa: pętla adaptacyjna (kryterium: Zgodność z tematem — 20 pkt)</span>
     <span class="pill">Slajd 5 / 10</span>
   </div>
-  <h1 class="headline">System nie tylko mierzy: sam zmienia rekomendację, prosi o reakcję i wskazuje zmiennika.</h1>
+  <h1 class="headline">System sam zmienia rekomendację, prosi o reakcję i wskazuje zmiennika.</h1>
   <div class="content" style="flex-direction: column; justify-content: space-between;">
     <div class="flow-grid" style="flex: 1;">
       <div class="card" style="border-left: 6px solid #2563eb;">
@@ -506,7 +506,7 @@ def main() -> None:
           <li><strong>EEG czołowe (F3, F4):</strong> mrugnięcia i stan oczu, ten sam czepek.</li>
           <li><strong>Reakcja (drugi sygnał):</strong> próba dźwiękowa 880 Hz, czas względem osobistej normy.</li>
           <li><strong>Kontekst:</strong> czas od przebudzenia i pora doby (demo 02:30, 19 h: ok. 2,4× szybciej; założenie).</li>
-          <li><strong>Jakość:</strong> okna &gt; 300 µV i płaski zapis odrzucane.</li>
+          <li><strong>Jakość:</strong> odrzucane okna &gt; 300 µV i płaski zapis.</li>
           <li><strong>Tętno z paska:</strong> osobne badanie T1, jeszcze nie w pętli.</li>
         </ul>
       </div>
@@ -521,7 +521,7 @@ def main() -> None:
           <li><strong>Rozdzielenie przyczyny spadku:</strong>
             <br>• <em>Zamknięte oczy</em> (alfa <em>z</em> ≥ 2,5 przez ≥ 3 s + brak mrugnięć)
             <br>• <em>Spadek reaktywności przy otwartych oczach</em> (próba reakcji > 1,5× normy lub > 3 s).</li>
-          <li><strong>Rezerwa czujności (0–100%):</strong> spada z pracą i incydentami, <strong>odnawia się w trakcie przerwy</strong> (+2,2 pkt%/min).</li>
+          <li><strong>Rezerwa czujności (0–100%):</strong> spada z pracą i incydentami, <strong>odnawia się w trakcie przerwy</strong> (+1 pkt na minutę przerwy; założenie modelu).</li>
         </ul>
       </div>
 
@@ -534,7 +534,7 @@ def main() -> None:
           <li><span class="badge-green">Możesz pracować</span> — cicha praca, prognoza czasu do kolejnej przerwy.</li>
           <li><span class="badge-amber">Zaplanuj przerwę</span> — przerwa wkrótce; <strong>próba reakcji</strong> co 20 min i zawsze po zamknięciu oczu.</li>
           <li><span class="badge-red">Przerwa teraz</span> — czerwony baner + nakaz zjechania / przekazania zmiany.</li>
-          <li><strong>Weryfikacja po incydencie:</strong> po otwarciu oczu system sam wystawia próbę reakcji — powrót do zielonego stanu wymaga jej zaliczenia.</li>
+          <li><strong>Weryfikacja po incydencie:</strong> po otwarciu oczu system sam wystawia próbę reakcji; brak reakcji utrzymuje „Przerwa teraz” do zaliczonej próby albo 2 min.</li>
           <li><strong>Panel przełożonego:</strong> automatycznie wskazuje zmiennika z najwyższą rezerwą.</li>
         </ul>
       </div>
@@ -542,12 +542,12 @@ def main() -> None:
 
     <div class="card" style="background: #f1f5f9; padding: 14px 20px;">
       <p style="font-size: 13pt; color: #1e293b;">
-        <strong>Dlaczego to pełny system adaptacyjny (Adaptive Systems):</strong> pętla działa w obu kierunkach — stan mózgu i reakcja pracownika zmieniają zachowanie interfejsu i plan obsady, a po odpoczynku lub zaliczonej próbie system automatycznie adaptuje rekomendację z powrotem.
+        <strong>Dlaczego to pełny system adaptacyjny (Adaptive Systems):</strong> pętla działa w obu kierunkach: sygnał i reakcja pracownika zmieniają interfejs i plan obsady, a po przerwie lub zaliczonej próbie system sam wraca do zwykłego trybu.
       </p>
     </div>
   </div>
   <div class="footer">
-    <span>Implementacja: src/wachta/filter.py · features.py · baseline.py · blinks.py · index.py · server.py</span>
+    <span>Implementacja: src/wachta/pipeline.py · features.py · baseline.py · blinks.py · index.py · server.py</span>
     <span>Slajd 5 / 10</span>
   </div>
 </section>
@@ -619,11 +619,11 @@ def main() -> None:
               <td><code>docs/trafnosc-na-nagraniach.md</code>,<br><code>img/trafnosc-na-nagraniach.png</code></td>
             </tr>
             <tr>
-              <td><strong>15 min monotonii (T1, 1 osoba, KSS 5):</strong> <strong>0 fałszywych alarmów</strong> przez 13 min otwartych oczu, zamknięcie oczu wykryte po ok. 9 s (0,9% odrzuconych okien)</td>
+              <td><strong>15 min monotonii (T1, 1 osoba, KSS 5):</strong> <strong>0 fałszywych alarmów</strong> przez 15 min, zamknięcie oczu wykryte po ok. 9 s (0,9% odrzuconych okien)</td>
               <td><code>docs/sesja-monotonii-wojtek.md</code>,<br>notebook 09</td>
             </tr>
             <tr>
-              <td><strong>Senność przy otwartych oczach (dane publiczne):</strong> alfa na O1/O2 rośnie u <strong>11 z 11 osób</strong>, mediana <strong>AUC = 0,75</strong> (zakres 0,52–0,91) na naszych 8 kanałach</td>
+              <td><strong>Senność przy otwartych oczach (dane publiczne):</strong> alfa na O1/O2 rośnie u <strong>11 z 11 osób</strong>, średnie <strong>AUC = 0,75</strong> (zakres 0,52–0,91) na naszych 8 kanałach</td>
               <td>notebook 04 (Cui i in. 2022, CC BY 4.0),<br><code>img/drowsiness-public-auc-and-calibration.png</code></td>
             </tr>
             <tr>
@@ -631,7 +631,7 @@ def main() -> None:
               <td>notebook 04, tabela strategii kalibracji</td>
             </tr>
             <tr>
-              <td><strong>Kontekst zmiany</strong> (czas jazdy, pora doby) podnosi AUC detekcji zmęczenia z <strong>0,76 do 0,88</strong></td>
+              <td><strong>Kontekst zmiany</strong> (czas jazdy, pora doby) dodany do HRV z pasa piersiowego podnosi AUC z <strong>0,76 do 0,88</strong> (literatura, 43 kierowców)</td>
               <td>Lu i in. (2022), <code>docs/podstawy-naukowe.md</code> poz. 3</td>
             </tr>
             <tr>
@@ -674,8 +674,8 @@ def main() -> None:
           <li><strong>Wykrywanie zamkniętych oczu i wzrostu alfy na suchych elektrodach BrainAccess MINI:</strong> 5 z 5 bloków na nagraniach zespołu, 1 fałszywy alarm w 48 min.</li>
           <li><strong>Zero fałszywych alarmów w 15-minutowej sesji monotonii (T1, KSS 5):</strong> stabilna praca w cichych warunkach, wykrycie zamknięcia oczu po ok. 9 s.</li>
           <li><strong>Senność przy otwartych oczach widać na naszych 8 kanałach w danych publicznych:</strong> wzrost alfy u 11 z 11 osób (AUC 0,75) w zbiorze Cui i in. 2022.</li>
-          <li><strong>Personalizacja istotnie poprawia rozróżnianie stanów:</strong> kalibracja na osobę podnosi AUC z 0,76 do 0,90 (trafność z 0,66–0,72 do 0,83).</li>
-          <li><strong>Działająca pętla adaptacyjna na żywo z czepkiem BrainAccess:</strong> kalibracja 60 s → detekcja → próba reakcji → zmiana stanu i wskazanie zmiennika.</li>
+          <li><strong>Personalizacja istotnie poprawia rozróżnianie stanów:</strong> model uczony na danych danej osoby podnosi AUC z 0,76 do 0,90 (trafność z 0,66–0,72 do 0,83); sama 60-sekundowa kalibracja AUC nie zmienia.</li>
+          <li><strong>Pętla na żywo z czepkiem BrainAccess:</strong> kalibracja 60 s → zamknięcie oczu → „Przerwa teraz”; pełna pętla z próbą reakcji i zmiennikiem sprawdzona na odtworzeniu nagrań.</li>
         </ul>
       </div>
     </div>
@@ -683,7 +683,7 @@ def main() -> None:
       <div class="card" style="border-top: 6px solid #d97706; flex: 1;">
         <h3 style="color: #b45309; font-size: 17pt; margin-bottom: 12px;">→ Założone / zweryfikowane negatywnie (do pilotażu)</h3>
         <ul class="clean" style="gap: 13px;">
-          <li><strong>Hipoteza główna do pilotażu:</strong> że osobisty limit czasu pracy wyznaczony z EEG i PVT-B przewiduje spadki czujności na zmianie lepiej niż sztywna norma i sam model kontekstu.</li>
+          <li><strong>Hipoteza główna do pilotażu:</strong> że osobisty limit czasu pracy wyznaczony z EEG i PVT-B lepiej chroni przed spadkami czujności na zmianie niż sztywna norma i sam model kontekstu.</li>
           <li><strong>Senność przy otwartych oczach na naszych własnych nagraniach:</strong> protokół nocny z testem PVT-B jest gotowy (<code>docs/protokol-nocny.md</code>, zadanie C4); w dziennej sesji T1 badany miał KSS 5 (brak senności).</li>
           <li><strong>Parametry równania rezerwy czujności:</strong> tempo spadku (12%/h), kary za incydenty i mnożnik nocny (1,6×) to jawne założenia inżynierskie w <code>config.py</code>.</li>
           <li><strong>Zegarek (HRV) jako zamiennik EEG:</strong> nasze dane pokazują, że <strong>nie zastąpi</strong> sesji EEG (<em>r</em> = 0,05 po odjęciu czasu zadania), może jedynie uzupełniać kontekst.</li>
@@ -710,13 +710,14 @@ def main() -> None:
       <div class="card">
         <h3>1. Kolejność wejścia na rynek (3 kroki)</h3>
         <ul class="clean">
-          <li><strong>Krok 1 — Kopalnie, budowa, operatorzy ciężkich maszyn:</strong> kask ochronny jest już obowiązkowy, więc opaska/wkładka EEG w kasku jest akceptowalna od pierwszego dnia.</li>
-          <li><strong>Krok 2 — Branże z prawnym obowiązkiem FRMS:</strong> lotnictwo, kontrola ruchu lotniczego, energetyka i dyspozytornie (gotowe ramy prawne na osobiste normy zmęczenia).</li>
-          <li><strong>Krok 3 — Transport drogowy:</strong> jako trzeci etap (w kabinie ciężarówki dziś wygrywa tania, obowiązkowa kamera DMS; wchodzimy tam z okresową kalibracją + modelem kontekstu).</li>
+          <li><strong>Krok 1 — Kopalnie, budowa, operatorzy ciężkich maszyn:</strong> kask jest już obowiązkowy, więc wkładka EEG w kasku nie zmienia stroju pracy.</li>
+          <li><strong>Krok 2 — Branże z obowiązkiem zarządzania zmęczeniem:</strong> lotnictwo, kontrola ruchu, energetyka, dyspozytornie.</li>
+          <li><strong>Krok 3 — Transport drogowy:</strong> w kabinie wygrywa tania, obowiązkowa kamera DMS, więc wchodzimy z okresową kalibracją i modelem kontekstu.</li>
+          <li><strong>Ten sam rdzeń, inne dyżury:</strong> nocne dyżury IT (DevOps, SRE, on-call), lekarze, dyspozytornie energetyki, nocne operacje w finansach.</li>
         </ul>
       </div>
       <div class="card">
-        <h3>2. Różnica względem SmartCap (Wenco / KGHM)</h3>
+        <h3>2. Różnica względem SmartCap</h3>
         <p><strong>SmartCap jedynie alarmuje</strong> przy ciągłym noszeniu czepka. <strong>Wachta zamyka pętlę zarządzania zmianą:</strong> wyznacza osobisty limit z krótkich sesji EEG + PVT-B, łączy go z kontekstem doby i wskazuje gotowego zmiennika w zespole.</p>
         <div class="source">Źródło: analiza konkurencji w docs/rynek-eeg-wearables.md.</div>
       </div>
@@ -725,14 +726,14 @@ def main() -> None:
       <div class="card">
         <div class="stat-num">345 mln USD (2025) → 877 mln USD (2032)</div>
         <h3>3. Rynek oprogramowania do zarządzania ryzykiem zmęczenia</h3>
-        <p>Szacunek firmy badawczej LP Information (raport z marca 2026): globalny rynek oprogramowania do zarządzania ryzykiem zmęczenia (FRMS) ma wzrosnąć z ok. 345 mln USD w 2025 r. do ok. 877 mln USD w 2032 r. (CAGR 14,5% w latach 2026–2032); inne firmy podają 8,5–14% zależnie od definicji rynku. Model biznesowy Wachty (założenie do walidacji): miesięczna subskrypcja B2B za stanowisko + okresowe sesje kalibracyjne; sprzęt EEG od partnera (<strong>BrainAccess</strong>).</p>
+        <p>Szacunek LP Information (marzec 2026), CAGR 14,5% w latach 2026–2032; inne firmy podają 8,5–14%. Model Wachty (założenie): subskrypcja B2B za stanowisko + sesje kalibracyjne; sprzęt od partnera (<strong>BrainAccess</strong>).</p>
         <div class="source">Źródło: raport LP Information, omówiony w docs/rynek-wielkosc-i-kierunek.md §2c.</div>
       </div>
       <div class="card" style="background: #f0fdf4; border-color: #bbf7d0; flex: 1;">
         <h3 style="color: #166534;">4. Prawo i etyka: zgodność z unijnym AI Act (motyw 18)</h3>
         <ul class="clean">
-          <li><strong>Zmęczenie i senność to stany fizyczne/fizjologiczne, a nie emocje:</strong> motyw 18 AI Act wprost wyłącza wykrywanie zmęczenia (np. u pilotów i kierowców w celu zapobiegania wypadkom) spod zakazu rozpoznawania emocji w miejscu pracy (art. 5 ust. 1 lit. f).</li>
-          <li><strong>Ochrona danych biometrycznych (RODO):</strong> surowe przebiegi EEG są przetwarzane lokalnie i zostają u pracownika. Przełożony widzi wyłącznie 3-stopniową gotowość do pracy.</li>
+          <li><strong>Zmęczenie i senność to stany fizyczne/fizjologiczne, a nie emocje:</strong> motyw 18 AI Act wyłącza wykrywanie zmęczenia spod zakazu rozpoznawania emocji w pracy (art. 5 ust. 1 lit. f).</li>
+          <li><strong>Ochrona danych biometrycznych (RODO):</strong> surowe przebiegi EEG są przetwarzane lokalnie i zostają u pracownika. Przełożony widzi tylko gotowość i rezerwę (%), bez sygnału EEG.</li>
         </ul>
       </div>
     </div>
@@ -749,21 +750,17 @@ def main() -> None:
     <span>Wachta · Co dalej: plan pilotażu i zespół</span>
     <span class="pill">Slajd 10 / 10</span>
   </div>
-  <h1 class="headline">Pilotaż na jednej zmianie: czy osobisty limit przewiduje spadki czujności lepiej niż norma.</h1>
+  <h1 class="headline">Pilotaż na jednej zmianie: czy osobisty limit chroni przed spadkami czujności lepiej niż norma.</h1>
   <div class="content">
     <div class="col" style="flex: 1.1;">
       <div class="card">
         <h3>Plan walidacji w pilotażu (3 porównywane warianty)</h3>
         <ul class="clean" style="margin-top: 8px;">
           <li><strong>Wariant A (punkt odniesienia):</strong> sztywna norma czasu pracy (zegar).</li>
-          <li><strong>Wariant B:</strong> sam model kontekstu (czas od przebudzenia + pora doby, bez kalibracji osobistej).</li>
-          <li><strong>Wariant C (Wachta):</strong> osobisty profil wyznaczony z krótkich sesji EEG + PVT-B połączony z kontekstem zmiany.</li>
+          <li><strong>Wariant B:</strong> sam model kontekstu (czas czuwania + pora doby).</li>
+          <li><strong>Wariant C (Wachta):</strong> osobisty profil z sesji EEG i prób reakcji + kontekst.</li>
         </ul>
-        <p style="margin-top: 12px;"><strong>Miary sukcesu:</strong> liczba lapsów (RT > 500 ms) w 3-minutowym teście PVT-B na koniec zmiany, zdarzenia ostre na zmianie oraz subiektywna skala senności KSS.</p>
-      </div>
-      <div class="card">
-        <h3>Co już trwa po zamrożeniu kodu</h3>
-        <p>Protokół nocnych punktów pomiarowych z testem reakcji PVT-B zaraz po nagraniu EEG jest gotowy i wdrożony w kodzie (<code>python -m wachta.session</code>, <code>python -m wachta.pvt</code>, <code>experiments/analyze-night-checkpoint.py</code>).</p>
+        <p style="margin-top: 12px;"><strong>Miary:</strong> lapsy (RT ≥ 355 ms) w 3-min PVT-B na koniec zmiany, zdarzenia ostre, senność KSS.</p>
       </div>
       <div class="card" style="background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35);">
         <h3>Publiczne repozytorium i pełna powtarzalność wyników</h3>
@@ -771,24 +768,30 @@ def main() -> None:
           https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN
         </p>
         <p style="font-size: 12pt; margin-top: 6px; color: #cbd5e1;">
-          114 testów jednostkowych i regresyjnych w CI · 10 notebooków analitycznych · działający pakiet <code>wachta</code>.
+          114 testów w CI · 10 notebooków · pakiet <code>wachta</code> · zbiory: COG-BCI (Hinss i in. 2023, CC BY 4.0), Cui i in. 2022 (CC BY 4.0), PhysioNet EEGMAT (ODC-By).
         </p>
       </div>
     </div>
     <div class="col" style="flex: 0.9;">
-      <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+      <div class="card">
         <div>
           <h3>Zespół AI All In — podział strumieni</h3>
-          <ul class="clean" style="margin-top: 12px; gap: 14px;">
-            <li><strong>Wojtek — Sygnał i aplikacja (Strumień A):</strong> potok DSP w czasie rzeczywistym, detekcja alfy i mrugnięć, serwer WebSocket, dashboard, integracja z BrainAccess MINI.</li>
-            <li><strong>Adrian — Dane i dowody (Strumień B):</strong> walidacja statystyczna na 5 nagraniach własnych i zbiorach publicznych (Cui 2022, COG-BCI), 10 notebooków weryfikujących hipotezy.</li>
-            <li><strong>Filip — Pomiary i protokoły (Strumień C):</strong> nagrania EEG na suchych elektrodach, sesje kontrolne i protokół pomiarów nocnych z PVT-B.</li>
-            <li><strong>Rudy — Pitch, rynek i demo (Strumień D):</strong> pozycjonowanie regulacyjne (AI Act, FRMS), analiza rynku wearables EEG i scenariusz wdrożenia.</li>
+          <ul class="clean" style="margin-top: 6px; gap: 4px;">
+            <li><strong>Wojtek — sygnał i aplikacja:</strong> przetwarzanie EEG na żywo, dashboard, BrainAccess MINI.</li>
+            <li><strong>Adrian — dane i dowody:</strong> walidacja na nagraniach zespołu i zbiorach publicznych, 10 notebooków.</li>
+            <li><strong>Filip — pomiary i protokoły:</strong> nagrania na suchych elektrodach, protokół nocny z PVT-B.</li>
+            <li><strong>Rudy — pitch, rynek i demo:</strong> AI Act, FRMS, rynek wearables EEG, scenariusz demo.</li>
           </ul>
         </div>
-        <div class="img-box" style="background: #ffffff; padding: 6px; margin-top: 12px;">
-          <img src="{img_t1}" style="max-height: 155px;">
-        </div>
+      </div>
+      <div class="card" style="margin-top: 12px;">
+        <h3>Dalszy rozwój (kierunki)</h3>
+        <ul class="clean" style="margin-top: 6px;">
+          <li><strong>Wearables:</strong> opaska, wkładka do kasku, słuchawki z elektrodami w uchu; suche elektrody grafenowe (dziś etap badań).</li>
+          <li><strong>Drugi sygnał w pętli:</strong> tętno i ruch z zegarka.</li>
+          <li><strong>Integracje:</strong> systemy grafików i dyżurów (rotacja on-call w IT, grafik oddziału).</li>
+          <li><strong>Zawsze lokalnie:</strong> surowe EEG nie opuszcza urządzenia, na zewnątrz tylko gotowość.</li>
+        </ul>
       </div>
     </div>
   </div>
