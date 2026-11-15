@@ -275,3 +275,43 @@ body {
 }
 
 .foot { display: flex; flex-wrap: wrap; gap: 4px 24px; padding: 4px 24px 24px; color: var(--muted); font-size: 13px; }
+
+/* Layout modes (set on <body> by app.js from the worker state).
+   mode-ok: full view. mode-warn: secondary panels dimmed, message emphasised.
+   mode-stop: one large message and the break button; charts and tiles collapse.
+   The reaction probe is a fixed overlay outside .layout, so it stays usable in every mode. */
+.charts, .tiles, .worker .hero { transition: opacity 0.3s ease; }
+
+.mode-warn .charts, .mode-warn .tiles { opacity: 0.45; }
+.mode-warn .state { padding: 18px 20px; border-width: 2px; }
+.mode-warn .state-label { font-size: 28px; }
+.mode-warn .state-advice { color: var(--ink); font-size: 16px; }
+
+.mode-stop .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "worker" "team"; }
+.mode-stop .worker { justify-self: center; width: min(880px, 100%); padding: 28px; }
+.mode-stop .charts, .mode-stop .tiles, .mode-stop .meter-legend { display: none; }
+.mode-stop .state { margin-top: 20px; padding: 28px; gap: 22px; border-width: 2px; }
+.mode-stop .state-icon { width: 72px; height: 72px; }
+.mode-stop .state-label { font-size: 44px; }
+.mode-stop .state-advice { margin-top: 8px; color: var(--ink); font-size: 22px; }
+.mode-stop .hero { margin-top: 18px; opacity: 0.6; }
+.mode-stop .hero-value { font-size: 44px; }
+.mode-stop .hero-unit { font-size: 22px; }
+.mode-stop .actions { margin-top: 22px; align-items: center; }
+.mode-stop #btn-break {
+  flex: 1 1 100%;
+  padding: 20px 24px;
+  font-size: 22px;
+  border-color: var(--critical);
+  background: var(--critical);
+  color: var(--on-critical);
+}
+.mode-stop .actions .button-quiet { opacity: 0.6; }
+
+@media (max-width: 640px) {
+  .mode-stop .worker { padding: 20px; }
+  .mode-stop .state { padding: 18px; gap: 14px; }
+  .mode-stop .state-icon { width: 48px; height: 48px; }
+  .mode-stop .state-label { font-size: 32px; }
+  .mode-stop .state-advice { font-size: 18px; }
+}
