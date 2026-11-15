@@ -31,6 +31,11 @@ class BlinkDetector:
     def ready(self) -> bool:
         return self.threshold is not None
 
+    def reset_filter(self) -> None:
+        """Forget the filter state and any blink in progress (after a gap or corrupt samples)."""
+        self._zi = None
+        self._run_start = None
+
     def push(self, filtered_uv: np.ndarray, first_sample: int) -> list[float]:
         """Feed band-passed EEG (8, n) in µV whose first column is sample ``first_sample``."""
         cfg = self.cfg

@@ -30,6 +30,7 @@ class Config:
     line_hz: float = 50.0
     settle_s: float = 3.0          # windows ending before this are ignored (filter warm-up)
     reject_uv: float = 300.0       # peak-to-peak above this on any channel marks the window as bad
+    flat_uv: float = 0.5           # peak-to-peak below this on all channels: no signal (headset off, frozen stream)
 
     # Calibration
     cal_windows: int = 60          # first clean windows used as the personal baseline

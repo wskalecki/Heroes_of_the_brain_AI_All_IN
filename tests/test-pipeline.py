@@ -91,3 +91,33 @@ def test_new_shift_keeps_calibration_and_restores_the_reserve():
     assert result["calibrated"] and result["state"] != "calibrating"
     assert result["reserve"] == pytest.approx(100 - cfg.drain_per_hour)   # one window = one shift hour
     assert result["work_min"] == pytest.approx(60)
+
+
+def test_nan_burst_is_survived_and_the_state_recovers():
+    eeg = _synthetic(200)
+    eeg[:, 100 * SFREQ : 100 * SFREQ + 50] = np.nan
+    eeg[3, 150 * SFREQ] = np.inf
+    results = run_offline(eeg)
+    assert all(np.isfinite(r["reserve"]) for r in results)
+    by_t = {r["t"]: r for r in results}
+    assert by_t[101.0]["bad"] and by_t[103.0]["bad"]            # windows that touch the glitch are not trusted
+    assert not by_t[110.0]["bad"] and by_t[110.0]["fast"] is not None
+    assert results[-1]["state"] == "ok" and results[-1]["reserve"] > 80
+    assert not any(r["new_lapse"] for r in results)             # a glitch is not an eye closure
+
+
+def test_flat_signal_is_no_signal_not_a_calm_worker():
+    eeg = np.concatenate([_synthetic(90), np.zeros((8, 90 * SFREQ))], axis=1)
+    results = run_offline(eeg)
+    assert results[-1]["state"] == "no_signal"
+    assert all(r["bad"] for r in results if r["t"] > 110)   # after the step response of the filter has died out
+
+
+def test_reset_stream_marks_the_next_windows_bad_and_keeps_calibration():
+    pipe = Pipeline()
+    for start in range(0, 80 * SFREQ, SFREQ):
+        pipe.push(_synthetic(1, seed=start)[:, :SFREQ])
+    pipe.reset_stream()
+    out = pipe.push(_synthetic(10, seed=5))
+    assert out[0]["bad"] and out[0]["calibrated"]
+    assert not out[-1]["bad"]
