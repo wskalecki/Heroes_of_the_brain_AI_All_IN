@@ -72,10 +72,11 @@ class BoardSource:
 
     live = True
 
-    def __init__(self, name: str = "na żywo", poll_s: float = 0.25, sfreq: float = 250.0) -> None:
+    def __init__(self, name: str = "na żywo", poll_s: float = 0.25, sfreq: float = 250.0, stale_s: float = 3.0) -> None:
         self.name = name
         self.poll_s = poll_s
         self.sfreq = sfreq
+        self.stale_s = stale_s       # no new samples for this long: report an error and reconnect
 
     @staticmethod
     def _connect():
@@ -118,11 +119,16 @@ class BoardSource:
         # Skip whatever was recorded before we connected.
         backlog = await asyncio.to_thread(database.get_data_since, device, 0.0)
         last = backlog["last_timestamp"] if backlog else 0.0
+        last_data = time.monotonic()
         while True:
             fresh = await asyncio.to_thread(database.get_data_since, device, last)
             if fresh:
                 last = fresh["last_timestamp"]
+                last_data = time.monotonic()
                 yield np.asarray(fresh["data"], dtype=float)[rows] * scale
+            elif time.monotonic() - last_data > self.stale_s:
+                # A stopped stream must not look like a calm worker: surface it and let the worker reconnect.
+                raise RuntimeError(f"Brak nowych próbek z Board od {self.stale_s:.0f} s. Sprawdź czepek i Board.")
             await asyncio.sleep(self.poll_s)
 
 

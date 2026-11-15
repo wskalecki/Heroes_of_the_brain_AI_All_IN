@@ -143,6 +143,30 @@ def test_board_source_reopens_the_database_and_reorders_channels(monkeypatch):
     assert not fake.open
 
 
+class _SilentBoardDB(_FakeBoardDB):
+    """Delivers the backlog and then nothing: the headset was switched off."""
+
+    def get_data_since(self, device, last_timestamp=0.0):
+        self.calls += 1
+        return {"data": np.zeros((9, 10)), "last_timestamp": 1.0} if self.calls == 1 else None
+
+
+def test_board_source_reports_a_stalled_stream(monkeypatch):
+    import pytest
+
+    from wachta.sources import BoardSource
+
+    monkeypatch.setattr(BoardSource, "_connect", staticmethod(lambda: _SilentBoardDB()))
+    source = BoardSource(poll_s=0.01, stale_s=0.1)
+
+    async def drain():
+        async for _ in source.chunks():
+            pass
+
+    with pytest.raises(RuntimeError, match="Brak nowych próbek"):
+        asyncio.run(drain())
+
+
 def test_context_settings_from_wake_and_clock():
     from wachta.server import context_settings
 

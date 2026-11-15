@@ -162,6 +162,7 @@ async def _run_worker(worker: Worker, hub: Hub) -> None:
             raise
         except Exception as error:
             worker.error = str(error)
+            worker.pipeline.reset_stream()      # the stream has a gap now; do not trust windows across it
             log.warning("%s: %s", worker.source.name, error)
             await hub.broadcast({"type": "status", "worker": worker.id, "error": worker.error})
             if not worker.source.live:
