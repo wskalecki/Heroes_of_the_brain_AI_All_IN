@@ -30,7 +30,7 @@ Zadania wynikające z tej analizy są w issues na GitHubie (zbiorczy issue „Ad
 | N2 | Wskaźnik wolny (θ+α)/β jest zakłócany przez mięśnie (r ≈ −0,5 u dwóch osób) i nie ma spójnego trendu w zadaniu czujności | notebooki 03, 05 |
 | N3 | Theta czołowa nie działa przy referencji Fp1 (AUC 0,58, u 3 z 11 osób odwrotny kierunek) | notebook 04 |
 | N4 | Reguła „przeciążony” nie zadziałała ani razu, a w zadaniu MATB alfa ciemieniowa rośnie zamiast spadać | notebooki 02, 03 |
-| N5 | Serce i EEG nie idą w parze minuta po minucie (|r| ≤ 0,16). Zmienność rytmu serca wiąże się z czasem reakcji (r = −0,23, ujemna u 16 z 16 osób), ale niezależnie od EEG. Tętno rośnie w 10-minutowym zadaniu, czyli odwrotnie niż przy senności | notebook 05 |
+| N5 | Serce i EEG nie idą w parze minuta po minucie (|r| ≤ 0,16). Zmienność rytmu serca (RMSSD) i szybkość reakcji spadają razem (r = 0,18, ten kierunek u 22 z 29 osób), ale głównie dlatego, że obie zmieniają się z czasem zadania; po jego uwzględnieniu zostaje +0,05 (CI −0,03 do 0,17), więc wcześniejsze „r = −0,23, 16 z 16” nie przetrwało przeliczenia (notebook 10). Tętno rośnie w 10-minutowym zadaniu, czyli odwrotnie niż przy senności | notebooks 05, 10 |
 | N6 | Próg 300 µV łapie ruch głowy (74–100% okien), ale tylko 33–60% okien z napięciem mięśni | notebook 03 |
 
 ### Czego jeszcze nie wiemy

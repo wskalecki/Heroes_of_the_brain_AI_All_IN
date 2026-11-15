@@ -84,7 +84,7 @@ Opracowanie dla projektu Wachta. Stan na 2026-11-14. Każde źródło ma status 
 1. Alfa potyliczna to najlepiej udokumentowany marker EEG senności i stanu oczu. Na naszym sprzęcie działa (zamknięcie oczu wykryte u 4/4 osób). Zaznaczamy, że to test sygnału, nie detekcja senności.
 2. Na publicznym zbiorze z jazdy marker alfa rozróżnia stany ze średnim AUC 0,75 na osobę, ale z rozrzutem 0,52-0,91. To zgodne z literaturą dla modeli bez kalibracji (ok. 76%).
 3. Ludzie różnią się podatnością na zmęczenie w sposób stabilny (Van Dongen 2004), a nasz model osobowy (ok. 1 min danych na klasę) dał ok. 81% wobec 66-72% dla modelu ogólnego. Personalizacja ma więc sens.
-4. Tętno i HRV niosą informację o czujności (Chua 2012; Lu 2022). U nas RMSSD korelowało z czasem reakcji ujemnie u 16/16 osób, choć słabo (r = −0,23).
+4. Tętno i HRV niosą informację o czujności (Chua 2012; Lu 2022). U nas (COG-BCI, 29 osób, notebook 10) RMSSD i szybkość reakcji 1/RT spadają razem (r = 0,18, 22 z 29 osób), ale po uwzględnieniu czasu zadania związek znika (+0,05, CI −0,03 do 0,17); wcześniejsze „16/16, r = −0,23” dotyczyło mediany RT po uśrednieniu sesji i nie utrzymało się na zalecanej mierze. Na lapsach brak mocy (12 osób).
 5. Tanie wearables dobrze mierzą HR i trendy u tej samej osoby, słabiej wartości bezwzględne HRV i źle w ruchu. Dlatego chcemy osobistej linii bazowej, a nie progów populacyjnych.
 6. Fuzja sygnałów w laboratorium zwykle poprawia wynik, a kontekst (pora dnia, czas zadania) wyraźnie pomaga.
 

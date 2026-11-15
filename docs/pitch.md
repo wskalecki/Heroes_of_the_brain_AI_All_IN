@@ -70,7 +70,7 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 | Senność w danych publicznych: alfa rośnie u 11 z 11 osób, AUC 0,75 (0,52–0,91) | notebook 04, wykres `img/drowsiness-public-auc-and-calibration.png` |
 | Model osobisty: trafność 0,83 (AUC 0,90) wobec 0,66–0,72 dla jednego modelu dla wszystkich | notebook 04, tabela strategii |
 | Kontekst (czas jazdy, pora doby) podnosi AUC z 0,76 do 0,88 | Lu i in. 2022, `podstawy-naukowe.md` poz. 3 |
-| HRV i czas reakcji: r = −0,23, kierunek ujemny u 16 z 16 osób (mediana RT; do przeliczenia na lapsach i 1/RT, zadanie B10, do tego czasu nie na slajd) | notebook 05 |
+| HRV zmienia się z czasem zadania tak jak czujność, ale jej nie mierzy (RMSSD a 1/RT: r = 0,18, po uwzględnieniu czasu zadania 0,05; 29 osób) | notebook 10 |
 | 15 minut monotonii (T1, jedna osoba, KSS 5) bez ani jednego fałszywego alarmu, zamknięcie oczu wykryte po ok. 9 s | [`sesja-monotonii-wojtek.md`](sesja-monotonii-wojtek.md) |
 
 ### 8. Co zweryfikowane, a co założone (zadanie D4)
