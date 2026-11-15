@@ -72,6 +72,7 @@ class Config:
     probe_norm_factor: float = 1.5     # personal norm: lapse above 1.5 x own median RT (as in Cui et al.)
     probe_norm_min: int = 3            # passed responses needed before the personal norm is used
     probe_timeout_ms: float = 3000.0
+    probe_min_rt_ms: float = 100.0     # faster than this is a false start (anticipation), not a measured reaction (PVT convention)
     probe_stop_s: float = 120.0        # a failed probe keeps "stop" until a passed probe or this long
 
     # Slow index: fatigue trend
@@ -84,7 +85,9 @@ class Config:
     # Reserve (assumptions, see module docstring)
     time_scale: float = 1.0        # shift seconds per real second (demo time compression)
     drain_per_hour: float = 12.0   # baseline: 100 -> 46 after 4.5 h of work
-    slow_gain: float = 0.5         # extra drain per sigma of the slow index
+    # The slow index (theta + alpha) / beta is not validated on our hardware (notebooks 03 and 04: it fails with the
+    # Fp1 reference), so it does not change the reserve by default (issue #19). Kept as a knob for experiments.
+    slow_gain: float = 0.0         # extra drain per sigma of the slow index
     slow_cap: float = 3.0
     lapse_penalty: float = 8.0     # reserve points lost per lapse
     recharge_per_hour: float = 60.0  # a 45 min break restores 45 points

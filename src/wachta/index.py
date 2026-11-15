@@ -70,7 +70,13 @@ class VigilanceIndex:
         self._event_probe_pending = False
 
     def start_break(self) -> None:
+        """Rest is not work: eyes closed during a break is neither an event nor a penalty."""
         self.on_break = True
+        self.lapse = False
+        self.lapse_kind = None
+        self._above = self._below = 0
+        self._event_probe_pending = False
+        self._probe_requested = False
 
     def end_break(self) -> None:
         self.on_break = False
@@ -90,8 +96,14 @@ class VigilanceIndex:
         return cfg.probe_norm_factor * median
 
     def record_probe(self, t: float, rt_ms: float | None) -> bool:
-        """Store a probe result; returns True when the probe failed."""
+        """Store a probe result; returns True when the probe failed.
+
+        A reaction that is not a number, negative or faster than ``probe_min_rt_ms`` is a false start or bad
+        input: it is not counted at all, neither as a pass nor as a lapse.
+        """
         cfg = self.cfg
+        if rt_ms is not None and not (math.isfinite(rt_ms) and rt_ms >= cfg.probe_min_rt_ms):
+            return False
         threshold = self.probe_threshold_ms()
         self.probes_done += 1
         self.last_rt_ms = rt_ms
@@ -213,7 +225,9 @@ class VigilanceIndex:
         fast = self._fast()
         slow = self._slow(t)
 
-        new_lapse = self._update_lapse(t, fast) if calibrated else False
+        if self.on_break:
+            self._above = self._below = 0          # no events while resting
+        new_lapse = self._update_lapse(t, fast) if calibrated and not self.on_break else False
         if self.lapse:
             self.lapse_kind = self._classify_lapse(t, last_blink, blinks_ready)
             # Count each event once, by the kind it settles on after the confirmation period.

@@ -59,8 +59,15 @@ def test_reserve_drains_with_work_and_recovers_on_break():
     assert out["reserve"] == pytest.approx(100.0 - 5 * cfg.drain_per_hour + cfg.recharge_per_hour)
 
 
-def test_fatigue_trend_makes_the_reserve_drain_faster():
+def test_the_slow_index_does_not_change_the_reserve_by_default():
     cfg = dataclasses.replace(Config(), time_scale=60.0)
+    a = _run(VigilanceIndex(cfg), 0, 120)
+    b = _run(VigilanceIndex(cfg), 0, 120, _z(tab_ratio=2.0))
+    assert b["reserve"] == a["reserve"] and b["drain_per_hour"] == a["drain_per_hour"]
+
+
+def test_fatigue_trend_makes_the_reserve_drain_faster_when_enabled():
+    cfg = dataclasses.replace(Config(), time_scale=60.0, slow_gain=0.5)
     rested, tired = VigilanceIndex(cfg), VigilanceIndex(cfg)
     a = _run(rested, 0, 120)
     b = _run(tired, 0, 120, _z(tab_ratio=2.0))
@@ -216,3 +223,37 @@ def test_personal_norm_replaces_the_fixed_threshold():
     assert index.probe_threshold_ms() == pytest.approx(330.0)   # 1.5 x median 220 ms
     assert index.record_probe(20.0, 340.0)                      # passes PVT-B, fails the personal norm
 
+
+
+def test_eyes_closed_during_a_break_is_not_an_event():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    index.start_break()
+    before = _run(index, 30, 1)["reserve"]
+    out = _run(index, 31, 20, _z(alpha_prom=6.0))
+    assert not out["lapse"] and out["lapse_count"] == 0 and out["state"] == "break"
+    assert out["reserve"] >= before                  # resting restores the reserve, no penalty
+    index.end_break()
+    out = _run(index, 51, 40)
+    assert out["lapse_count"] == 0 and not out["probe"] and out["state"] == "ok"
+
+
+def test_a_lapse_in_progress_ends_when_a_break_starts():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    assert _run(index, 30, 6, _z(alpha_prom=6.0))["lapse"]
+    index.start_break()
+    out = _run(index, 36, 1, _z(alpha_prom=6.0))
+    assert not out["lapse"] and out["lapse_kind"] is None and out["lapse_count"] == 1
+
+
+def test_false_starts_and_garbage_reactions_are_not_counted():
+    index = VigilanceIndex(Config())
+    _run(index, 0, 30)
+    for rt in (0.0, 40.0, -5.0, float("nan"), float("inf")):
+        assert not index.record_probe(30.0, rt)
+    out = _run(index, 31, 1)
+    assert out["probes_done"] == 0 and out["probe_lapses"] == 0 and out["last_rt_ms"] is None
+    assert index.probe_threshold_ms() == Config().probe_lapse_ms
+    assert not index.record_probe(32.0, 250.0)       # a real reaction still counts
+    assert index.probes_done == 1

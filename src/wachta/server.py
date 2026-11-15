@@ -85,7 +85,10 @@ class Worker:
         if probe_id != self.pending_probe:
             return False
         self.pending_probe = None
-        value = None if rt_ms is None else float(rt_ms)
+        try:
+            value = None if rt_ms is None else float(rt_ms)
+        except (TypeError, ValueError):
+            return False                      # garbage from the page: forget the probe, count nothing
         self.pipeline.index.record_probe(self.last_t, value)
         return True
 
@@ -308,8 +311,11 @@ def main() -> None:
     import uvicorn
 
     logging.basicConfig(level=logging.INFO, format="%(message)s")
-    cfg = dataclasses.replace(Config(), time_scale=args.time_scale, **context_settings(args.wake, args.clock))
-    workers = build_workers(args, cfg)
+    try:
+        cfg = dataclasses.replace(Config(), time_scale=args.time_scale, **context_settings(args.wake, args.clock))
+        workers = build_workers(args, cfg)
+    except (ValueError, FileNotFoundError) as error:
+        parser.error(str(error))               # a readable message instead of a traceback
     log.info("Wachta: http://%s:%s  (%s)", args.host, args.port, ", ".join(w.source.name for w in workers))
     uvicorn.run(create_app(workers, cfg), host=args.host, port=args.port, log_level="warning")
 

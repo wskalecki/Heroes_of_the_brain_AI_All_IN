@@ -199,6 +199,15 @@ def test_probe_reaches_the_page_and_the_answer_is_recorded():
         assert not worker.probe_response(probe["id"], 100)
 
 
+def test_garbage_probe_answers_are_ignored_without_breaking_the_worker():
+    app, worker = _app(5)
+    for bad in ("abc", {"x": 1}, [1]):
+        probe_id = worker.new_probe()
+        assert not worker.probe_response(probe_id, bad)
+        assert worker.pending_probe is None
+    assert worker.pipeline.index.probes_done == 0
+
+
 def test_new_shift_resets_the_whole_team():
     cfg = Config()
     workers = [Worker(f"w{i}", ReplaySource(_noise(80, seed=i), SFREQ, name=f"T{i}", speed=200.0), cfg) for i in range(2)]
