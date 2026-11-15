@@ -20,7 +20,7 @@ def main() -> None:
     img_driver = b64_img(ART / "img/driver-night-broll.jpg")
     img_nurse = b64_img(ART / "img/nurse-shift-broll.jpg")
     img_dash_probe = b64_img(ART / "img/dashboard-proba-reakcji.jpg")
-    img_dash_stop = b64_img(ART / "img/dashboard-przerwa-teraz.jpg")
+    img_dash_stop = b64_img(REPO / "docs/img/tryb-stop.png")  # simplified stop view, banner without "mikrosen"
     img_trafnosc = b64_img(REPO / "docs/img/trafnosc-na-nagraniach.png")
     img_drowsiness = b64_img(REPO / "docs/img/drowsiness-public-auc-and-calibration.png")
     img_heart = b64_img(
@@ -313,7 +313,7 @@ def main() -> None:
         </div>
         <div class="card">
           <h3>Prywatność (AI Act)</h3>
-          <p>Surowy sygnał EEG zostaje na stanowisku pracownika — przełożony widzi wyłącznie gotowość.</p>
+          <p>Surowy sygnał EEG zostaje na stanowisku pracownika — przełożony widzi gotowość i rezerwę (%), bez EEG.</p>
         </div>
       </div>
     </div>
