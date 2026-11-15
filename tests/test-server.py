@@ -1,6 +1,8 @@
 import asyncio
+from pathlib import Path
 
 import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 
 from wachta.config import Config
@@ -38,6 +40,42 @@ def test_replay_source_without_loop_stops_at_the_end():
         return sum([1 async for _ in source.chunks()])
 
     assert asyncio.run(count()) == 2
+
+
+def test_replay_segment_loops_inside_its_bounds():
+    eeg = np.tile(np.arange(10, dtype=float), (8, 1)) * 1e-3          # 10 samples, value = index (SFREQ 1 Hz here)
+    source = ReplaySource(eeg, 1.0, speed=1000.0, chunk_s=1.0, start_s=2.0, end_s=5.0)
+
+    async def take(n):
+        out = []
+        async for chunk in source.chunks():
+            out.append(float(chunk[0, 0] * 1e3))
+            if len(out) == n:
+                break
+        return out
+
+    assert asyncio.run(take(8)) == [2, 3, 4, 2, 3, 4, 2, 3]
+    with pytest.raises(ValueError):
+        ReplaySource(eeg, 1.0, start_s=5.0, end_s=5.0)
+
+
+def test_team_spec_accepts_a_segment_and_hyphenated_recording_names(monkeypatch):
+    from wachta import server
+
+    seen = {}
+
+    class Spy:
+        @classmethod
+        def from_file(cls, path, **kwargs):
+            seen.update(kwargs, path=path)
+            return ReplaySource(_noise(1), SFREQ, name=kwargs["name"])
+
+    monkeypatch.setattr(server, "ReplaySource", Spy)
+    monkeypatch.setattr(server, "resolve_recording", lambda name: Path(f"x/task-{name}_run.fif"))
+    server._replay_worker("w1", "wojtek-t1:380-520", Config(), 1.0, 0.0)
+    assert seen["start_s"] == 380.0 and seen["end_s"] == 520.0 and str(seen["path"]).endswith("task-wojtek-t1_run.fif")
+    server._replay_worker("w1", "rudy", Config(), 1.0, 7.0)
+    assert seen["start_s"] == 7.0 and seen["end_s"] is None
 
 
 def _app(seconds=80):

@@ -2,6 +2,7 @@
 
 Examples:
     python -m wachta.server --file filip --start 540 --team rudy:230 adi:240
+    python -m wachta.server --file filip --team rudy:380-520 adi:370-500   # team members loop over a calm segment
     python -m wachta.server --source board --team rudy:230 adi:240
 
 The first source is the worker shown in the main view. ``--team`` adds replayed
@@ -245,12 +246,14 @@ def create_app(workers: list[Worker], cfg: Config) -> FastAPI:
 
 
 def _replay_worker(worker_id: str, spec: str, cfg: Config, speed: float, start_s: float) -> Worker:
-    """Build a replayed worker from ``name`` or ``name:start_seconds``."""
+    """Build a replayed worker from ``name``, ``name:start`` or ``name:start-end`` (seconds, end loops back to start)."""
     name, _, offset = spec.partition(":")
+    offset, _, end = offset.partition("-")
     path = resolve_recording(name)
     label = path.name.split("task-")[1].split("_")[0] if "task-" in path.name else path.stem
     source = ReplaySource.from_file(
-        path, name=f"{label.capitalize()} (nagranie)", speed=speed, start_s=float(offset) if offset else start_s
+        path, name=f"{label.capitalize()} (nagranie)", speed=speed, start_s=float(offset) if offset else start_s,
+        end_s=float(end) if end else None,
     )
     return Worker(worker_id, source, cfg)
 
@@ -298,7 +301,7 @@ def main() -> None:
     parser.add_argument("--start", type=float, default=0.0, help="replay start offset in seconds")
     parser.add_argument("--speed", type=float, default=1.0, help="replay speed, 1 is real time")
     parser.add_argument("--name", help="display name of the main worker")
-    parser.add_argument("--team", nargs="*", default=[], metavar="NAME[:START]",
+    parser.add_argument("--team", nargs="*", default=[], metavar="NAME[:START[-END]]",
                         help="extra replayed recordings for the supervisor panel")
     parser.add_argument("--time-scale", type=float, default=60.0,
                         help="shift seconds per real second; 60 means one minute of demo is one hour of work")
