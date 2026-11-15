@@ -410,10 +410,10 @@ class ProblemSlide:
         d.text((108, 180), "Problem: przepisy patrzą na zegar, nie na mózg", font=font(32, True), fill=INK)
         d.text((1152, 575), "Pętla adaptacyjna Wachty (Adaptive Systems):", font=font(24, True), fill=INK)
         bullets = [
-            ("20% wypadków w transporcie komercyjnym", "wynika ze zmęczenia i senności za kierownicą\n(Komisja Europejska / ERSO 2023)."),
+            ("Do 20% wypadków drogowych wiąże się ze zmęczeniem", "zmęczenie i senność za kierownicą to jedna z głównych przyczyn\n(Komisja Europejska / ERSO 2023)."),
             ("17–19 godzin bez snu = 0,05% alkoholu we krwi", "sprawność psychomotoryczna spada poniżej bezpiecznego progu\n(Dawson i Reid 1997, Nature)."),
             ("Sztywna norma czasu pracy traktuje wszystkich tak samo", "po tych samych 8 godzinach jedna osoba ma pełną rezerwę,\na druga wchodzi w zamknięte oczy."),
-            ("Kamera w kabinie widzi dopiero zamknięte powieki", "nie sprawdza czasu reakcji po incydencie i nie wskazuje\nzmiennika w zespole."),
+            ("Kamera w kabinie widzi oczy i głowę", "Wachta dokłada osobisty profil, sprawdzenie reakcji\ni wskazanie zmiennika w zespole."),
         ]
         steps = [
             "1. Kalibracja osobista (60 s czystego EEG na starcie zmiany)",
@@ -711,14 +711,14 @@ def subtitles(cap: Capture) -> list[tuple[float, float, str, str]]:
     rt_txt = rt if rt.endswith("ms") else "ok. 250 ms"
     return [
         (0.0, 6.0, "1/6  Problem na żywo", "2:30 w nocy, 19 godzin od przebudzenia. Przepisy mierzą zegar — Wachta mierzy człowieka."),
-        (6.0, 15.0, "1/6  Problem na żywo", "Kiedy mózg przestaje reagować, Wachta każe zjechać i od razu wskazuje zmiennika z największą rezerwą."),
-        (15.0, 24.0, "2/6  Dlaczego zegar nie wystarcza", "Normy czasu pracy traktują wszystkich tak samo, a senność powoduje ok. 20% wypadków w transporcie."),
-        (24.0, 33.0, "2/6  Dlaczego zegar nie wystarcza", "Po 18 h czuwania sprawność spada jak przy 0,05% alkoholu. Kamera widzi tylko powieki — my mierzymy EEG i reakcję."),
-        (33.0, 44.0, "3/6  Kalibracja i kontekst nocy", f"Po 60 s osobistej kalibracji system śledzi alfę z tyłu głowy i mrugnięcia. W nocy rezerwa spada {cf}× szybciej."),
+        (6.0, 15.0, "1/6  Problem na żywo", "Gdy oczy zamykają się na dłużej niż kilka sekund, Wachta każe zjechać i od razu wskazuje zmiennika z największą rezerwą."),
+        (15.0, 24.0, "2/6  Dlaczego zegar nie wystarcza", "Normy czasu pracy traktują wszystkich tak samo, a ze zmęczeniem wiąże się do 20% wypadków drogowych."),
+        (24.0, 33.0, "2/6  Dlaczego zegar nie wystarcza", "Po 18 h czuwania sprawność spada jak przy 0,05% alkoholu. Kamera widzi oczy. Wachta dokłada osobisty profil i próbę reakcji."),
+        (33.0, 44.0, "3/6  Kalibracja i kontekst nocy", f"Po 60 s osobistej kalibracji system śledzi alfę z tyłu głowy i mrugnięcia. W nocy po długim czuwaniu zakładamy spadek rezerwy {cf}× szybszy (założenie modelu)."),
         (44.0, 54.0, "3/6  Próba reakcji w normie", f"Krótka próba sprawdza czas reakcji względem osobistej normy pracownika: {rt_txt} — reakcja w normie."),
         (54.0, 64.0, "4/6  Zamknięte oczy i panel przełożonego", "Zamknięcie oczu podnosi alfę na O1/O2 powyżej progu 2,5 przez 3 s. Przełożony widzi tylko gotowość zespołu."),
-        (64.0, 76.0, "4/6  Potwierdzenie po spadku czujności", "Gdy oczy znów się otworzą, system sam sprawdza, czy mózg wrócił. Brak reakcji utrzymuje nakaz przerwy."),
-        (76.0, 90.0, "4/6  Dyżur w szpitalu i regeneracja", "Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę. Odpoczynek realnie odnawia rezerwę czujności."),
+        (64.0, 76.0, "4/6  Potwierdzenie po spadku czujności", "Gdy oczy znów się otworzą, system sam sprawdza, czy człowiek reaguje. Brak reakcji utrzymuje nakaz przerwy."),
+        (76.0, 90.0, "4/6  Dyżur w szpitalu i regeneracja", "Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę. W modelu rezerwy odpoczynek ją odnawia."),
         (90.0, 99.0, "5/6  Walidacja na 5 nagraniach zespołu", "Ten sam kod wykrył 5 z 5 bloków zamkniętych oczu i dał tylko 1 fałszywy alarm w 48 minutach (0 w monotonii T1)."),
         (99.0, 108.0, "5/6  Walidacja na zbiorach publicznych", "W danych publicznych (Cui i in., CC BY 4.0) alfa rośnie u 11 z 11 osób, a model osobisty podnosi AUC z 0,76 do 0,90."),
         (108.0, 114.0, "6/6  Podsumowanie i pilotaż", "Następny krok: pilotaż sprawdzający, czy osobisty limit rezerwy wyprzedza spadki czujności lepiej niż zegar."),

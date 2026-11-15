@@ -56,7 +56,7 @@ wyłącznie na potrzeby projektu, za zgodą nagranych osób (patrz wyżej). Nie 
 (prawa do projektu zostają przy uczestnikach), a nie blokuje komercjalizacji.
 
 **Punkty otwarte.**
-1. Czy repo ma być publiczne po hackathonie. Jeśli tak, trzeba ponownie potwierdzić zgodę nagranych osób albo usunąć nagrania z historii.
+1. Czy repo ma być publiczne po hackathonie. **Rozstrzygnięte (Adrian, 15.11):** repo jest publiczne (link w zgłoszeniu), nagrania zespołu zostają w `data/recordings/`; MIT ich nie obejmuje.
 2. `brainaccess-board` (opcja `live`) jest własnościowy (PyPI: Proprietary). Nie dołączamy go do repo; trzeba potwierdzić u BrainAccess,
    że użycie w konkursie jest dozwolone (to SDK do sprzętu od organizatora).
 
