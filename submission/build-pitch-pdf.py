@@ -5,10 +5,8 @@ import base64
 from pathlib import Path
 import subprocess
 
-REPO = Path("/home/antigravity/wskalecki/Heroes_of_the_brain_AI_All_IN")
-ART = Path(
-    "str(Path(__file__).resolve().parent)"
-)
+ART = Path(__file__).resolve().parent
+REPO = ART.parent
 
 
 def b64_img(path: Path) -> str:
@@ -19,10 +17,10 @@ def b64_img(path: Path) -> str:
 
 
 def main() -> None:
-    img_driver = b64_img(ART / "driver_night_broll_1794703303398.jpg")
-    img_nurse = b64_img(ART / "nurse_shift_broll_1794703305071.jpg")
-    img_dash_probe = b64_img(REPO / "docs/img/dashboard-proba-reakcji.png")
-    img_dash_stop = b64_img(REPO / "docs/img/dashboard-przerwa-teraz.png")
+    img_driver = b64_img(ART / "img/driver-night-broll.jpg")
+    img_nurse = b64_img(ART / "img/nurse-shift-broll.jpg")
+    img_dash_probe = b64_img(ART / "img/dashboard-proba-reakcji.jpg")
+    img_dash_stop = b64_img(ART / "img/dashboard-przerwa-teraz.jpg")
     img_trafnosc = b64_img(REPO / "docs/img/trafnosc-na-nagraniach.png")
     img_drowsiness = b64_img(REPO / "docs/img/drowsiness-public-auc-and-calibration.png")
     img_heart = b64_img(
@@ -507,7 +505,7 @@ def main() -> None:
           <li><strong>EEG potyliczne (O1, O2):</strong> wyrazistość pasma alfa (8–12 Hz) względem sąsiednich pasm w oknie 4 s co 1 s.</li>
           <li><strong>EEG czołowe (F3, F4):</strong> detekcja mrugnięć i stanu oczu (<code>otwarte</code> / <code>zamknięte</code>).</li>
           <li><strong>Kontekst zmiany:</strong> czas od przebudzenia + pora doby (mnożnik spadku rezerwy do 2,56× w nocy).</li>
-          <li><strong>Czas reakcji:</strong> odpowiedź spacją/klikiem na krótki ton 660 Hz (okno 3 s).</li>
+          <li><strong>Czas reakcji:</strong> odpowiedź spacją/klikiem na krótki sygnał 880 Hz (okno 3 s).</li>
           <li><strong>Kontrola jakości:</strong> odrzucanie okien z artefaktami ruchu/EMG (> 150 µV ptp).</li>
         </ul>
       </div>
@@ -520,7 +518,7 @@ def main() -> None:
         <ul class="clean" style="margin-top: 8px;">
           <li><strong>Kalibracja indywidualna (60 s):</strong> mediana i MAD na czystych oknach wyznaczają jednostkę <em>z</em> danej osoby.</li>
           <li><strong>Rozdzielenie przyczyny spadku:</strong>
-            <br>• <em>Zamknięte oczy / mikrosen</em> (alfa <em>z</em> ≥ 2,5 przez ≥ 3 s + brak mrugnięć)
+            <br>• <em>Zamknięte oczy</em> (alfa <em>z</em> ≥ 2,5 przez ≥ 3 s + brak mrugnięć)
             <br>• <em>Spadek reaktywności przy otwartych oczach</em> (próba reakcji > 1,5× normy lub > 3 s).</li>
           <li><strong>Rezerwa czujności (0–100%):</strong> spada z pracą i incydentami, <strong>odnawia się w trakcie przerwy</strong> (+2,2 pkt%/min).</li>
         </ul>
@@ -534,7 +532,7 @@ def main() -> None:
         <ul class="clean" style="margin-top: 8px;">
           <li><span class="badge-green">Możesz pracować</span> — cicha praca, prognoza czasu do kolejnej przerwy.</li>
           <li><span class="badge-amber">Zaplanuj przerwę</span> — wyzwalana automatycznie <strong>próba reakcji</strong> weryfikująca czujność.</li>
-          <li><span class="badge-red">Przerwa teraz</span> — dwutonowy alarm dźwiękowy (880/660 Hz) + nakaz zjechania / przekazania zmiany.</li>
+          <li><span class="badge-red">Przerwa teraz</span> — czerwony baner + nakaz zjechania / przekazania zmiany.</li>
           <li><strong>Weryfikacja po incydencie:</strong> po otwarciu oczu system sam wystawia próbę reakcji — powrót do zielonego stanu wymaga jej zaliczenia.</li>
           <li><strong>Panel przełożonego:</strong> automatycznie wskazuje zmiennika z najwyższą rezerwą.</li>
         </ul>
@@ -559,35 +557,35 @@ def main() -> None:
     <span>Wachta · Scenariusz Demo (na żywo z BrainAccess MINI oraz w trybie odtwarzania)</span>
     <span class="pill">Slajd 6 / 10</span>
   </div>
-  <h1 class="headline">Ten sam przebieg w filmie i na żywo: noc, kalibracja, próba reakcji, mikrosen, zmiennik i przerwa.</h1>
+  <h1 class="headline">Ten sam przebieg w filmie i na żywo: noc, kalibracja, próba reakcji, zamknięte oczy, zmiennik i przerwa.</h1>
   <div class="content">
     <div class="col" style="flex: 0.95; justify-content: space-between;">
       <div class="card" style="padding: 14px 18px;">
         <h3>Przebieg demonstracji (docs/scenariusz-demo.md)</h3>
         <ul class="clean" style="gap: 8px; margin-top: 6px;">
-          <li><strong>1. Kontekst nocy (02:30, 19 h czuwania):</strong> po 60 s kalibracji osobistej system pokazuje stan <span class="badge-green">Możesz pracować</span> i tempo spadku rezerwy 26%/h.</li>
-          <li><strong>2. Szybka próba reakcji:</strong> odpowiedź spacją w <strong>248 ms</strong> (w osobistej normie) utrzymuje zielony status.</li>
-          <li><strong>3. Zamknięcie oczu (mikrosen):</strong> wzrost alfy na O1/O2 powyżej progu 2,5 przez 3 s uruchamia <span class="badge-red">Przerwa teraz</span> i alarm dźwiękowy.</li>
+          <li><strong>1. Kontekst nocy (02:30, 19 h czuwania):</strong> po 60 s kalibracji osobistej system pokazuje stan <span class="badge-green">Możesz pracować</span> i tempo spadku rezerwy ok. 30%/h (w nocy ponad 2,4× szybciej niż w dzień).</li>
+          <li><strong>2. Szybka próba reakcji:</strong> odpowiedź spacją w <strong>325 ms</strong> (w osobistej normie) utrzymuje zielony status.</li>
+          <li><strong>3. Zamknięcie oczu:</strong> wzrost alfy na O1/O2 powyżej progu 2,5 przez 3 s uruchamia <span class="badge-red">Przerwa teraz</span> i czerwony baner z nakazem zjechania.</li>
           <li><strong>4. Weryfikacja przy otwartych oczach:</strong> po otwarciu oczu system sam prosi o reakcję — <strong>brak odpowiedzi (> 3 s)</strong> potwierdza spadek czujności.</li>
-          <li><strong>5. Zmiennik i regeneracja:</strong> panel przełożonego wskazuje zmiennika (<em>Rudy — 84%</em>), a kliknięcie <code>Rozpocznij przerwę</code> odnawia rezerwę.</li>
+          <li><strong>5. Zmiennik i regeneracja:</strong> panel przełożonego wskazuje zmiennika (<em>Rudy — 93%</em>), a kliknięcie <code>Rozpocznij przerwę</code> odnawia rezerwę.</li>
         </ul>
       </div>
       <div class="card" style="background: #eff6ff; border-color: #bfdbfe; padding: 14px 18px;">
-        <h3 style="color: #1e3a8a;">Uruchomienie jednym poleceniem</h3>
+        <h3 style="color: #1e3a8a;">Uruchomienie: na żywo i z nagrania</h3>
         <p style="font-family: monospace; font-size: 11.5pt; background: #ffffff; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;">
-          wachta --source board --wake 19 --clock 02:30<br>
-          wachta --source replay --file data/recordings/wojtek_1-raw.fif --speed 4
+          python -m wachta.server --source board --time-scale 30 --wake 07:00 --clock 02:30<br>
+          python -m wachta.server --file wojtek --start 200 --time-scale 10 --wake 07:00 --clock 02:30
         </p>
       </div>
     </div>
     <div class="col" style="flex: 1.05; gap: 12px;">
       <div class="img-box" style="flex: 1; padding: 8px;">
         <img src="{img_dash_probe}" style="max-height: 235px;">
-        <div class="source">Krok 2 i 4: Aktywna próba reakcji na dashboardzie (pomarańczowy krąg + ton 660 Hz).</div>
+        <div class="source">Krok 2 i 4: aktywna próba reakcji (klatka z odtwarzania nagrania EEG) (pomarańczowy krąg + ton 880 Hz).</div>
       </div>
       <div class="img-box" style="flex: 1; padding: 8px;">
         <img src="{img_dash_stop}" style="max-height: 235px;">
-        <div class="source">Krok 3 i 5: Stan „Przerwa teraz” po zamknięciu oczu i wskazanie zmiennika w Panelu przełożonego.</div>
+        <div class="source">Krok 3 i 5: „Przerwa teraz” po zamknięciu oczu i zmiennik w panelu przełożonego (klatka z odtwarzania nagrania EEG).</div>
       </div>
     </div>
   </div>
@@ -650,7 +648,7 @@ def main() -> None:
       </div>
       <div class="img-box" style="flex: 1; padding: 8px;">
         <img src="{img_drowsiness}" style="max-height: 240px;">
-        <div class="source">Zbiór Cui i in. (2022, 11 osób): kalibracja osobista podnosi AUC z 0,76 do 0,90.</div>
+        <div class="source">Zbiór Cui i in. (2022, 11 osób): model osobisty (uczony na danych tej osoby) podnosi AUC z 0,76 do 0,90.</div>
       </div>
     </div>
   </div>
