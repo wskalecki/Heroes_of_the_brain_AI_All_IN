@@ -55,6 +55,8 @@ Trzy elementy:
 Diagram: sygnał (EEG: alfa z tyłu głowy, mrugnięcia; kontekst; reakcja) → stan (rezerwa czujności, rodzaj spadku) → zmiana zachowania
 („zaplanuj przerwę”, „przerwa teraz”, próba reakcji, zmiennik w panelu przełożonego). To jest odpowiedź na kryterium „zgodność z tematem”.
 
+**Sygnały biologiczne w pętli, wprost:** (1) EEG: wyrazistość alfy z tyłu głowy (O1, O2); (2) mrugnięcia i stan oczu (z elektrod czołowych F3, F4 tego samego czepka); (3) reakcja behawioralna: krótka próba dźwiękowa, czas reakcji względem osobistej normy. Kontekst (czas od przebudzenia, pora doby) ustawia tempo spadku rezerwy. Tętno z paska piersiowego zbadaliśmy osobno (sesja T1: 93 bpm w spoczynku, 97 bpm w monotonii; notebooki 05 i 10), ale nie jest częścią pętli na żywo: to następny krok (issue #17).
+
 ### 6. Demo
 
 Film albo demo na żywo według [`scenariusz-demo.md`](scenariusz-demo.md). Ten sam przebieg: noc, kalibracja, szybka reakcja,

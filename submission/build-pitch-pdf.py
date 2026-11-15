@@ -391,12 +391,12 @@ def main() -> None:
     <div class="col" style="flex: 1.15; gap: 10px;">
       <div class="card" style="padding: 13px 18px;">
         <h3>1. Podatność na brak snu to stała cecha osobnicza (Van Dongen i in. 2004)</h3>
-        <p>Spadki sprawności po deprywacji snu różnią się między ludźmi wielokrotnie i są <strong>systematyczne oraz powtarzalne u tej samej osoby</strong>. Jedna norma czasu pracy z definicji nie pasuje do wszystkich.</p>
+        <p>Spadki sprawności po deprywacji snu różnią się między ludźmi wielokrotnie i są <strong>powtarzalne u tej samej osoby</strong>. Jedna norma nie pasuje do wszystkich.</p>
         <div class="source">Źródło: Van Dongen i in. (2004), Sleep 27(3):423–433 (docs/podstawy-naukowe.md, poz. 28).</div>
       </div>
       <div class="card" style="padding: 13px 18px;">
         <h3>2. Kamera widzi oczy — Wachta dokłada osobisty profil i sprawdzenie reakcji</h3>
-        <p>Kamera DMS wykrywa zamknięte powieki i zachowanie kierowcy. Nasz detektor alfy wykrywa to samo zdarzenie (zamknięcie oczu), więc nie obiecujemy, że zrobi to wcześniej ani trafniej. Różnica jest gdzie indziej: Wachta kalibruje się do osoby, krótką próbą sprawdza, czy człowiek naprawdę reaguje, i zmienia plan pracy (przerwa, zmiennik), zamiast tylko alarmować.</p>
+        <p>Kamera DMS widzi zamknięte powieki; nasz detektor alfy wykrywa to samo zdarzenie, więc nie obiecujemy, że lepiej. Różnica: osobisty profil, próba reakcji i zmiana planu pracy (przerwa, zmiennik) zamiast samego alarmu.</p>
       </div>
       <div class="card" style="padding: 13px 18px;">
         <h3>3. Zegarek (HRV) nie zastąpi EEG — to osobny sygnał uzupełniający</h3>
@@ -405,13 +405,13 @@ def main() -> None:
       </div>
       <div class="card" style="padding: 13px 18px;">
         <h3>4. Prawo lotnicze już dopuszcza normy oparte na danych (FRMS)</h3>
-        <p>Systemy zarządzania ryzykiem zmęczenia (FRMS) są legalną alternatywą dla sztywnych limitów, ale w praktyce wciąż opierają się głównie na limitach czasu i subiektywnej samoocenie KSS.</p>
-        <div class="source">Źródło: IATA FRMS White Paper (2025) oraz dokumenty robocze ICAO (Zgromadzenie A42).</div>
+        <p>FRMS to legalna alternatywa dla sztywnych limitów, ale w praktyce wciąż opiera się na czasie pracy i samoocenie KSS.</p>
+        <div class="source">Źródło: IATA FRMS White Paper (2025).</div>
       </div>
     </div>
     <div class="col" style="flex: 0.85; gap: 10px;">
       <div class="img-box" style="flex: 1; padding: 8px;">
-        <img src="{img_heart}" style="max-height: 310px;">
+        <img src="{img_heart}" style="max-height: 250px;">
         <div class="source" style="text-align: center; margin-top: 6px;">
           Notebook 10 (COG-BCI, 29 osób): HRV (RMSSD) odzwierciedla czas na zadaniu, ale po jego uwzględnieniu nie mierzy spadków czujności (<em>r</em> = 0,05).
         </div>
@@ -499,14 +499,15 @@ def main() -> None:
   <div class="content" style="flex-direction: column; justify-content: space-between;">
     <div class="flow-grid" style="flex: 1;">
       <div class="card" style="border-left: 6px solid #2563eb;">
-        <div class="pill" style="margin-bottom: 8px;">1. WEJŚCIE: 4 STRUMIENIE</div>
+        <div class="pill" style="margin-bottom: 8px;">1. WEJŚCIE: SYGNAŁY</div>
         <h3>Sygnał biologiczny i kontekst</h3>
         <ul class="clean" style="margin-top: 8px;">
-          <li><strong>EEG potyliczne (O1, O2):</strong> wyrazistość pasma alfa (8–12 Hz) względem sąsiednich pasm w oknie 4 s co 1 s.</li>
-          <li><strong>EEG czołowe (F3, F4):</strong> detekcja mrugnięć i stanu oczu (<code>otwarte</code> / <code>zamknięte</code>).</li>
-          <li><strong>Kontekst zmiany:</strong> czas od przebudzenia + pora doby (mnożnik spadku rezerwy do 2,56× w nocy).</li>
-          <li><strong>Czas reakcji:</strong> odpowiedź spacją/klikiem na krótki sygnał 880 Hz (okno 3 s).</li>
-          <li><strong>Kontrola jakości:</strong> odrzucanie okien z artefaktami ruchu/EMG (> 150 µV ptp).</li>
+          <li><strong>EEG potyliczne (O1, O2):</strong> wyrazistość alfy (8–12 Hz), okno 2 s co 1 s.</li>
+          <li><strong>EEG czołowe (F3, F4):</strong> mrugnięcia i stan oczu, ten sam czepek.</li>
+          <li><strong>Reakcja (drugi sygnał):</strong> próba dźwiękowa 880 Hz, czas względem osobistej normy.</li>
+          <li><strong>Kontekst:</strong> czas od przebudzenia i pora doby (demo 02:30, 19 h: ok. 2,4× szybciej; założenie).</li>
+          <li><strong>Jakość:</strong> okna &gt; 300 µV i płaski zapis odrzucane.</li>
+          <li><strong>Tętno z paska:</strong> osobne badanie T1, jeszcze nie w pętli.</li>
         </ul>
       </div>
 
@@ -531,7 +532,7 @@ def main() -> None:
         <h3>Decyzja i zamknięcie pętli</h3>
         <ul class="clean" style="margin-top: 8px;">
           <li><span class="badge-green">Możesz pracować</span> — cicha praca, prognoza czasu do kolejnej przerwy.</li>
-          <li><span class="badge-amber">Zaplanuj przerwę</span> — wyzwalana automatycznie <strong>próba reakcji</strong> weryfikująca czujność.</li>
+          <li><span class="badge-amber">Zaplanuj przerwę</span> — przerwa wkrótce; <strong>próba reakcji</strong> co 20 min i zawsze po zamknięciu oczu.</li>
           <li><span class="badge-red">Przerwa teraz</span> — czerwony baner + nakaz zjechania / przekazania zmiany.</li>
           <li><strong>Weryfikacja po incydencie:</strong> po otwarciu oczu system sam wystawia próbę reakcji — powrót do zielonego stanu wymaga jej zaliczenia.</li>
           <li><strong>Panel przełożonego:</strong> automatycznie wskazuje zmiennika z najwyższą rezerwą.</li>
@@ -686,7 +687,7 @@ def main() -> None:
           <li><strong>Senność przy otwartych oczach na naszych własnych nagraniach:</strong> protokół nocny z testem PVT-B jest gotowy (<code>docs/protokol-nocny.md</code>, zadanie C4); w dziennej sesji T1 badany miał KSS 5 (brak senności).</li>
           <li><strong>Parametry równania rezerwy czujności:</strong> tempo spadku (12%/h), kary za incydenty i mnożnik nocny (1,6×) to jawne założenia inżynierskie w <code>config.py</code>.</li>
           <li><strong>Zegarek (HRV) jako zamiennik EEG:</strong> nasze dane pokazują, że <strong>nie zastąpi</strong> sesji EEG (<em>r</em> = 0,05 po odjęciu czasu zadania), może jedynie uzupełniać kontekst.</li>
-          <li><strong>Czy alfa przy otwartych oczach ostrzega przed lapsem w kolejnej minucie?</strong> <strong style="color: #dc2626;">Sprawdziliśmy i nie ostrzega</strong> (AUC = 0,52 na 29 osobach w COG-BCI, notebook 06) — dlatego wyzwalaczem prób jest zdarzenie ostre i harmonogram, a nie podprogowa alfa.</li>
+          <li><strong>Czy alfa przy otwartych oczach ostrzega przed lapsem w kolejnej minucie?</strong> <strong style="color: #dc2626;">Sprawdziliśmy i nie ostrzega</strong> (AUC = 0,52 na 20 osobach z ≥ 3 lapsami, z 29 w COG-BCI; notebook 06) — dlatego wyzwalaczem prób jest zdarzenie ostre i harmonogram, a nie podprogowa alfa.</li>
         </ul>
       </div>
     </div>
@@ -770,7 +771,7 @@ def main() -> None:
           https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN
         </p>
         <p style="font-size: 12pt; margin-top: 6px; color: #cbd5e1;">
-          76 testów jednostkowych i regresyjnych w CI · 10 notebooków analitycznych · działający pakiet <code>wachta</code>.
+          114 testów jednostkowych i regresyjnych w CI · 10 notebooków analitycznych · działający pakiet <code>wachta</code>.
         </p>
       </div>
     </div>

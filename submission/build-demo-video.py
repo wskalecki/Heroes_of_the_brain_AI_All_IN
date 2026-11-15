@@ -710,12 +710,12 @@ def subtitles(cap: Capture) -> list[tuple[float, float, str, str]]:
     rt = (cap.events["B_result"].get("probeResult") or {}).get("title", "")
     rt_txt = rt if rt.endswith("ms") else "ok. 250 ms"
     return [
-        (0.0, 6.0, "1/6  Problem na żywo", "2:30 w nocy, 19 godzin od przebudzenia. Przepisy mierzą zegar — Wachta mierzy człowieka."),
-        (6.0, 15.0, "1/6  Problem na żywo", "Gdy oczy zamykają się na dłużej niż kilka sekund, Wachta każe zjechać i od razu wskazuje zmiennika z największą rezerwą."),
+        (0.0, 6.0, "1/6  Problem", "2:30 w nocy, 19 godzin od przebudzenia. Przepisy mierzą zegar — Wachta mierzy człowieka."),
+        (6.0, 15.0, "1/6  Problem", "Gdy oczy zamykają się na dłużej niż kilka sekund, Wachta każe zjechać i od razu wskazuje zmiennika z największą rezerwą."),
         (15.0, 24.0, "2/6  Dlaczego zegar nie wystarcza", "Normy czasu pracy traktują wszystkich tak samo, a ze zmęczeniem wiąże się do 20% wypadków drogowych."),
         (24.0, 33.0, "2/6  Dlaczego zegar nie wystarcza", "Po 18 h czuwania sprawność spada jak przy 0,05% alkoholu. Kamera widzi oczy. Wachta dokłada osobisty profil i próbę reakcji."),
         (33.0, 44.0, "3/6  Kalibracja i kontekst nocy", f"Po 60 s osobistej kalibracji system śledzi alfę z tyłu głowy i mrugnięcia. W nocy po długim czuwaniu zakładamy spadek rezerwy {cf}× szybszy (założenie modelu)."),
-        (44.0, 54.0, "3/6  Próba reakcji w normie", f"Krótka próba sprawdza czas reakcji względem osobistej normy pracownika: {rt_txt} — reakcja w normie."),
+        (44.0, 54.0, "3/6  Próba reakcji w normie", f"Drugi sygnał to zachowanie: krótka próba sprawdza czas reakcji względem osobistej normy: {rt_txt}, w normie."),
         (54.0, 64.0, "4/6  Zamknięte oczy i panel przełożonego", "Zamknięcie oczu podnosi alfę na O1/O2 powyżej progu 2,5 przez 3 s. Przełożony widzi tylko gotowość zespołu."),
         (64.0, 76.0, "4/6  Potwierdzenie po spadku czujności", "Gdy oczy znów się otworzą, system sam sprawdza, czy człowiek reaguje. Brak reakcji utrzymuje nakaz przerwy."),
         (76.0, 90.0, "4/6  Dyżur w szpitalu i regeneracja", "Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę. W modelu rezerwy odpoczynek ją odnawia."),

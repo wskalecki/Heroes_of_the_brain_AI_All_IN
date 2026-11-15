@@ -57,10 +57,10 @@ operatorskie), a nie konkuruje z nim.
 
 | Kryterium | Co pokazać | Czym to mamy poparte |
 |---|---|---|
-| **Zgodność z tematem (20)** | Pierwszy slajd i pierwsze 15 s filmu: *„System zmienia plan pracy i przerw na podstawie EEG i tętna”*. Pętla: sygnał → stan → **zmiana zachowania** (rekomendacja przerwy, zmiana obsady). Dwa sygnały: EEG i serce | A1–A3 (pipeline, dashboard), notebook 05 (EEG a serce), PVT-B i znaczniki w `session.py` |
-| **Innowacyjność (10)** | „EEG kalibruje, zegarek pilnuje” i **limit zmęczenia liczony dla osoby, nie dla zegara**. Wyraźna różnica względem SmartCap (EEG w czapce przez cały dzień, tylko alarm) | `docs/rynek-eeg-wearables.md`, wynik B2: model osobisty 81% kontra wspólny 66–72% |
+| **Zgodność z tematem (20)** | Pierwszy slajd i pierwsze 15 s filmu: *„System zmienia plan pracy i przerw na podstawie EEG i reakcji pracownika”*. Pętla: sygnał → stan → **zmiana zachowania** (rekomendacja przerwy, zmiana obsady). Sygnały w pętli: EEG (alfa z tyłu głowy, mrugnięcia z tych samych elektrod), reakcja behawioralna (próba reakcji) i kontekst doby; tętno z paska to osobne badanie (T1, notebooki 05 i 10), nie część pętli na żywo | A1–A3 (pipeline, dashboard), notebook 05 (EEG a serce), PVT-B i znaczniki w `session.py` |
+| **Innowacyjność (10)** | „EEG i test reakcji ustalają osobisty profil, na co dzień działa model kontekstu” i **limit zmęczenia liczony dla osoby, nie dla zegara**. Wyraźna różnica względem SmartCap (EEG w czapce przez cały dzień, tylko alarm) | `docs/rynek-eeg-wearables.md`, wynik B2: model osobisty 81% kontra wspólny 66–72% |
 | **Użyteczność (10)** | Jeden konkretny odbiorca i koszt problemu w pieniądzach, ze źródłem | `docs/rynek-wielkosc-i-kierunek.md` |
-| **Jakość implementacji (10)** | Działające demo, tryb odtwarzania jako plan B, 45 testów, powtarzalne notebooki, uczciwe liczby | `docs/trafnosc-na-nagraniach.md`, notebooki 01–05 |
+| **Jakość implementacji (10)** | Działające demo, tryb odtwarzania jako plan B, 114 testów, powtarzalne notebooki, uczciwe liczby | `docs/trafnosc-na-nagraniach.md`, notebooki 01–10 |
 | **Pytania (10)** | Przećwiczone odpowiedzi, patrz niżej | wyniki B1–B3 |
 
 Zasady narracji (**wniosek**):
@@ -80,10 +80,10 @@ Zasady narracji (**wniosek**):
 | Cztery osoby to za mało | Zgoda. To sprawdzenie mechanizmu. Wnioski statystyczne dają dane publiczne (11 i 16 osób) i trzy punkty pomiarowe zespołu |
 | Czemu nie kamera? | Kamera widzi skutki (oczy, głowa), EEG i tętno widzą stan organizmu. Nie twierdzimy, że wygramy z kamerą w trafności. Nasza różnica to **osobisty limit** i adaptacja planu pracy |
 | Czemu serce, skoro korelacja z EEG jest słaba? | Dlatego, że to **inny sygnał**. To inny sygnał, ale uczciwie: w 10-minutowym teście czujności RMSSD i szybkość reakcji spadają razem (r = 0,18, 22 z 29 osób), głównie dlatego, że obie zmieniają się z czasem zadania; ponad czas zadania RMSSD nie dodaje informacji (notebook 10). Serce traktujemy jako dodatkowy kontekst i miarę pewności, nie jako dowód czujności. EKG w laboratorium to nie zegarek |
-| Co z suchymi elektrodami i ruchem? | Odrzucamy 16–21% okien (artefakty). System ma stan „brak wiarygodnego sygnału” i nie zgaduje. Theta czołowa nie nadaje się przy referencji Fp1, więc jej nie używamy |
+| Co z suchymi elektrodami i ruchem? | Odrzucamy od 0,7% do 15% okien zależnie od osoby i warunków (artefakty; 0,7% w cichej sesji T1). System ma stan „brak wiarygodnego sygnału” i nie zgaduje. Theta czołowa nie nadaje się przy referencji Fp1, więc jej nie używamy |
 | Skąd 60 s kalibracji i czy to wystarczy? | Do zamkniętych oczu tak. Do rozróżniania senności sama kalibracja prawie nie pomaga (B2), dopiero model uczony na danych tej osoby (ok. 1 min na klasę daje 81% w laboratorium). Dlatego planujemy sesje osobiste |
 | Prywatność i prawo? | Przetwarzanie lokalne, na zewnątrz tylko wskaźnik gotowości, stan fizyczny, nie emocja. Konsultacja prawna (RODO art. 9) po hackathonie |
-| Dlaczego próba reakcji, a nie sama alfa? | Sprawdziliśmy: alfa przy otwartych oczach nie przewiduje lapsów w kolejnej minucie (AUC 0,52, 29 osób COG-BCI, notebook 06). Poprzednia reakcja przewiduje lepiej, a próba jest bezpośrednią miarą czujności. EEG mówi nam, co dzieje się teraz (oczy zamknięte, fala alfy), próba sprawdza, czy człowiek reaguje |
+| Dlaczego próba reakcji, a nie sama alfa? | Sprawdziliśmy: alfa przy otwartych oczach nie przewiduje lapsów w kolejnej minucie (AUC 0,52 na 20 osobach z co najmniej 3 lapsami, z 29 w COG-BCI; notebook 06). Poprzednia reakcja przewiduje lepiej, a próba jest bezpośrednią miarą czujności. EEG mówi nam, co dzieje się teraz (oczy zamknięte, fala alfy), próba sprawdza, czy człowiek reaguje |
 | Czemu rezerwa spada, skoro nic nie mierzycie? | Rezerwa łączy założenie kontekstowe (czas zadania, pora doby; parametry oznaczone jako założone) z częścią mierzoną (zdarzenia ostre, wyniki prób). Dziś w demo przeważa założenie, i mówimy to wprost; rozbicie na dashboardzie to zadanie w toku (issue #12). Rezerwy nie przedstawiamy jako pomiaru |
 | Czy to działa u każdego? | Nie, i dlatego jest test „marker działa u tej osoby”: skok wyrazistości alfy po zamknięciu oczu (R_z), progi wstępne tak ≥ 2,5, słabo 1,5–2,5, nie < 1,5. W danych publicznych 37% osób „tak”, 26% „słabo”, 37% „nie” (27 osób, elektrody żelowe). Werdykt dotyczy sesji: tydzień później ten sam wynik ma 44–56% osób, więc liczymy go przy każdym założeniu czepka (notebook 07) |
 | Co zrobi system, gdy marker u mnie nie działa? | Powie to wprost i oprze się na próbach reakcji i kontekście, zamiast udawać wykrywanie. Dolny próg („nie”) nie wystąpił u nikogo z zespołu, więc na suchych elektrodach jest nieprzetestowany |
@@ -98,8 +98,8 @@ Dwa warianty ze wspólnym rdzeniem technicznym (decyzja zespołu: [`decyzje.md`]
 - *Problem:* limity czasu pracy kierowców są stałe dla wszystkich, a zmęczenie nie. W UE obowiązują limity czasu jazdy
   i przerw (rozporządzenie 561/2006), w USA limity godzin służby (FMCSA). **Liczby do sprawdzenia przed slajdem**, tu podaję
   tylko kierunek.
-- *Produkt:* „rezerwa czujności” dla konkretnej osoby oraz plan przerw i obsady liczony dla niej. EEG kalibruje wzorzec
-  na krótkiej sesji, zegarek pilnuje na co dzień.
+- *Produkt:* „rezerwa czujności” dla konkretnej osoby oraz plan przerw i obsady liczony dla niej. EEG i test reakcji ustalają
+  osobisty profil na krótkiej sesji, na co dzień działa model kontekstu (zegarek to dodatkowy, osobny sygnał).
 - *Dlaczego pasuje do jury:* Wekwejt zna branżę transportową i łańcuch dostaw. **Wniosek:** można mówić o *przydziale ładunków i zmian
   z uwzględnieniem gotowości kierowcy* jako warstwie nad dispatchem. Nie obiecujemy integracji, tylko kierunek.
 - *Konkurencja:* SmartCap (czapka, kopalnie, transport), kamery w kabinie. Różnica: osobisty limit, EEG tylko do kalibracji.
@@ -112,7 +112,7 @@ który zna reszta jury.
 
 1. *Hak:* „Normy mierzą czas pracy, nie człowieka. Dwie osoby po tej samej zmianie mają inną rezerwę czujności.”
 2. *Dowód problemu:* jedna liczba ze źródłem (koszt zmęczenia albo przestoju).
-3. *Rozwiązanie w jednym zdaniu:* „EEG kalibruje, zegarek pilnuje, system zmienia plan przerw.”
+3. *Rozwiązanie w jednym zdaniu:* „EEG i test reakcji ustalają osobisty profil, system na tej podstawie zmienia plan przerw.”
 4. *Demo:* osoba zamyka oczy, wskaźnik reaguje, dashboard zmienia rekomendację i panel przełożonego.
 5. *Dowody i granice:* wykresy z `docs/img/` oraz slajd „zweryfikowane kontra założone”.
 6. *Model i pilotaż:* licencja za stanowisko, pilotaż na jednej zmianie z pomiarem przed i po. **Wszystkie liczby rynkowe jako
