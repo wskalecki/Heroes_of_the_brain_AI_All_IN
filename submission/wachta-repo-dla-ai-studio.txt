@@ -2033,7 +2033,7 @@ def window_features(window_uv: np.ndarray, sfreq: float) -> dict[str, float]:
 ---
 ## FILE: `src/wachta/index.py`
 ```
-"""Vigilance index: lapse detection, eye state, reaction probes, reserve and state.
+"""Vigilance index: acute events (eyes closing, alpha waves), eye state, reaction probes, reserve and state.
 
 Signals that feed the state:
 
@@ -2047,8 +2047,8 @@ Signals that feed the state:
 * reaction probes (issue #14): after each acute event and on a schedule. A missing
   response or one slower than the personal norm (1.5 x own median, PVT-B 355 ms
   until enough responses) is a failed probe.
-* slow: one-minute mean of the z-scored (theta + alpha) / beta ratio. It only
-  changes how fast the reserve drains.
+* slow: one-minute mean of the z-scored (theta + alpha) / beta ratio. Experimental:
+  with the default ``slow_gain = 0`` it does not affect the reserve or the state (issue #19).
 * context: hours awake and time of day (simplified two-process model). Also
   only changes the drain rate.
 
