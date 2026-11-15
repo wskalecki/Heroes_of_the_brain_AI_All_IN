@@ -58,7 +58,7 @@ operatorskie), a nie konkuruje z nim.
 | Kryterium | Co pokazać | Czym to mamy poparte |
 |---|---|---|
 | **Zgodność z tematem (20)** | Pierwszy slajd i pierwsze 15 s filmu: *„System zmienia plan pracy i przerw na podstawie EEG i reakcji pracownika”*. Pętla: sygnał → stan → **zmiana zachowania** (rekomendacja przerwy, zmiana obsady). Sygnały w pętli: EEG (alfa z tyłu głowy, mrugnięcia z tych samych elektrod), reakcja behawioralna (próba reakcji) i kontekst doby; tętno z paska to osobne badanie (T1, notebooki 05 i 10), nie część pętli na żywo | A1–A3 (pipeline, dashboard), notebook 05 (EEG a serce), PVT-B i znaczniki w `session.py` |
-| **Innowacyjność (10)** | „EEG i test reakcji ustalają osobisty profil, na co dzień działa model kontekstu” i **limit zmęczenia liczony dla osoby, nie dla zegara**. Wyraźna różnica względem SmartCap (EEG w czapce przez cały dzień, tylko alarm) | `docs/rynek-eeg-wearables.md`, wynik B2: model osobisty 81% kontra wspólny 66–72% |
+| **Innowacyjność (10)** | „EEG i test reakcji ustalają osobisty profil, na co dzień działa model kontekstu” i **limit zmęczenia liczony dla osoby, nie dla zegara**. Wyraźna różnica względem SmartCap (EEG w czapce przez cały dzień, tylko alarm) | `docs/rynek-eeg-wearables.md`, wynik B2: model osobisty 0,81 (po ok. 1 min danych na klasę) do 0,83 kontra wspólny 0,66–0,72 |
 | **Użyteczność (10)** | Jeden konkretny odbiorca i koszt problemu w pieniądzach, ze źródłem | `docs/rynek-wielkosc-i-kierunek.md` |
 | **Jakość implementacji (10)** | Działające demo, tryb odtwarzania jako plan B, 114 testów, powtarzalne notebooki, uczciwe liczby | `docs/trafnosc-na-nagraniach.md`, notebooki 01–10 |
 | **Pytania (10)** | Przećwiczone odpowiedzi, patrz niżej | wyniki B1–B3 |

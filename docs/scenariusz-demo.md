@@ -78,8 +78,8 @@ przed siebie, aż baner zmieni się z „Kalibracja” na „Możesz pracować�
 | 1:00 | osoba w czepku | na znak narratora **zamyka oczy na 15 s** | „Teraz zamykam oczy.” |
 | 1:07–1:13 | — | baner: **„Przerwa teraz. Oczy zamknięte dłużej niż kilka sekund. Zjedź na najbliższy parking.”** Widok sam się upraszcza: wykresy i kafelki znikają, zostaje duży komunikat i czerwony przycisk „Rozpocznij przerwę” (adaptacja interfejsu, #13). Nie pokazujemy wtedy wykresu, bo go nie ma | „Po kilku sekundach system nie tylko alarmuje, ale zmienia plan: kierowca ma zjechać.” |
 | 1:20 | narrator | wskazuje panel przełożonego: „Najwięcej rezerwy ma Rudy” | „Przełożony nie widzi fal mózgowych, tylko gotowość. I od razu wie, kto może przejąć kurs.” |
-| 1:30 | — | ok. 12–20 s po otwarciu oczu **system sam prosi o reakcję** („Sprawdzenie po spadku czujności”). Osoba w czepku **celowo nie reaguje** | „Po każdym spadku czujności system sprawdza, czy mózg wrócił. Oczy są już otwarte, a reakcji brak. Tu ją symulujemy.” |
-| 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz: reakcja za wolna albo jej brak” | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy. Stan zostaje, dopóki kolejna próba nie wypadnie w normie.” |
+| 1:30 | — | ok. 12–20 s po otwarciu oczu **system sam prosi o reakcję** („Sprawdzenie po spadku czujności”). Osoba w czepku **celowo nie reaguje** | „Po każdym spadku czujności system sprawdza, czy człowiek znów reaguje. Oczy są już otwarte, a reakcji brak. Tu ją symulujemy.” |
+| 1:40 | — | „Brak reakcji”, rezerwa spada o 8 pkt, stan „Przerwa teraz: reakcja za wolna albo jej brak” | „Brak reakcji to potwierdzony spadek czujności, niezależnie od tego, jak wyglądają oczy. Stan zostaje, dopóki kolejna próba nie wypadnie w normie, najwyżej 2 minuty.” |
 | 1:55 | operator | przełącza na **Pielęgniarka** | „Ten sam system w szpitalu: przekaż pacjentów i zrób przerwę.” |
 | 2:05 | operator | klika **Rozpocznij przerwę**. Stan „Przerwa trwa”, rezerwa rośnie | „Przerwa naprawdę odnawia rezerwę, a limit jest liczony dla tej osoby, nie dla zegara.” |
 | 2:20 | narrator | slajd z dowodami | „Zamknięte oczy wykryliśmy w 5 z 5 nagrań, z jednym fałszywym alarmem w 48 minutach. Senność przy otwartych oczach pokazują dane publiczne: alfa rośnie u 11 z 11 osób, a model osobisty rozróżnia stany wyraźnie lepiej niż jeden dla wszystkich. Dlatego liczymy normy dla człowieka, nie dla zegara.” |
@@ -123,7 +123,7 @@ Nagrajcie jedno ujęcie na żywo i jedno na planie B, potem wybierzcie lepsze. N
 | 0:35–1:05 | „Nowa zmiana” w nocy, kafelki kontekstu, próba reakcji z szybką odpowiedzią | „Minuta kalibracji EEG, potem system śledzi alfę, mrugnięcia i reakcję. W nocy rezerwa spada szybciej.” |
 | 1:05–1:30 | brak reakcji przy otwartych oczach, rezerwa spada, przełączenie na „Pielęgniarka”, przerwa | „Kamera widzi, czy oczy są otwarte. My sprawdzamy, czy człowiek jeszcze reaguje.” |
 | 1:30–1:50 | wykres `trafnosc-na-nagraniach.png`, wykres z danych publicznych | „5 z 5 nagrań, jeden fałszywy alarm w 48 minutach. W danych publicznych alfa rośnie z sennością u 11 z 11 osób.” |
-| 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż, który sprawdzi, czy osobisty limit przewiduje spadki czujności lepiej niż norma czasu.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
+| 1:50–2:00 | zespół, nazwa, „co dalej” | „Następny krok: pilotaż, który sprawdzi, czy osobisty limit chroni przed spadkami czujności lepiej niż norma czasu.” Źródła danych w napisach końcowych (CC BY wymaga podania) |
 
 ## Co mówimy, a czego nie
 
