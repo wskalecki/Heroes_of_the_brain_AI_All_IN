@@ -23,7 +23,7 @@ Studium przypadku: jedna osoba, jedna sesja, bez testu reakcji PVT. Liczby polic
 | Najwyższa średnia minutowa w monotonii | 1,19 (próg alarmu: 2,5) |
 | Spadki czujności w monotonii | 0 |
 | Okna nad progiem próby reakcji (1,5) | 11,5% |
-| Próby reakcji, które obecny system wywołałby w monotonii | 11 w 15 min (ok. 44 na godzinę) |
+| Próby reakcji w monotonii (wcześniejsza reguła z progiem 1,5 / po PR #36) | 11 w 15 min (ok. 44 na godzinę) / 0 po PR #36 |
 | Mrugnięcia na minutę w monotonii | od 0 do 13, bez trendu |
 | Tętno z paska: oczy otwarte / oczy zamknięte / liczenie / monotonia | 93 / 90 / 93 / 97 bpm |
 | Tętno w monotonii minuta po minucie | od 90 do 103, bez trendu spadkowego |
@@ -43,8 +43,8 @@ Przesunięcie sprawdziliśmy na sygnale: alfa rośnie ok. 65 s od początku plik
    3–15% w nagraniach z południa). Wskaźnik ani razu nie zbliżył się do progu alarmu.
 3. **Zamknięcie oczu nadal działa:** wykryte ok. 9 s po zamknięciu, w przedziale 7–13 s z wcześniejszych nagrań.
 4. **Próba reakcji wywoływana podprogowym wzrostem alfy pojawiałaby się zbyt często:** 11 razy w 15 minut bez żadnego spadku
-   czujności. To potwierdza wniosek z notebooka 06 i propozycję z issue #14 (próba z harmonogramu albo po zdarzeniu, a nie z podprogowej alfy).
-5. **Jedno zamknięcie oczu rozpadło się na dwa spadki czujności** (krótka przerwa w środku bloku). Potwierdza to problem opisany w issue #11.
+   czujności. To potwierdza wniosek z notebooka 06 i propozycję z issue #14 (próba z harmonogramu albo po zdarzeniu, a nie z podprogowej alfy — **naprawione w PR #36**: 0 prób w monotonii).
+5. **Jedno zamknięcie oczu rozpadło się na dwa spadki czujności** (krótka przerwa w środku bloku). Potwierdza to problem opisany w issue #11 (**naprawione w PR #36**: 1 zdarzenie w bloku, stan „Stop” kończy się zaraz po otwarciu oczu; zob. [`trafnosc-na-nagraniach.md`](trafnosc-na-nagraniach.md)).
 
 ## Ograniczenia
 

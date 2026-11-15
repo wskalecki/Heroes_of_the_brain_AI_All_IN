@@ -74,7 +74,7 @@ def test_actions_change_the_worker_pipeline():
         ws.receive_json()
         ws.send_json({"action": "break_start", "worker": "w0"})
         for _ in range(200):
-            message = ws.receive_json()
+            ws.receive_json()
             if worker.pipeline.index.on_break:
                 break
         assert worker.pipeline.index.on_break
@@ -186,9 +186,12 @@ def test_new_shift_resets_the_whole_team():
             if all(w.history and w.history[-1]["state"] != "calibrating" for w in workers):
                 break
         before = [w.pipeline.index for w in workers]
+        stale_probe_id = workers[0].new_probe()
         ws.send_json({"action": "reset", "worker": "w0"})
         message = ws.receive_json()
         while message["type"] != "hello":
             message = ws.receive_json()
         assert all(w.pipeline.index is not b for w, b in zip(workers, before))
         assert all(w.pipeline.baseline.ready for w in workers)
+        assert workers[0].pending_probe is None
+        assert not workers[0].probe_response(stale_probe_id, None)

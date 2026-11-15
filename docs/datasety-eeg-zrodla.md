@@ -105,7 +105,7 @@ Linki:
 - **Co zawiera:** 11 osób (z 27 w zbiorze źródłowym), 2022 okna po 3 s, 128 Hz (zbiór źródłowy ma 500 Hz). Etykiety: 0 = czujny, 1 = senny. Jeden plik MATLAB `dataset.mat` z trzema zmiennymi: `EEGsample` (okna), `substate` (etykieta), `subindex` (numer osoby 1–11). Wersja zbalansowana: podobna liczba okien w obu klasach u każdej osoby.
 - **Pokrywa nasze kanały:** tak, wszystkie osiem. 30 kanałów EEG, ta sama lista co w punkcie 2 (kolejność w kodzie autorów, licząc od 0: F3 to indeks 3, F4 5, C3 13, C4 15, P3 23, P4 25, O1 27, O2 29).
 - **Uwaga:** opis na figshare podaje rozmiar okna „20x384”, a jednocześnie 30 kanałów. Kod autorów zakłada 30 × 384 (30 kanałów × 3 s × 128 Hz). Kształt sprawdzić po wczytaniu pliku.
-- **Jak powstały etykiety:** **niesprawdzone.** Abstrakt tego nie opisuje, a pełny tekst jest płatny. Najpewniej z czasu reakcji na zjazd z pasa (jedyna miara zachowania w zbiorze źródłowym), ale progi i okno przed zdarzeniem trzeba sprawdzić w artykule, zanim opiszemy etykiety na slajdzie.
+- **Jak powstały etykiety:** **sprawdzone w notebooku 04.** Etykieta pochodzi z czasu reakcji na zjazd z pasa (lokalnego i z 90 s) względem najlepszych reakcji tej osoby w zbiorze Cao i in. (2019); okno to 3 s tuż przed zjazdem. Cui i in. wybrali sesje z ≥ 50 oknami każdej klasy i przycięli liczniejszą klasę, zostawiając skrajne okna (najszybsze reakcje jako czujne, najwolniejsze jako senne).
 - **Wynik w artykule (abstrakt):** 73,22% trafności między osobami (leave-one-subject-out) z jednego kanału (Oz). Model rozpoznaje senność po wrzecionach alfa i wybuchach theta.
 - **Licencja:** CC BY 4.0.
 - **Rozmiar:** 180,8 MB (172 MiB), jeden plik. Nie da się pobrać pojedynczej osoby, ale całość jest mała. Bez konta.
@@ -116,7 +116,7 @@ Linki:
 - Wersja niezbalansowana: https://doi.org/10.6084/m9.figshare.16586957.v1
 - Artykuł: Cui J. i in., *A compact and interpretable convolutional neural network for cross-subject driver drowsiness detection from single-channel EEG*, Methods 202:173–184 (2022). https://doi.org/10.1016/j.ymeth.2021.04.017 ([PubMed](https://pubmed.ncbi.nlm.nih.gov/33901644/))
 - Kod autorów (PyTorch, wczytanie danych i lista kanałów): https://github.com/cuijiancorbin/A-Compact-and-Interpretable-Convolutional-Neural-Network-for-Single-Channel-EEG
-- Nasza analiza (w toku): `data/analysis/04-drowsiness-public-dataset.ipynb`
+- Nasza analiza: `data/analysis/04-drowsiness-public-dataset.ipynb`
 
 ---
 
@@ -198,12 +198,13 @@ Zgodna z [`plan-projektu.md`](plan-projektu.md), sekcja „Zbiory publiczne, w k
 - `data/analysis/01-recordings-quality.ipynb`: jakość naszych nagrań z BrainAccess MINI.
 - `data/analysis/02-public-datasets-comparison.ipynb`: porównanie naszych nagrań z EEGMAT (punkt 1) i COG-BCI (punkt 3).
 - `data/analysis/03-wachta-indicator-on-recordings.ipynb`: wskaźnik Wachty na naszych nagraniach.
+- `data/analysis/04-drowsiness-public-dataset.ipynb`: czujny kontra senny na O1/O2 i pozostałych naszych kanałach (Cui i in., punkt 6).
+- `data/analysis/05-eeg-vs-heart-cogbci.ipynb`: EEG i EKG jednocześnie w zadaniu PVT (COG-BCI, punkt 3).
+- `data/analysis/06-pvt-alpha-early-warning.ipynb`: czy alfa potyliczna przy otwartych oczach ostrzega przed lapsem w PVT (COG-BCI, punkt 3).
 
 **Dalej:**
-1. **Cui i in. (punkt 6):** wykres czujny kontra senny na O1/O2 i pozostałych naszych kanałach. W toku: `data/analysis/04-drowsiness-public-dataset.ipynb`.
-2. **ds004902 (punkt 7):** wyspany kontra po deprywacji snu, z PVT i KSS tam, gdzie są (KSS tylko u 33 osób).
-3. **COG-BCI (punkt 3):** EEG i EKG jednocześnie, PVT i KSS. Jedyny szybki sposób, by pokazać związek EEG z sercem.
-4. **Slajd „co dalej”:** CL-Drive, FatigueSet, MEFAR (punkty 8–10), tylko jako opis, bez analizy.
+1. **ds004902 (punkt 7):** wyspany kontra po deprywacji snu, z PVT i KSS tam, gdzie są (KSS tylko u 33 osób).
+2. **Slajd „co dalej”:** CL-Drive, FatigueSet, MEFAR (punkty 8–10), tylko jako opis, bez analizy.
 
 Poprzednia kolejność (z czasu wariantu „senność i przeciążenie”), zostawiona dla porządku:
 

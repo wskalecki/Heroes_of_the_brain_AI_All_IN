@@ -223,7 +223,7 @@ def save_figure(rows: list[dict], cfg: Config, path: Path) -> None:
     )
     fig.tight_layout(rect=(0, 0, 1, 0.905))
     path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=130, facecolor=surface)
+    fig.savefig(path, dpi=115, facecolor=surface)
     plt.close(fig)
 
 
