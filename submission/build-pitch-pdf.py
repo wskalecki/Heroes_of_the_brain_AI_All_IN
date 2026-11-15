@@ -713,6 +713,7 @@ def main() -> None:
           <li><strong>Krok 1 — Kopalnie, budowa, operatorzy ciężkich maszyn:</strong> kask jest już obowiązkowy, więc wkładka EEG w kasku nie zmienia stroju pracy.</li>
           <li><strong>Krok 2 — Branże z obowiązkiem zarządzania zmęczeniem:</strong> lotnictwo, kontrola ruchu, energetyka, dyspozytornie.</li>
           <li><strong>Krok 3 — Transport drogowy:</strong> w kabinie wygrywa tania, obowiązkowa kamera DMS, więc wchodzimy z okresową kalibracją i modelem kontekstu.</li>
+          <li><strong>Ten sam rdzeń, inne dyżury:</strong> nocne dyżury IT (DevOps, SRE, on-call), lekarze, dyspozytornie energetyki, nocne operacje w finansach.</li>
         </ul>
       </div>
       <div class="card">
@@ -756,14 +757,10 @@ def main() -> None:
         <h3>Plan walidacji w pilotażu (3 porównywane warianty)</h3>
         <ul class="clean" style="margin-top: 8px;">
           <li><strong>Wariant A (punkt odniesienia):</strong> sztywna norma czasu pracy (zegar).</li>
-          <li><strong>Wariant B:</strong> sam model kontekstu (czas od przebudzenia + pora doby, bez kalibracji osobistej).</li>
-          <li><strong>Wariant C (Wachta):</strong> osobisty profil wyznaczony z krótkich sesji EEG + PVT-B połączony z kontekstem zmiany.</li>
+          <li><strong>Wariant B:</strong> sam model kontekstu (czas czuwania + pora doby).</li>
+          <li><strong>Wariant C (Wachta):</strong> osobisty profil z sesji EEG i prób reakcji + kontekst.</li>
         </ul>
-        <p style="margin-top: 12px;"><strong>Miary sukcesu:</strong> liczba lapsów (RT ≥ 355 ms) w 3-minutowym teście PVT-B na koniec zmiany, zdarzenia ostre na zmianie oraz subiektywna skala senności KSS.</p>
-      </div>
-      <div class="card">
-        <h3>Co już trwa po zamrożeniu kodu</h3>
-        <p>Protokół nocnych punktów pomiarowych z testem reakcji PVT-B zaraz po nagraniu EEG jest gotowy i wdrożony w kodzie (<code>python -m wachta.session</code>, <code>python -m wachta.pvt</code>, <code>experiments/analyze-night-checkpoint.py</code>).</p>
+        <p style="margin-top: 12px;"><strong>Miary:</strong> lapsy (RT ≥ 355 ms) w 3-min PVT-B na koniec zmiany, zdarzenia ostre, senność KSS.</p>
       </div>
       <div class="card" style="background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.35);">
         <h3>Publiczne repozytorium i pełna powtarzalność wyników</h3>
@@ -771,24 +768,30 @@ def main() -> None:
           https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN
         </p>
         <p style="font-size: 12pt; margin-top: 6px; color: #cbd5e1;">
-          114 testów jednostkowych i regresyjnych w CI · 10 notebooków analitycznych · działający pakiet <code>wachta</code>.
+          114 testów w CI · 10 notebooków · pakiet <code>wachta</code> · zbiory: COG-BCI (Hinss i in. 2023, CC BY 4.0), Cui i in. 2022 (CC BY 4.0), PhysioNet EEGMAT (ODC-By).
         </p>
       </div>
     </div>
     <div class="col" style="flex: 0.9;">
-      <div class="card" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+      <div class="card">
         <div>
           <h3>Zespół AI All In — podział strumieni</h3>
-          <ul class="clean" style="margin-top: 12px; gap: 14px;">
-            <li><strong>Wojtek — Sygnał i aplikacja (Strumień A):</strong> potok DSP w czasie rzeczywistym, detekcja alfy i mrugnięć, serwer WebSocket, dashboard, integracja z BrainAccess MINI.</li>
-            <li><strong>Adrian — Dane i dowody (Strumień B):</strong> walidacja statystyczna na 5 nagraniach własnych i zbiorach publicznych (Cui 2022, COG-BCI), 10 notebooków weryfikujących hipotezy.</li>
-            <li><strong>Filip — Pomiary i protokoły (Strumień C):</strong> nagrania EEG na suchych elektrodach, sesje kontrolne i protokół pomiarów nocnych z PVT-B.</li>
-            <li><strong>Rudy — Pitch, rynek i demo (Strumień D):</strong> pozycjonowanie regulacyjne (AI Act, FRMS), analiza rynku wearables EEG i scenariusz wdrożenia.</li>
+          <ul class="clean" style="margin-top: 6px; gap: 4px;">
+            <li><strong>Wojtek — sygnał i aplikacja:</strong> przetwarzanie EEG na żywo, dashboard, BrainAccess MINI.</li>
+            <li><strong>Adrian — dane i dowody:</strong> walidacja na nagraniach zespołu i zbiorach publicznych, 10 notebooków.</li>
+            <li><strong>Filip — pomiary i protokoły:</strong> nagrania na suchych elektrodach, protokół nocny z PVT-B.</li>
+            <li><strong>Rudy — pitch, rynek i demo:</strong> AI Act, FRMS, rynek wearables EEG, scenariusz demo.</li>
           </ul>
         </div>
-        <div class="img-box" style="background: #ffffff; padding: 6px; margin-top: 12px;">
-          <img src="{img_t1}" style="max-height: 155px;">
-        </div>
+      </div>
+      <div class="card" style="margin-top: 12px;">
+        <h3>Dalszy rozwój (kierunki)</h3>
+        <ul class="clean" style="margin-top: 6px;">
+          <li><strong>Wearables:</strong> opaska, wkładka do kasku, słuchawki z elektrodami w uchu; suche elektrody grafenowe (dziś etap badań).</li>
+          <li><strong>Drugi sygnał w pętli:</strong> tętno i ruch z zegarka.</li>
+          <li><strong>Integracje:</strong> systemy grafików i dyżurów (rotacja on-call w IT, grafik oddziału).</li>
+          <li><strong>Zawsze lokalnie:</strong> surowe EEG nie opuszcza urządzenia, na zewnątrz tylko gotowość.</li>
+        </ul>
       </div>
     </div>
   </div>

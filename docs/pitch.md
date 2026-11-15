@@ -93,6 +93,9 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 - **Segment wejścia (propozycja, decyzja w zadaniu D2):** kopalnie, budowa, operatorzy maszyn (kask jest, EEG w kasku akceptowalne);
   potem branże z obowiązkiem zarządzania zmęczeniem (lotnictwo i kontrola ruchu, energetyka). Transport drogowy jako trzeci krok,
   bo tam wygrywa tania, obowiązkowa kamera.
+- **Ten sam rdzeń, inne dyżury (kierunki do sprawdzenia, bez własnych danych):** nocne dyżury w IT (DevOps, SRE, on-call przy awariach),
+  lekarze i pielęgniarki na dyżurach, dyspozytornie energetyki i sieci, nocne operacje w finansach (monitoring transakcji, rozliczenia).
+  Wspólne: praca w nocy, decyzje o wysokiej stawce i grafik, który nie wie, kto jest wypoczęty.
 - **Różnica względem SmartCap:** oni alarmują, my zmieniamy plan pracy i ustalamy osobisty limit. Źródło: [`rynek-eeg-wearables.md`](rynek-eeg-wearables.md).
 - **Rynek:** oprogramowanie do zarządzania ryzykiem zmęczenia 345 mln USD (2025) → 877 mln USD (2032). Źródło: LP Information, w [`rynek-wielkosc-i-kierunek.md`](rynek-wielkosc-i-kierunek.md) §2c. Podać jako szacunek z jednego raportu.
 - **Model:** licencja za stanowisko miesięcznie plus sesje kalibracyjne; sprzęt od partnera (BrainAccess). Kwoty jako założenia, nie dane.
@@ -105,6 +108,10 @@ zamknięte oczy i „przerwa teraz”, brak reakcji przy otwartych oczach, zmien
 
 - Miary: lapsy w teście PVT-B, zdarzenia na zmianie, ocena senności (KSS). Porównanie trzech wariantów: norma czasu, model kontekstu, model osobisty.
 - Własne nocne pomiary z testem reakcji już zbieramy (zadanie C4).
+- **Dalszy rozwój (kierunki, nie wyniki):** wygodniejszy sprzęt do noszenia (opaska, wkładka do kasku, słuchawki z elektrodami w uchu);
+  suche elektrody grafenowe (cieńsze i lżejsze, dziś na etapie badań); tętno i ruch z zegarka w pętli jako drugi sygnał (#17);
+  integracja z systemami grafików i dyżurów (np. rotacja on-call w IT, grafik oddziału), żeby propozycja zmiennika trafiała tam, gdzie planuje się obsadę.
+  Zasada bez zmian: **przetwarzanie lokalne**, surowe EEG nie opuszcza urządzenia pracownika, na zewnątrz wychodzi tylko gotowość.
 - Zespół: imiona i role.
 - Na ostatnim slajdzie źródła zbiorów (CC BY wymaga podania autorów): COG-BCI (Hinss i in. 2023), zbiór Cui i in. 2022, EEG During Mental Arithmetic Tasks (PhysioNet), pełna lista w [`licencje.md`](licencje.md).
 

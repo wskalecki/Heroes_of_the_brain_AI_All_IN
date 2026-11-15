@@ -9,7 +9,7 @@ Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
 - Sprzęt: BrainAccess MINI, 8 suchych elektrod (F3, F4, C3, C4, P3, P4, O1, O2), 250 Hz, dane w MNE.
 - **Kierunek jest ustalony:** zmęczenie i czujność mierzone na człowieku, nie na zegarze.
   Decyzja: `docs/decyzje.md`, plan: `docs/plan-projektu.md`, podział zadań: `docs/zadania.md`.
-- Folder `pomysly-adi/` to inspiracja, nie specyfikacja. Buduj według planu i zadań, nie według listy pomysłów.
+- Buduj według planu i zadań, nie według luźnych pomysłów.
 
 ## Język
 
@@ -19,7 +19,7 @@ Jeśli pracujesz w tym repo — te zasady Cię obowiązują.
 ## Struktura i porządek
 
 - Nazwy plików i folderów: małe litery, myślniki zamiast spacji, bez polskich znaków
-  (`pomysly-adi/`, `signal-processing.py`).
+  (`docs/plan-projektu.md`, `signal-processing.py`).
 - Nowe pomysły i notatki osobiste: każdy ma swój folder `pomysly-<imie>/`.
 - Kod projektu (gdy powstanie): `src/`, eksperymenty i prototypy: `experiments/`,
   dokumentacja: `docs/`. Nie twórz tych folderów "na zapas" — dopiero gdy jest co do nich włożyć.
