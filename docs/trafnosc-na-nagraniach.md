@@ -22,7 +22,7 @@ Stan na 14.11.2026, noc. To wynik skryptu `experiments/validate-on-recordings.py
 
 Razem: wykryto 5 z 5 bloków, 1 fałszywy alarm w 48 min poza blokiem (po kalibracji).
 
-![Wskaźnik czujności w czasie dla czterech nagrań](img/trafnosc-na-nagraniach.png)
+![Wskaźnik czujności w czasie dla pięciu nagrań](img/trafnosc-na-nagraniach.png)
 
 Kolumny:
 
@@ -34,11 +34,11 @@ Kolumny:
 
 ## Jak czytać te liczby
 
-- **To sprawdzenie mechanizmu, nie statystyka.** Cztery osoby, po jednym bloku na osobę.
+- **To sprawdzenie mechanizmu, nie statystyka.** Pięć nagrań u czterech osób, po jednym bloku `eyes_closed` w nagraniu.
 - **Próg 2,5 dobraliśmy na tych samych nagraniach**, więc wynik jest optymistyczny. Przy progu 2,0 było 6 fałszywych alarmów
   zamiast jednego. Na nowych nagraniach z punktów pomiarowych trzeba to sprawdzić ponownie.
 - **Opóźnienie zawiera niedokładność timeline'u.** Od chwili, gdy alfa po raz pierwszy przekracza próg w dwóch kolejnych
-  oknach, do zgłoszenia mijają 4 s u każdej z czterech osób. Z tego 3 s to wymagane utrzymanie sygnału.
+  oknach, do zgłoszenia mijają 4 s w czterech nagraniach z południa (w sesji T1: 9 s od początku bloku). Z tego 3 s to wymagane utrzymanie sygnału.
 - **Zamknięte oczy to nie senność.** Alfa przy zamkniętych oczach jest najsilniejszym sygnałem, jaki ten sprzęt widzi.
   Prawdziwa senność daje słabsze zmiany. To uzupełni wykres z danych publicznych (zadanie B2).
 - **Wskaźnik wolny i rezerwa nie są tu sprawdzane.** Ich parametry są założeniami.
