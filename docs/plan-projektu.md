@@ -101,7 +101,7 @@ z adnotacjami, bez kopii CSV.
 
 - Wykrywanie senności z HRV potwierdzone EEG: 12 z 13 epizodów przed zaśnięciem, 1,7 fałszywego alarmu na godzinę (Fujiwara i in. 2019).
 - Samo HRV słabo uogólnia się między osobami (Persson i in.), a kontekst (czas jazdy, pora doby) podnosi AUC z 0,76 do 0,88
-  (Chalmers/Autoliv 2022). To argument za personalizacją.
+  (Chalmers 2022). To argument za personalizacją.
 
 Liczby trzeba sprawdzić w pełnych tekstach przed wstawieniem na slajd.
 
