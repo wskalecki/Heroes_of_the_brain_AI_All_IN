@@ -1,69 +1,87 @@
-# Prompty: Claude (żywe wyklikanie demo) + Fable (motion design i montaż)
+# Prompty z dokładnymi ścieżkami w repozytorium (bez lokalnego pullowania)
 
-Poniżej masz dwa gotowe prompty:
-1. **Prompt dla Claude (Computer Use / Claude Code z przeglądarką)** — żeby uruchomił prawdziwy serwer Wachty, wyklikał cały scenariusz na żywo (z płynnym ruchem wykresów i kursora) i zapisał surowe nagranie ekranu `.mp4`.
-2. **Prompt pod Fable** — żeby z nagrania dashboardu oraz przebitek z `submission/img/` i wykresów z `docs/img/` zmontował dynamiczny, dopieszczony wizualnie film `≤ 1:55` (1080p, 16:9) z najazdami kamery (zoom-in na alerty i wykresy), płynnymi przejściami i typografią kinetyczną.
+Repozytorium publiczne: `https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN`
+Gałąź z gotowymi plikami wideo, obrazami i prezentacją: **`submission-assets`**
 
 ---
 
-## Krok 1: Prompt dla Claude (żeby wyklikał żywe demo na ekranie)
+## 1. Jeden wspólny prompt dla Claude / Fable (działającego na repozytorium GitHub)
 
-Wklej ten prompt do **Claude Code / Claude z dostępem do przeglądarki** w katalogu naszego repozytorium:
+Skopiuj i wklej w całości:
 
 ```text
-Chcę nagrać 75-sekundowe, płynne wideo (1920x1080, 30 lub 60 fps) z żywej interakcji z naszym dashboardem Wachty do wstawienia w montażu w Fable.
+Work directly on the public GitHub repository:
+Repository: https://github.com/wskalecki/Heroes_of_the_brain_AI_All_IN
+Branch with all existing video/image/presentation assets: `submission-assets`
 
-Wykonaj po kolei:
-1. Uruchom serwer Wachty w tle w przyspieszonym trybie odtwarzania z nocnym kontekstem:
+If your workspace is currently checked out on `main`, first fetch and switch to `submission-assets`:
+`git fetch origin submission-assets:submission-assets && git checkout submission-assets`
+
+### EXISTING FILES IN THE REPOSITORY (branch `submission-assets`):
+1. Current 1:54 demo video (1920x1080, 24fps, H.264 + AAC):
+   - Path: `submission/wachta-demo-2min.mp4`
+   - Raw URL: https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/submission/wachta-demo-2min.mp4
+2. Video generator script & timeline / voiceover script:
+   - Path: `submission/build-demo-video.py`
+   - Path: `submission/wideo-demo-scenariusz-i-lektor.md`
+   - Path: `docs/scenariusz-demo.md`
+   - Path: `docs/pitch.md`
+3. AI B-Roll & Picture-in-Picture (PiP) operator images:
+   - `submission/img/driver-night-broll.jpg` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/submission/img/driver-night-broll.jpg)
+   - `submission/img/nurse-shift-broll.jpg` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/submission/img/nurse-shift-broll.jpg)
+   - `submission/img/pip-eyes-open.jpg` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/submission/img/pip-eyes-open.jpg)
+   - `submission/img/pip-eyes-closed.jpg` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/submission/img/pip-eyes-closed.jpg)
+4. Validation charts in `docs/img/`:
+   - `docs/img/trafnosc-na-nagraniach.png` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/docs/img/trafnosc-na-nagraniach.png)
+   - `docs/img/drowsiness-public-auc-and-calibration.png` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/docs/img/drowsiness-public-auc-and-calibration.png)
+   - `docs/img/pvt-alpha-early-warning-cogbci.png` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/docs/img/pvt-alpha-early-warning-cogbci.png)
+   - `docs/img/monotonia-minuta-po-minucie.png` (https://raw.githubusercontent.com/wskalecki/Heroes_of_the_brain_AI_All_IN/submission-assets/docs/img/monotonia-minuta-po-minucie.png)
+5. Real web dashboard source code & EEG replay recordings:
+   - Web UI: `src/wachta/web/index.html`, `src/wachta/web/style.css`, `src/wachta/web/app.js`
+   - Server & DSP pipeline: `src/wachta/server.py`, `src/wachta/index.py`, `src/wachta/blinks.py`
+   - Real EEG recordings: `data/recordings/wojtek_1-raw.fif`, `data/recordings/wojtek-monotonia_1-raw.fif`
+
+---
+
+### TASK PART 1 — LIVE INTERACTIVE DASHBOARD CAPTURE (for Claude / Browser Agent):
+Instead of static screenshots of the dashboard, launch the real Wachta server from `src/wachta/` and record a smooth 30/60fps 1920x1080 browser interaction with visible cursor movements and live scrolling charts:
+1. Start the server:
    `python -m wachta --source replay --file data/recordings/wojtek_1-raw.fif --speed 4 --wake 19 --clock 02:30 --no-browser`
-   (lub użyj `--source sim --wake 19 --clock 02:30` + endpointów WebSocket, jeśli chcesz precyzyjnie sterować czasem każdego przejścia).
-2. Otwórz `http://127.0.0.1:8765` w oknie przeglądarki o wymiarach dokładnie `1920x1080` (bez paska zakładek) i rozpocznij nagrywanie ekranu (Playwright `record_video_dir` w 1920x1080 lub `ffmpeg` z Xvfb/ekranu) do pliku `submission/live-dashboard-capture.mp4`.
-3. Wyklikaj na żywo z widocznym, płynnym ruchem kursora dokładnie 5 scen ze `scenariusz-demo.md`:
-   - Scena A (0:00–0:12): Kalibracja kończy się -> zielony stan „Możesz pracować”, rezerwa czujności ~92%, w karcie kontekstu widać „19 h od przebudzenia” i „02:30 (noc)”. Przejedź płynnie kursorem po wykresie „Wskaźnik czujności, ostatnie 3 minuty” oraz „Rezerwa czujności w czasie zmiany”.
-   - Scena B (0:12–0:25): Kliknij przycisk „Sprawdź reakcję”. Gdy pojawi się pomarańczowe koło „Reakcja!”, odczekaj ~250 ms i naciśnij `Space` -> pokaż przez 3 sekundy zielone koło z wynikiem w normie (np. „248 ms — Reakcja w normie”).
-   - Scena C (0:25–0:42): Wejście w blok zamkniętych oczu (`eyes_closed`) -> wykres wskaźnika czujności rośnie powyżej czerwonej linii progu 2,5, karta „Oczy” zmienia się na „zamknięte”, a główny status zmienia się na czerwony „Przerwa teraz”. Zjedź kursorem na dół na „Panel przełożonego”, gdzie przy Wojtku świeci „Przerwa teraz”, a przy Rudym i Adim „Możesz pracować”.
-   - Scena D (0:42–0:58): Po wyjściu z bloku zamkniętych oczu pojawia się automatyczna próba weryfikacyjna „Reakcja! (sprawdzenie po spadku czujności)”. NIE klikaj spacji przez 3 sekundy -> pozwól, by pojawiło się czerwone koło „Brak reakcji”, które utrzymuje status „Przerwa teraz” i obniża rezerwę czujności.
-   - Scena E (0:58–1:12): Kliknij przycisk „Rozpocznij przerwę” -> status zmienia się na niebieski „Przerwa trwa — Odpocznij. W tym czasie rezerwa wraca”, a krzywa rezerwy czujności zaczyna rosnąć.
-4. Zatrzymaj nagrywanie i przekonwertuj plik wyjściowy przez `ffmpeg` do `submission/live-dashboard-capture.mp4` (H.264, `yuv420p`, `1920x1080`).
-```
+   (or `--source sim --wake 19 --clock 02:30` for deterministic state transitions).
+2. Open `http://127.0.0.1:8765` in a `1920x1080` viewport and click through the 5 demo beats from `docs/scenariusz-demo.md`:
+   - Beat A [0:33–0:44]: Calibration finishes -> green status `"Możesz pracować"`, `"92% Rezerwa czujności"`, `"19 h od przebudzenia"`, `"26% / h"`. Hover cursor smoothly over the two live charts (`#chart-index` and `#chart-reserve`).
+   - Beat B [0:45–0:53]: Click `"Sprawdź reakcję"` (`#btn-probe`). When the orange modal `"Reakcja!"` (`#probe`) appears, wait ~250 ms and press `Space` -> show the green confirmation circle `"248 ms — Reakcja w normie"`.
+   - Beat C [0:54–1:03]: Enter the `eyes_closed` block -> live alpha prominence line crosses the red threshold `2.5` for 3 seconds, `"Oczy"` changes to `"zamknięte"`, main status switches to red `"Przerwa teraz"`. Move cursor down to `"Panel przełożonego"` (`#team-rows`) showing `"Wojtek — Przerwa teraz"` and `"Rudy — Możesz pracować"`.
+   - Beat D [1:04–1:15]: Eyes reopen -> automatic post-event verification probe `"Reakcja! (sprawdzenie po spadku czujności)"` pops up. Do NOT press space for 3 seconds -> show red timeout circle `"Brak reakcji"`, keeping `"Przerwa teraz"` active.
+   - Beat E [1:20–1:29]: Click `"Rozpocznij przerwę"` (`#btn-break`) -> status changes to blue `"Przerwa trwa — Odpocznij. W tym czasie rezerwa wraca"`, and the reserve curve begins recovering.
 
 ---
 
-## Krok 2: Zoptymalizowany prompt pod Fable (motion design i uładnienie wideo)
+### TASK PART 2 — MOTION DESIGN & VIDEO POLISH (for Fable / Video Renderer):
+Upgrade `submission/wachta-demo-2min.mp4` into a sleek 1080p (16:9, 24/30fps) hackathon product demo reel while keeping total duration strictly under `1:55` (hard limit `2:00`) and preserving all Polish UI labels and captions verbatim:
 
-Wgraj do projektu w **Fable** pliki:
-- `submission/wachta-demo-2min.mp4` (oraz `submission/live-dashboard-capture.mp4`, jeśli wygenerujesz żywy przebieg z Kroku 1),
-- przebitki z `submission/img/` (`driver-night-broll.jpg`, `nurse-shift-broll.jpg`, `pip-eyes-open.jpg`, `pip-eyes-closed.jpg`),
-- wykresy z `docs/img/` (`trafnosc-na-nagraniach.png`, `drowsiness-public-auc-and-calibration.png`, `pvt-alpha-early-warning-cogbci.png`),
-
-a następnie wklej poniższy prompt (po angielsku — Fable najlepiej rozumie dyrektywy kompozycji i kamery po angielsku, z nakazem zachowania polskich napisów):
-
-```text
-Polish and animate this 1:54 hackathon product demo video ("Wachta — Adaptive Systems", 1920x1080, 16:9, 24fps) into a sleek, high-contrast tech product reel while strictly keeping total duration under 1:55 and preserving all Polish UI text and captions verbatim.
-
-VISUAL STYLE & MOTION DESIGN INSTRUCTIONS:
-1. Smooth 2.5D Camera Moves on Dashboard UI:
-   - Instead of flat static full-screen captures of the web dashboard, place the dashboard on a clean dark-slate canvas (#0B1120) with a subtle drop shadow and rounded corners (16px), and animate smooth ease-in-out camera pans and 1.35x zoom-ins onto the active UI region at each beat:
-     * [0:33–0:44] Zoom 1.3x into the top-left status card ("Możesz pracować", "92% Rezerwa czujności", "19 h od przebudzenia / 26% / h").
-     * [0:45–0:53] Snap-zoom 1.4x to the center orange reaction probe modal ("Reakcja!") -> pulse ripple effect when it turns green ("248 ms — Reakcja w normie").
-     * [0:54–1:03] Pan right to follow the rising blue EEG alpha line crossing the red threshold (2.5) on the top chart, then pan left to the red alert card ("Przerwa teraz") with a subtle red glow pulse, and pan down to highlight the "Panel przełożonego" row showing the replacement teammate ("Rudy — Możesz pracować").
-     * [1:04–1:15] Zoom into the post-incident reaction probe timing out into the red circle ("Brak reakcji").
-     * [1:20–1:29] Zoom into the blue recovery state ("Przerwa trwa — 79%") after clicking "Rozpocznij przerwę".
+1. Smooth 2.5D Camera Moves on the Dashboard (`src/wachta/web/`):
+   - Place the dashboard on a dark slate canvas (`#0B1120`) with rounded corners (`16px`) and soft shadow.
+   - Animate smooth ease-in-out camera pans and `1.35x` zoom-ins onto the active UI region at each timestamp:
+     * `[0:33–0:44]` Zoom `1.3x` into the top-left status card (`#state-card`: `"Możesz pracować"`, `"92%"`, `"19 h od przebudzenia"`).
+     * `[0:45–0:53]` Snap-zoom `1.4x` to the center orange reaction probe modal (`#probe`: `"Reakcja!"`) -> pulse ripple effect when it turns green (`"248 ms — Reakcja w normie"`).
+     * `[0:54–1:03]` Pan across `#chart-index` as the blue EEG alpha line crosses the red threshold (`2.5`), then pan left to the red alert card (`"Przerwa teraz"`) and down to `"Panel przełożonego"` (`#team-rows`).
+     * `[1:04–1:15]` Zoom into the post-incident reaction probe timing out into the red circle (`"Brak reakcji"`).
+     * `[1:20–1:29]` Zoom into the blue recovery state (`"Przerwa trwa — 79%"`) after clicking `"Rozpocznij przerwę"`.
 
 2. Picture-in-Picture (PiP) Operator Feed Polish:
-   - Style the bottom-right PiP operator camera (`pip-eyes-open.jpg` / `pip-eyes-closed.jpg`) as a live HUD overlay with a rounded border, subtle REC indicator dot, and a glowing border color that matches the current state (emerald #16A34A when alert, amber #D97706 during probe, crimson #DC2626 during eyes-closed microsleep).
+   - Style the bottom-right PiP operator feed (`submission/img/pip-eyes-open.jpg` and `submission/img/pip-eyes-closed.jpg`) as a live HUD overlay with rounded corners, a subtle `REC` dot, and a border glow matching the current state (emerald `#16A34A` when alert, amber `#D97706` during probe, crimson `#DC2626` during eyes-closed microsleep).
 
-3. B-Roll & Problem Hook [0:00–0:32]:
-   - Add a slow cinematic Ken Burns push-in (1.00x -> 1.08x) on the night truck driver (`driver-night-broll.jpg`) and hospital night-shift nurse (`nurse-shift-broll.jpg`) with subtle film grain and a clean lower-third glassmorphism title bar.
-   - On the problem/loop comparison slide [0:15–0:32], stagger-animate the 4 problem bullet points on the left and the 5 numbered adaptive-loop steps on the right with a 0.25s spring fade-up.
+3. B-Roll & Problem Hook `[0:00–0:32]`:
+   - Apply a slow cinematic Ken Burns push-in (`1.00x -> 1.08x`) on `submission/img/driver-night-broll.jpg` and `submission/img/nurse-shift-broll.jpg`.
+   - On the problem vs. adaptive loop comparison slide `[0:15–0:32]`, stagger-animate the 4 problem points on the left and the 5 adaptive loop steps on the right with a `0.25s` spring fade-up.
 
-4. Scientific Validation Charts [1:30–1:47]:
-   - Animate a clean highlight callout badge over the key metrics on the validation figures (`trafnosc-na-nagraniach.png` and `drowsiness-public-auc-and-calibration.png`):
-     * "5 / 5 bloków zamkniętych oczu wykrytych (BrainAccess MINI)"
-     * "1 fałszywy alarm w 48 min (0 w 15 min monotonii T1)"
-     * "Kalibracja osobista: AUC 0,76 → 0,90 (Cui i in. 2022)"
+4. Scientific Validation Charts `[1:30–1:47]`:
+   - Display `docs/img/trafnosc-na-nagraniach.png`, `docs/img/monotonia-minuta-po-minucie.png`, `docs/img/drowsiness-public-auc-and-calibration.png`, and `docs/img/pvt-alpha-early-warning-cogbci.png` with animated callout badges highlighting:
+     * `"5 / 5 bloków zamkniętych oczu wykrytych (BrainAccess MINI)"`
+     * `"1 fałszywy alarm w 48 min (0 w 15 min monotonii T1)"`
+     * `"Kalibracja osobista: AUC 0,76 → 0,90 (Cui i in. 2022)"`
 
-5. Subtitles & Audio Cues:
-   - Keep the Polish subtitles in a clean, high-contrast pill at the bottom safe-area (font: Inter/Plus Jakarta Sans SemiBold, 24px, white on #0F172A at 88% opacity).
-   - Keep the audio cues (660 Hz reaction probe beep at 0:45 and 1:04, and 880/660 Hz two-tone alarm at 0:06 and 0:55) synced to the visual modal popups.
+5. Output:
+   - Save and commit the final polished video back to `submission/wachta-demo-2min.mp4` on branch `submission-assets` (keep file size `< 5 MB` so `.github/scripts/check-repo.py` passes).
 ```
