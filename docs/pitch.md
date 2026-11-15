@@ -36,7 +36,7 @@ Pod spodem nazwa zespołu i kategoria (Systemy adaptacyjne).
 **„Ludzie różnią się podatnością na zmęczenie w stały sposób, a ani normy, ani kamery tego nie mierzą.”**
 
 - Różnice między osobami w spadku sprawności po braku snu są systematyczne i powtarzalne u tej samej osoby (Van Dongen i in. 2004, *Sleep* 27(3):423-33). Źródło: `podstawy-naukowe.md`, poz. 28.
-- Kamera w aucie sprawdza, czy oczy są zamknięte. Nie widzi, czy mózg przy otwartych oczach jeszcze reaguje.
+- Kamera w aucie widzi oczy i głowę. Nasz detektor alfy wykrywa to samo zdarzenie (zamknięcie oczu), więc nie obiecujemy, że zrobimy to lepiej. Różnica: osobisty profil, krótka próba reakcji i zmiana planu pracy zamiast samego alarmu.
 - Lotnictwo już dopuszcza normy oparte na danych (systemy zarządzania ryzykiem zmęczenia, FRMS) jako alternatywę dla sztywnych limitów. Źródło: [IATA FRMS 2025](https://www.iata.org/contentassets/5f976bb3ca2446f3a40e88b18dd61fbb/frms_white-paper_2025.pdf).
 
 ### 4. Rozwiązanie

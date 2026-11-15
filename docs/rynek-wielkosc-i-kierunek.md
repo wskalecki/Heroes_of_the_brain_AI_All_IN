@@ -38,7 +38,7 @@ Research pod pitch na Heroes of the Brain (listopad 2026). Uzupełnia plik `ryne
 - **83%** analityków czuje się przytłoczonych liczbą alarmów ([IT Brief](https://itbrief.co.uk/story/soc-analysts-face-alert-overload-duplicate-effort-survey-finds)).
 
 ### 2c. Zarządzanie zmęczeniem w przemyśle i transporcie (zajęte przez SmartCap)
-- Oprogramowanie do zarządzania ryzykiem zmęczenia: **345 mln USD (2025) → 877 mln USD (2032)**, CAGR 14,5% ([LP Information](https://www.marketresearch.com/LP-Information-Inc-v4134/Global-Fatigue-Risk-Management-Software-44138237)).
+- Oprogramowanie do zarządzania ryzykiem zmęczenia: **345 mln USD (2025) → 877 mln USD (2032)**, CAGR 14,5% w latach 2026–2032 (raport z marca 2026; streszczenie publicznie: [Market Publishers](https://pdf.marketpublishers.com/lpinfo/global-fatigue-risk-management-software-market-lp.pdf); liczone dla 2025→2032 wychodzi ok. 14,3%; Bosson Research podaje 14,0% przy 293 mln USD w 2025, Market Intelo 8,5% dla szerszego rynku z usługami i sprzętem) ([LP Information](https://www.marketresearch.com/LP-Information-Inc-v4134/Global-Fatigue-Risk-Management-Software-44138237)).
 - Systemy wykrywania zmęczenia kierowców: 1,85 mld USD (2025) → 5,55 mld USD (2034) ([Intel Market Research](https://www.intelmarketresearch.com/fatigue-driving-monitoring-system-market-market-22052)). Głównie kamery, nie EEG.
 
 ### 2d. Kontrola ruchu lotniczego i dyspozytornie
